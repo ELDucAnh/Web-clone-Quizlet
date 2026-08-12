@@ -1,24 +1,12 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
-import {
-  Home,
-  Library,
-  Folder,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  Users,
-  Bell,
-  Settings,
-  CreditCard,
-  Zap,
-  Gamepad2,
-  X,
-} from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useStore } from '@/lib/store';
+import {
+  Home, Library, Folder, Plus, ChevronLeft, ChevronRight,
+  Settings, CreditCard, Zap, Gamepad2, X, Sun, Moon,
+} from 'lucide-react';
 
 interface NavItemProps {
   href: string;
@@ -53,6 +41,7 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
   const { folders, sidebarCollapsed, toggleSidebar } = useStore();
   const folderList = Object.values(folders).sort((a, b) => b.createdAt - a.createdAt);
   const collapsed = sidebarCollapsed;
+  const isDark = theme === 'dark';
 
   return (
     <>
@@ -64,18 +53,17 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
         />
       )}
 
-      <aside
-        className={`app-sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}
-      >
-        {/* ── Brand Header ─────────────────────────────────────── */}
+      <aside className={`app-sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+
+        {/* ── Brand Header ────────────────────────────────────────── */}
         <div className="h-[60px] flex items-center justify-between px-3 border-b border-[var(--border)] flex-shrink-0">
           <Link
             href="/"
             className="flex items-center gap-2.5 overflow-hidden min-w-0"
             onClick={onMobileClose}
           >
-            <div className="w-8 h-8 bg-[var(--quizlet-blue)] text-white rounded-lg flex items-center justify-center font-black text-base flex-shrink-0">
-              Q
+            <div className="w-8 h-8 bg-[var(--quizlet-blue)] text-white rounded-lg flex items-center justify-center font-black text-sm flex-shrink-0">
+              VM
             </div>
             {!collapsed && (
               <span className="font-bold text-[15px] text-[var(--text)] tracking-tight truncate">
@@ -84,7 +72,7 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             )}
           </Link>
 
-          {/* Toggle collapse button (desktop only) */}
+          {/* Collapse toggle (desktop) */}
           <button
             onClick={toggleSidebar}
             className="hidden md:flex w-7 h-7 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--text)] transition-colors flex-shrink-0 ml-1"
@@ -93,7 +81,7 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
           </button>
 
-          {/* Mobile close button */}
+          {/* Mobile close */}
           {mobileOpen && (
             <button
               onClick={onMobileClose}
@@ -104,7 +92,7 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
           )}
         </div>
 
-        {/* ── Main Navigation ───────────────────────────────────── */}
+        {/* ── Main Nav ─────────────────────────────────────────────── */}
         <nav className="p-2 space-y-0.5 flex-shrink-0">
           <NavItem
             href="/"
@@ -120,63 +108,45 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             active={pathname.startsWith('/library')}
             collapsed={collapsed}
           />
-          <NavItem
-            href="/library?tab=groups"
-            icon={<Users size={18} />}
-            label="Nhóm học"
-            active={false}
-            collapsed={collapsed}
-          />
-          <NavItem
-            href="/library?tab=notifications"
-            icon={<Bell size={18} />}
-            label="Thông báo"
-            active={false}
-            collapsed={collapsed}
-          />
         </nav>
 
-        {/* ── Divider ───────────────────────────────────────────── */}
-        {!collapsed && (
-          <div className="mx-3 my-1 border-t border-[var(--border)]" />
-        )}
-
-        {/* ── Study Modes ───────────────────────────────────────── */}
+        {/* ── Study Modes ───────────────────────────────────────────── */}
+        <div className="mx-2 my-1 border-t border-[var(--border)]" />
         <nav className="p-2 space-y-0.5 flex-shrink-0">
           {!collapsed && (
-            <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-              Trò chơi
+            <p className="px-3 pb-1 pt-0.5 text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+              Chế độ học
             </p>
           )}
           <NavItem
-            href="/library?mode=flashcard"
+            href="/library"
             icon={<CreditCard size={18} />}
             label="Thẻ ghi nhớ"
             active={false}
             collapsed={collapsed}
           />
           <NavItem
-            href="/library?mode=learn"
+            href="/library"
             icon={<Zap size={18} />}
-            label="Học"
+            label="Chế độ học"
             active={false}
             collapsed={collapsed}
           />
           <NavItem
-            href="/library?mode=match"
+            href="/library"
             icon={<Gamepad2 size={18} />}
-            label="Trò chơi ghép thẻ"
+            label="Ghép thẻ"
             active={false}
             collapsed={collapsed}
           />
         </nav>
 
-        {/* ── Folders Section ───────────────────────────────────── */}
+        {/* ── Folders ───────────────────────────────────────────────── */}
         {!collapsed && (
-          <div className="px-3 pt-3 pb-1 flex-1 min-h-0 flex flex-col">
+          <div className="px-3 pt-2 pb-1 flex-1 min-h-0 flex flex-col">
             <div className="flex items-center justify-between mb-1.5">
               <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-                Thư mục của bạn
+                Thư mục
               </p>
               <button
                 onClick={showCreateFolderModal}
@@ -186,41 +156,48 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
                 <Plus size={13} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto space-y-0.5 pr-1">
+
+            <div className="flex-1 overflow-y-auto space-y-0.5 pr-0.5">
               {folderList.length === 0 ? (
-                <p className="text-[12px] text-[var(--text-muted)] px-2 py-1">
-                  Chưa có thư mục nào
-                </p>
+                <button
+                  onClick={showCreateFolderModal}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[13px] text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--primary)] transition-colors"
+                >
+                  <Plus size={13} />
+                  <span>Tạo thư mục đầu tiên</span>
+                </button>
               ) : (
-                folderList.map((folder) => (
-                  <Link
-                    key={folder.id}
-                    href={`/folder/${folder.id}`}
-                    onClick={onMobileClose}
-                    className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm truncate transition-colors ${
-                      pathname === `/folder/${folder.id}`
-                        ? 'bg-[var(--primary-light)] text-[var(--primary)] font-medium'
-                        : 'text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--text)]'
-                    }`}
+                <>
+                  {folderList.map((folder) => (
+                    <Link
+                      key={folder.id}
+                      href={`/folder/${folder.id}`}
+                      onClick={onMobileClose}
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[13px] truncate transition-colors ${
+                        pathname === `/folder/${folder.id}`
+                          ? 'bg-[var(--primary-light)] text-[var(--primary)] font-medium'
+                          : 'text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--text)]'
+                      }`}
+                    >
+                      <Folder size={14} className="flex-shrink-0" />
+                      <span className="truncate">{folder.name}</span>
+                    </Link>
+                  ))}
+                  <button
+                    onClick={showCreateFolderModal}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[13px] text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--primary)] w-full transition-colors"
                   >
-                    <Folder size={14} className="flex-shrink-0" />
-                    <span className="truncate text-[13px]">{folder.name}</span>
-                  </Link>
-                ))
+                    <Plus size={13} />
+                    <span>Thêm thư mục</span>
+                  </button>
+                </>
               )}
-              <button
-                onClick={showCreateFolderModal}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[13px] text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--primary)] w-full transition-colors"
-              >
-                <Plus size={14} />
-                <span>Thư mục mới</span>
-              </button>
             </div>
           </div>
         )}
 
-        {/* ── Bottom Settings ───────────────────────────────────── */}
-        <div className="p-2 border-t border-[var(--border)] flex-shrink-0 mt-auto">
+        {/* ── Bottom ───────────────────────────────────────────────── */}
+        <div className="p-2 border-t border-[var(--border)] flex-shrink-0 mt-auto space-y-0.5">
           <NavItem
             href="/settings"
             icon={<Settings size={18} />}
@@ -228,16 +205,21 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             active={pathname === '/settings'}
             collapsed={collapsed}
           />
+
+          {/* Theme toggle — dùng inline style để tránh lỗi Tailwind dynamic class */}
           <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className={`sidebar-nav-item w-full text-left`}
-            title={collapsed ? (theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối') : undefined}
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            className="sidebar-nav-item w-full text-left"
+            title={collapsed ? (isDark ? 'Chế độ sáng' : 'Chế độ tối') : undefined}
           >
-            <span className="nav-icon flex-shrink-0 text-lg">
-              {theme === 'dark' ? '☀️' : '🌙'}
+            <span className="nav-icon flex-shrink-0">
+              {isDark
+                ? <Sun size={18} className="text-amber-400" />
+                : <Moon size={18} />
+              }
             </span>
             {!collapsed && (
-              <span>{theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}</span>
+              <span className="text-sm">{isDark ? 'Chế độ sáng' : 'Chế độ tối'}</span>
             )}
           </button>
         </div>
