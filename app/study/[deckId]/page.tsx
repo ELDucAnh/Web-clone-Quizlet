@@ -1,244 +1,343 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, BookOpen, Brain, Gamepad2, Zap, Calendar, AlertCircle } from 'lucide-react';
+import {
+  ChevronLeft, ChevronRight, RotateCcw, Shuffle, Volume2, Star,
+  BookOpen, Zap, FileText, Gamepad2, TrendingUp, Search, Pencil,
+  MoreVertical, Trash2, Play, Pause, Folder, ChevronRight as CR,
+} from 'lucide-react';
 import { useStore } from '@/lib/store';
-import { getDueCards } from '@/lib/algorithms';
-import { ProgressBar } from '@/components/ProgressBar';
+import { shuffleArray } from '@/lib/shuffle';
+import type { Card } from '@/lib/types';
 
-export default function StudyHubPage() {
+// ── TTS Helper ───────────────────────────────────────────────────────
+function speak(text: string) {
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utt);
+  }
+}
+
+// ── Flashcard Preview ────────────────────────────────────────────────
+interface FlashcardPreviewProps {
+  card: Card;
+  index: number;
+  total: number;
+  onPrev: () => void;
+  onNext: () => void;
+  onShuffle: () => void;
+  shuffled: boolean;
+  starred: boolean;
+  onToggleStar: () => void;
+}
+
+function FlashcardPreview({ card, index, total, onPrev, onNext, onShuffle, shuffled, starred, onToggleStar }: FlashcardPreviewProps) {
+  const [flipped, setFlipped] = useState(false);
+  const [autoPlay, setAutoPlay] = useState(false);
+
+  useEffect(() => { setFlipped(false); }, [card.id]);
+
+  useEffect(() => {
+    if (!autoPlay) return;
+    const timer = setTimeout(() => {
+      if (flipped) onNext(); else setFlipped(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [autoPlay, flipped, onNext]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === ' ') { e.preventDefault(); setFlipped(f => !f); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); onPrev(); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); onNext(); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onPrev, onNext]);
+
+  const front = card.term;
+  const back = card.definition;
+  const pct = Math.round(((index + 1) / total) * 100);
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Progress */}
+      <div className="flex items-center gap-3">
+        <span className="text-sm font-semibold text-[var(--text)]">{index + 1}</span>
+        <div className="flex-1 progress-bar-track">
+          <div className="progress-bar-fill" style={{ width: `${pct}%` }} />
+        </div>
+        <span className="text-sm text-[var(--text-muted)]">{total}</span>
+      </div>
+
+      {/* 3D Card */}
+      <div
+        className="card-container w-full cursor-pointer select-none"
+        style={{ height: 'clamp(240px, 36vw, 340px)' }}
+        onClick={() => setFlipped(f => !f)}
+      >
+        <div className={`card-inner w-full h-full ${flipped ? 'flipped' : ''}`}>
+          {/* Front */}
+          <div className="card-face bg-[var(--card)] border border-[var(--border)] card-shadow flex-col gap-4 p-8 rounded-2xl">
+            <span className="absolute top-4 left-5 text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Từ vựng</span>
+            <button className="absolute top-3 right-12 text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors" onClick={e => { e.stopPropagation(); speak(front); }} aria-label="Phát âm">
+              <Volume2 size={18} />
+            </button>
+            <button
+              className="absolute top-3 right-4 transition-colors"
+              style={{ color: starred ? '#F59E0B' : 'var(--text-muted)' }}
+              onClick={e => { e.stopPropagation(); onToggleStar(); }}
+            >
+              <Star size={18} fill={starred ? '#F59E0B' : 'none'} />
+            </button>
+            <p className="text-center font-bold text-[var(--text)] leading-relaxed" dir="auto"
+              style={{ fontSize: front.length > 80 ? '1rem' : front.length > 40 ? '1.35rem' : '1.875rem' }}>
+              {front}
+            </p>
+            <span className="absolute bottom-4 text-xs text-[var(--text-muted)]/60">Nhấn để lật thẻ (Space)</span>
+          </div>
+          {/* Back */}
+          <div className="card-face card-back-face bg-gradient-to-br from-[#4255FF] to-[#6172E0] flex-col gap-4 p-8 rounded-2xl">
+            <span className="absolute top-4 left-5 text-xs font-semibold uppercase tracking-widest text-indigo-200">Định nghĩa</span>
+            <button className="absolute top-3 right-4 text-indigo-200 hover:text-white transition-colors" onClick={e => { e.stopPropagation(); speak(back); }}>
+              <Volume2 size={18} />
+            </button>
+            <p className="text-center font-bold text-white leading-relaxed" dir="auto"
+              style={{ fontSize: back.length > 80 ? '1rem' : back.length > 40 ? '1.35rem' : '1.875rem' }}>
+              {back}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="flex items-center justify-between gap-2">
+        <button onClick={onShuffle} className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${shuffled ? 'bg-[var(--primary)] text-white border-[var(--primary)]' : 'border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg)]'}`} title="Xáo trộn">
+          <Shuffle size={17} />
+        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={onPrev} disabled={index === 0} className="w-11 h-11 rounded-xl flex items-center justify-center border border-[var(--border)] hover:bg-[var(--bg)] disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+            <ChevronLeft size={20} />
+          </button>
+          <button onClick={() => setFlipped(false)} className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--bg)] transition-colors" title="Lật lại">
+            <RotateCcw size={16} />
+          </button>
+          <button onClick={onNext} disabled={index === total - 1} className="w-11 h-11 rounded-xl flex items-center justify-center border border-[var(--border)] hover:bg-[var(--bg)] disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+            <ChevronRight size={20} />
+          </button>
+        </div>
+        <button onClick={() => setAutoPlay(v => !v)} className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${autoPlay ? 'bg-emerald-500 text-white border-emerald-500' : 'border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg)]'}`} title={autoPlay ? 'Dừng' : 'Tự động phát'}>
+          {autoPlay ? <Pause size={17} /> : <Play size={17} />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Set Detail Page ─────────────────────────────────────────────
+export default function SetDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const deckId = params.deckId as string;
+  const { decks, cards, cardsByDeck, progress, folders, toggleStarCard, deleteDeck, resetDeckProgress } = useStore();
   const [mounted, setMounted] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [shuffled, setShuffled] = useState(false);
+  const [orderedIds, setOrderedIds] = useState<string[]>([]);
+  const [termSearch, setTermSearch] = useState('');
+  const [termFilter, setTermFilter] = useState<'all' | 'starred'>('all');
+  const [showMenu, setShowMenu] = useState(false);
 
-  const { decks, cards, cardsByDeck, progress } = useStore();
+  useEffect(() => { setMounted(true); }, []);
+
+  const rawIds = cardsByDeck[deckId] ?? [];
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setOrderedIds(rawIds);
+    setCurrentIndex(0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deckId]);
 
-  useEffect(() => {
-    if (mounted && !decks[deckId]) {
-      router.replace('/');
+  const handleShuffle = useCallback(() => {
+    if (shuffled) {
+      setOrderedIds(rawIds);
+    } else {
+      setOrderedIds(shuffleArray([...rawIds]));
     }
-  }, [mounted, deckId, decks, router]);
+    setShuffled(s => !s);
+    setCurrentIndex(0);
+  }, [shuffled, rawIds]);
 
   if (!mounted) return null;
 
   const deck = decks[deckId];
-  if (!deck) return null;
+  if (!deck) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <div className="text-5xl">🔍</div>
+        <h2 className="text-xl font-bold text-[var(--text)]">Không tìm thấy học phần</h2>
+        <Link href="/" className="btn-primary"><ChevronLeft size={16} /> Về trang chủ</Link>
+      </div>
+    );
+  }
 
-  const cardIds = cardsByDeck[deckId] ?? [];
-  const deckCards = cardIds.map((id) => cards[id]).filter((c): c is NonNullable<typeof c> => !!c);
-  const masteredCount = cardIds.filter(
-    (id) => progress[id]?.learnStage === 'mastered'
-  ).length;
-  const dueCards = getDueCards(deckCards, progress);
+  const currentCard = cards[orderedIds[currentIndex]];
+  const folder = deck.folderId ? folders[deck.folderId] : null;
+  const mastered = orderedIds.filter(id => progress[id]?.learnStage === 'mastered').length;
+  const pct = deck.cardCount > 0 ? Math.round((mastered / deck.cardCount) * 100) : 0;
+  const starredCount = orderedIds.filter(id => cards[id]?.starred).length;
 
-  const modes = [
-    {
-      id: 'flashcard',
-      icon: '📚',
-      title: 'Flashcard',
-      description: 'Lật thẻ, tự đánh giá bản thân',
-      href: `/study/${deckId}/flashcard`,
-      gradient: 'from-blue-500 to-indigo-600',
-      disabled: false,
-    },
-    {
-      id: 'learn',
-      icon: '🧠',
-      title: 'Learn',
-      description: 'Trắc nghiệm + gõ tay · thuật toán SM-2',
-      href: `/study/${deckId}/learn`,
-      gradient: 'from-violet-500 to-purple-700',
-      disabled: false,
-    },
-    {
-      id: 'quick-review',
-      icon: '⚡',
-      title: 'Ôn tập nhanh',
-      description: 'Trắc nghiệm & Nối từ ngẫu nhiên',
-      href: `/study/${deckId}/quick-review`,
-      gradient: 'from-amber-400 to-orange-500',
-      disabled: false,
-    },
-    {
-      id: 'match',
-      icon: '🎮',
-      title: 'Match',
-      description: 'Nối từ với nghĩa theo thời gian',
-      href: `/study/${deckId}/games/match`,
-      gradient: 'from-emerald-500 to-teal-600',
-      disabled: deck.cardCount < 3,
-      disabledMsg: 'Cần ít nhất 3 thẻ',
-    },
-    {
-      id: 'gravity',
-      icon: '☄️',
-      title: 'Gravity',
-      description: 'Từ rơi xuống, gõ nhanh trước khi chạm đất',
-      href: `/study/${deckId}/games/gravity`,
-      gradient: 'from-orange-500 to-red-600',
-      disabled: deck.cardCount < 2,
-      disabledMsg: 'Cần ít nhất 2 thẻ',
-    },
+  const termCardList = orderedIds
+    .map(id => cards[id]).filter(Boolean)
+    .filter(c => {
+      if (termFilter === 'starred' && !c.starred) return false;
+      if (termSearch && !c.term.toLowerCase().includes(termSearch.toLowerCase()) && !c.definition.toLowerCase().includes(termSearch.toLowerCase())) return false;
+      return true;
+    });
+
+  const studyModes = [
+    { icon: '🎴', label: 'Thẻ ghi nhớ', href: `/learn/${deckId}?mode=flashcard` },
+    { icon: '🧠', label: 'Học', href: `/learn/${deckId}?mode=learn` },
+    { icon: '📝', label: 'Kiểm tra', href: `/learn/${deckId}?mode=test` },
+    { icon: '🧩', label: 'Ghép thẻ', href: `/learn/${deckId}?mode=match` },
+    { icon: '☄️', label: 'Gravity', href: `/learn/${deckId}?mode=gravity` },
   ];
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-[var(--card)]/80 backdrop-blur-lg border-b border-[var(--border)]">
-        <div className="max-w-2xl mx-auto px-4 h-16 flex items-center gap-3">
-          <Link
-            href="/"
-            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[var(--bg)] text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
-          >
-            <ArrowLeft size={20} />
-          </Link>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-[var(--text)] truncate">{deck.name}</h1>
-            <p className="text-xs text-[var(--text-muted)]">{deck.cardCount} thẻ</p>
-          </div>
-        </div>
-      </header>
+    <div className="flex flex-col gap-8 animate-fade-in">
+      {/* ── Breadcrumb ─────────────────────────────────────── */}
+      <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] flex-wrap">
+        <Link href="/" className="hover:text-[var(--primary)] transition-colors">Trang chủ</Link>
+        <CR size={14} />
+        {folder ? (
+          <>
+            <Link href={`/folder/${folder.id}`} className="hover:text-[var(--primary)] transition-colors flex items-center gap-1">
+              <Folder size={13} /> {folder.name}
+            </Link>
+            <CR size={14} />
+          </>
+        ) : (
+          <>
+            <Link href="/library" className="hover:text-[var(--primary)] transition-colors">Thư viện</Link>
+            <CR size={14} />
+          </>
+        )}
+        <span className="text-[var(--text)] font-medium truncate">{deck.name}</span>
+      </div>
 
-      <main className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
-        {/* Progress overview */}
-        <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 card-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-[var(--text)]">Tiến độ tổng thể</h2>
-            <span className="text-sm font-bold" style={{ color: deck.color }}>
-              {masteredCount}/{deck.cardCount} đã thuộc
-            </span>
-          </div>
-          <ProgressBar
-            current={masteredCount}
-            total={deck.cardCount}
-            color={deck.color}
-            showLabel={false}
-          />
-        </div>
-
-        {/* Mode cards */}
-        <div>
-          <h2 className="font-semibold text-[var(--text)] mb-3 flex items-center gap-2">
-            <Gamepad2 size={16} />
-            Chọn chế độ học
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {modes.map((mode) => (
-              <div key={mode.id} className="relative">
-                {mode.disabled ? (
-                  <div className="relative bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 opacity-50 cursor-not-allowed">
-                    <div className="text-3xl mb-3">{mode.icon}</div>
-                    <h3 className="font-bold text-[var(--text)] text-lg">{mode.title}</h3>
-                    <p className="text-sm text-[var(--text-muted)] mt-1">{mode.description}</p>
-                    <div className="mt-3 flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
-                      <AlertCircle size={12} />
-                      {mode.disabledMsg}
-                    </div>
-                  </div>
-                ) : (
-                  <Link
-                    href={mode.href}
-                    className="block bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group card-shadow"
-                  >
-                    <div
-                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${mode.gradient} flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-transform duration-200`}
-                    >
-                      {mode.icon}
-                    </div>
-                    <h3 className="font-bold text-[var(--text)] text-lg">{mode.title}</h3>
-                    <p className="text-sm text-[var(--text-muted)] mt-1 leading-snug">
-                      {mode.description}
-                    </p>
-                  </Link>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Spaced repetition review */}
-        <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden card-shadow">
-          <div className="p-5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center">
-                <Calendar size={20} className="text-amber-600 dark:text-amber-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-[var(--text)]">Ôn tập theo lịch</h3>
-                <p className="text-sm text-[var(--text-muted)]">
-                  {dueCards.length > 0
-                    ? `${dueCards.length} thẻ cần ôn hôm nay`
-                    : masteredCount === 0
-                    ? 'Chưa có thẻ đã thuộc'
-                    : 'Không có thẻ cần ôn hôm nay 🎉'}
-                </p>
-              </div>
-            </div>
-            {dueCards.length > 0 ? (
-              <Link
-                href={`/review/${deckId}`}
-                className="px-4 py-2 rounded-xl gradient-primary text-white text-sm font-semibold hover:opacity-90 transition-all shadow-md shadow-indigo-500/25"
-              >
-                Ôn ngay
+      {/* ── Header ─────────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl font-bold text-[var(--text)] truncate">{deck.name}</h1>
+          {deck.description && <p className="text-[var(--text-muted)] text-sm mt-1">{deck.description}</p>}
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            <span className="badge badge-blue flex items-center gap-1"><BookOpen size={12} /> {deck.cardCount} thẻ</span>
+            {folder && (
+              <Link href={`/folder/${folder.id}`} className="badge badge-yellow flex items-center gap-1">
+                <Folder size={12} /> {folder.name}
               </Link>
-            ) : (
-              <span className="px-3 py-1.5 rounded-xl bg-[var(--bg)] text-[var(--text-muted)] text-xs font-medium">
-                {masteredCount === 0 ? 'Chưa sẵn sàng' : 'Hoàn thành ✓'}
-              </span>
             )}
+            <span className="text-xs text-[var(--text-muted)]">Đã thuộc: {mastered}/{deck.cardCount} ({pct}%)</span>
           </div>
-          {masteredCount > 0 && (
-            <div className="px-5 pb-4 text-xs text-[var(--text-muted)]">
-              <Zap size={12} className="inline mr-1 text-amber-500" />
-              Ôn đúng lịch giúp nhớ lâu hơn 5x theo nghiên cứu về spaced repetition
-            </div>
+        </div>
+        <div className="relative flex-shrink-0">
+          <button onClick={() => setShowMenu(v => !v)} className="w-9 h-9 flex items-center justify-center rounded-xl border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg)] transition-colors">
+            <MoreVertical size={18} />
+          </button>
+          {showMenu && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+              <div className="absolute right-0 top-10 z-20 w-52 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-xl animate-scale-in overflow-hidden">
+                <Link href={`/create-set?edit=${deckId}`} className="flex items-center gap-2.5 px-4 py-3 text-sm hover:bg-[var(--bg)] transition-colors" onClick={() => setShowMenu(false)}>
+                  <Pencil size={14} /> Chỉnh sửa học phần
+                </Link>
+                <button onClick={() => { setShowMenu(false); if (confirm('Đặt lại tiến độ?')) resetDeckProgress(deckId); }} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm hover:bg-[var(--bg)] transition-colors text-left">
+                  <RotateCcw size={14} /> Đặt lại tiến độ
+                </button>
+                <button onClick={() => { setShowMenu(false); if (confirm(`Xóa học phần "${deck.name}"?`)) { deleteDeck(deckId); window.location.href = '/'; } }} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors text-left">
+                  <Trash2 size={14} /> Xóa học phần
+                </button>
+              </div>
+            </>
           )}
         </div>
+      </div>
 
-        {/* Card list preview */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-[var(--text)] flex items-center gap-2">
-              <BookOpen size={16} />
-              Danh sách thẻ
-            </h2>
-            <span className="text-xs text-[var(--text-muted)]">{deckCards.length} thẻ</span>
-          </div>
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden">
-            {deckCards.slice(0, 10).map((card, i) => {
-              const p = progress[card.id];
-              const stage = p?.learnStage ?? 'unseen';
-              return (
-                <div
-                  key={card.id}
-                  className="grid grid-cols-2 border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--bg)]/50 transition-colors"
-                >
-                  <div className="px-4 py-3 text-sm font-medium truncate">{card.term}</div>
-                  <div className="px-4 py-3 text-sm text-[var(--text-muted)] border-l border-[var(--border)] flex items-center justify-between gap-2">
-                    <span className="truncate">{card.definition}</span>
-                    {stage === 'mastered' && (
-                      <span className="flex-shrink-0 text-xs px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-medium">
-                        ✓
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-            {deckCards.length > 10 && (
-              <div className="px-4 py-3 text-xs text-[var(--text-muted)] text-center bg-[var(--bg)]/30">
-                ... và {deckCards.length - 10} thẻ nữa
-              </div>
-            )}
+      {/* ── Flashcard Preview ───────────────────────────────── */}
+      {currentCard && (
+        <section className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+          <FlashcardPreview
+            card={currentCard}
+            index={currentIndex}
+            total={orderedIds.length}
+            onPrev={() => setCurrentIndex(i => Math.max(0, i - 1))}
+            onNext={() => setCurrentIndex(i => Math.min(orderedIds.length - 1, i + 1))}
+            onShuffle={handleShuffle}
+            shuffled={shuffled}
+            starred={!!currentCard.starred}
+            onToggleStar={() => toggleStarCard(currentCard.id)}
+          />
+        </section>
+      )}
+
+      {/* ── Study Modes ─────────────────────────────────────── */}
+      <section>
+        <h2 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
+          <Zap size={18} className="text-[var(--primary)]" /> Chế độ học
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          {studyModes.map(m => (
+            <Link key={m.label} href={m.href} className="study-mode-btn">
+              <span className="mode-icon">{m.icon}</span>
+              <span className="mode-label">{m.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Term List ───────────────────────────────────────── */}
+      <section>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h2 className="text-lg font-bold text-[var(--text)]">Thuật ngữ ({deck.cardCount})</h2>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setTermFilter('all')} className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${termFilter === 'all' ? 'bg-[var(--primary)] text-white border-[var(--primary)]' : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--primary)]'}`}>
+              Tất cả ({deck.cardCount})
+            </button>
+            <button onClick={() => setTermFilter('starred')} className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all flex items-center gap-1 ${termFilter === 'starred' ? 'bg-amber-500 text-white border-amber-500' : 'border-[var(--border)] text-[var(--text-muted)] hover:border-amber-500'}`}>
+              <Star size={11} fill={termFilter === 'starred' ? 'white' : 'none'} /> Đã gắn sao ({starredCount})
+            </button>
           </div>
         </div>
-      </main>
+        <div className="relative mb-4">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+          <input type="text" value={termSearch} onChange={e => setTermSearch(e.target.value)} placeholder="Tìm kiếm từ vựng..." className="q-input pl-9" />
+        </div>
+        <div className="flex flex-col gap-2">
+          {termCardList.length === 0 ? (
+            <div className="text-center py-8 text-[var(--text-muted)]"><p className="text-sm">Không tìm thấy từ vựng phù hợp</p></div>
+          ) : termCardList.map((card, idx) => (
+            <div key={card.id} className="term-row group">
+              <span className="text-xs font-bold text-[var(--text-muted)] w-6 flex-shrink-0">{idx + 1}</span>
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+                <div className="sm:border-r border-[var(--border)] sm:pr-3">
+                  <p className="font-semibold text-[var(--text)] text-sm leading-relaxed">{card.term}</p>
+                </div>
+                <div><p className="text-[var(--text-muted)] text-sm leading-relaxed">{card.definition}</p></div>
+              </div>
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                <button onClick={() => speak(card.term)} className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--primary)] hover:bg-[var(--primary-light)] transition-colors" title="Phát âm">
+                  <Volume2 size={14} />
+                </button>
+                <button onClick={() => toggleStarCard(card.id)} className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors" style={{ color: card.starred ? '#F59E0B' : 'var(--text-muted)' }} title={card.starred ? 'Bỏ gắn sao' : 'Gắn sao'}>
+                  <Star size={14} fill={card.starred ? '#F59E0B' : 'none'} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

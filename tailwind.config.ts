@@ -11,12 +11,13 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#4F46E5',
-          light: '#EEF2FF',
-          dark: '#3730A3',
+          DEFAULT: '#4255FF',
+          light: '#EEF0FF',
+          dark: '#2E3856',
         },
-        success: '#10B981',
-        danger: '#EF4444',
+        'quizlet-blue': '#4255FF',
+        success: '#23B26D',
+        danger: '#FF6B6B',
         warning: '#F59E0B',
       },
       fontFamily: {

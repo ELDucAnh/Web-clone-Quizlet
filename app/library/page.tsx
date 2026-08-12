@@ -1,0 +1,301 @@
+'use client';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { BookOpen, Folder, Star, Plus, Search, SortAsc, MoreVertical, Trash2, RotateCcw, ChevronRight } from 'lucide-react';
+import { useStore } from '@/lib/store';
+import type { Deck } from '@/lib/types';
+
+type Tab = 'sets' | 'folders' | 'starred';
+type SortBy = 'recent' | 'alpha' | 'studied';
+
+function DeckMenu({ deck, onDelete, onReset }: { deck: Deck; onDelete: () => void; onReset: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen((v) => !v); }}
+        className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--text)] transition-colors"
+      >
+        <MoreVertical size={15} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-8 z-20 w-44 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-xl animate-scale-in overflow-hidden">
+            <button onClick={() => { setOpen(false); onReset(); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm hover:bg-[var(--bg)] transition-colors text-left">
+              <RotateCcw size={14} /> Đặt lại tiến độ
+            </button>
+            <button onClick={() => { setOpen(false); onDelete(); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors text-left">
+              <Trash2 size={14} /> Xóa học phần
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function LibraryPage() {
+  const [mounted, setMounted] = useState(false);
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as Tab | null;
+
+  const [activeTab, setActiveTab] = useState<Tab>(tabParam || 'sets');
+  const [sortBy, setSortBy] = useState<SortBy>('recent');
+  const [search, setSearch] = useState('');
+
+  const { decks, folders, cards, cardsByDeck, progress, deleteDeck, resetDeckProgress, deleteFolder } = useStore();
+
+  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { if (tabParam) setActiveTab(tabParam); }, [tabParam]);
+
+  const deckList = Object.values(decks)
+    .filter((d) => !search || d.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      if (sortBy === 'alpha') return a.name.localeCompare(b.name);
+      if (sortBy === 'studied') return (b.lastStudied || 0) - (a.lastStudied || 0);
+      return b.createdAt - a.createdAt;
+    });
+
+  const folderList = Object.values(folders)
+    .filter((f) => !search || f.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => b.updatedAt - a.updatedAt);
+
+  // Starred terms: collect all starred cards
+  const starredCards = Object.values(cards).filter((c) => c.starred);
+
+  const handleDeleteDeck = (id: string, name: string) => {
+    if (confirm(`Xóa học phần "${name}"? Thao tác này không thể hoàn tác.`)) {
+      deleteDeck(id);
+    }
+  };
+
+  const handleResetDeck = (id: string) => {
+    if (confirm('Đặt lại toàn bộ tiến độ của học phần này?')) {
+      resetDeckProgress(id);
+    }
+  };
+
+  const handleDeleteFolder = (id: string, name: string) => {
+    if (confirm(`Xóa thư mục "${name}"? Các học phần bên trong sẽ không bị xóa.`)) {
+      deleteFolder(id);
+    }
+  };
+
+  if (!mounted) return null;
+
+  return (
+    <div className="flex flex-col gap-6 animate-fade-in">
+      {/* ── Header ─────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--text)]">Thư viện của bạn</h1>
+          <p className="text-[var(--text-muted)] text-sm mt-0.5">
+            {Object.keys(decks).length} học phần · {Object.keys(folders).length} thư mục
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Link href="/create-set" className="btn-primary text-sm">
+            <Plus size={16} /> Tạo học phần
+          </Link>
+        </div>
+      </div>
+
+      {/* ── Search & Filter ─────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm kiếm trong thư viện..."
+            className="q-input pl-9"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <SortAsc size={15} className="text-[var(--text-muted)]" />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortBy)}
+            className="q-input w-auto pr-8 cursor-pointer"
+          >
+            <option value="recent">Mới nhất</option>
+            <option value="studied">Đã học gần đây</option>
+            <option value="alpha">A-Z</option>
+          </select>
+        </div>
+      </div>
+
+      {/* ── Tabs ─────────────────────────────────────────── */}
+      <div className="tab-pills">
+        <button className={`tab-pill ${activeTab === 'sets' ? 'active' : ''}`} onClick={() => setActiveTab('sets')}>
+          <span className="flex items-center gap-1.5"><BookOpen size={14} /> Học phần ({Object.keys(decks).length})</span>
+        </button>
+        <button className={`tab-pill ${activeTab === 'folders' ? 'active' : ''}`} onClick={() => setActiveTab('folders')}>
+          <span className="flex items-center gap-1.5"><Folder size={14} /> Thư mục ({Object.keys(folders).length})</span>
+        </button>
+        <button className={`tab-pill ${activeTab === 'starred' ? 'active' : ''}`} onClick={() => setActiveTab('starred')}>
+          <span className="flex items-center gap-1.5"><Star size={14} /> Đã gắn sao ({starredCards.length})</span>
+        </button>
+      </div>
+
+      {/* ── Tab Content ──────────────────────────────────── */}
+      {activeTab === 'sets' && (
+        <div className="animate-fade-in">
+          {deckList.length === 0 ? (
+            <div className="empty-state">
+              <div className="text-5xl">📚</div>
+              <div>
+                <h3 className="font-bold text-[var(--text)] text-lg">Chưa có học phần nào</h3>
+                <p className="text-[var(--text-muted)] text-sm mt-1">
+                  {search ? 'Không tìm thấy kết quả phù hợp' : 'Tạo học phần đầu tiên để bắt đầu học'}
+                </p>
+              </div>
+              {!search && (
+                <Link href="/create-set" className="btn-primary">
+                  <Plus size={16} /> Tạo học phần
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {deckList.map((deck) => {
+                const cardIds = cardsByDeck[deck.id] ?? [];
+                const mastered = cardIds.filter((id) => progress[id]?.learnStage === 'mastered').length;
+                const pct = deck.cardCount > 0 ? Math.round((mastered / deck.cardCount) * 100) : 0;
+                return (
+                  <div key={deck.id} className="quizlet-card overflow-hidden" style={{ borderTop: `3px solid ${deck.color}` }}>
+                    <div className="p-5 flex flex-col gap-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <Link href={`/study/${deck.id}`} className="flex-1 min-w-0 group">
+                          <h3 className="font-bold text-[var(--text)] truncate group-hover:text-[var(--primary)] transition-colors">
+                            {deck.name}
+                          </h3>
+                          {deck.description && (
+                            <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">{deck.description}</p>
+                          )}
+                          <p className="text-sm text-[var(--text-muted)] mt-1">{deck.cardCount} thẻ</p>
+                        </Link>
+                        <DeckMenu
+                          deck={deck}
+                          onDelete={() => handleDeleteDeck(deck.id, deck.name)}
+                          onReset={() => handleResetDeck(deck.id)}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex justify-between text-xs text-[var(--text-muted)]">
+                          <span>Tiến độ</span>
+                          <span className="font-semibold" style={{ color: deck.color }}>{mastered}/{deck.cardCount}</span>
+                        </div>
+                        <div className="progress-bar-track">
+                          <div className="progress-bar-fill" style={{ width: `${pct}%`, background: deck.color }} />
+                        </div>
+                      </div>
+                      <Link
+                        href={`/study/${deck.id}`}
+                        className="block text-center py-2 rounded-lg text-white text-sm font-bold transition-opacity hover:opacity-90"
+                        style={{ background: deck.color }}
+                      >
+                        {deck.lastStudied ? 'Tiếp tục học' : 'Bắt đầu học'}
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'folders' && (
+        <div className="animate-fade-in">
+          {folderList.length === 0 ? (
+            <div className="empty-state">
+              <div className="text-5xl">📁</div>
+              <div>
+                <h3 className="font-bold text-[var(--text)] text-lg">Chưa có thư mục nào</h3>
+                <p className="text-[var(--text-muted)] text-sm mt-1">
+                  {search ? 'Không tìm thấy thư mục phù hợp' : 'Tạo thư mục để nhóm các học phần lại'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {folderList.map((folder) => (
+                <div key={folder.id} className="folder-card group">
+                  <Link href={`/folder/${folder.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+                      <Folder size={22} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-[var(--text)] truncate">{folder.name}</p>
+                      {folder.description && (
+                        <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">{folder.description}</p>
+                      )}
+                      <p className="text-xs text-[var(--text-muted)] mt-0.5">{folder.deckIds.length} học phần</p>
+                    </div>
+                    <ChevronRight size={16} className="text-[var(--text-muted)] flex-shrink-0" />
+                  </Link>
+                  <button
+                    onClick={() => handleDeleteFolder(folder.id, folder.name)}
+                    className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all flex-shrink-0"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'starred' && (
+        <div className="animate-fade-in">
+          {starredCards.length === 0 ? (
+            <div className="empty-state">
+              <div className="text-5xl">⭐</div>
+              <div>
+                <h3 className="font-bold text-[var(--text)] text-lg">Chưa có từ gắn sao</h3>
+                <p className="text-[var(--text-muted)] text-sm mt-1">
+                  Gắn sao các từ quan trọng khi học để ôn tập ở đây
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {starredCards
+                .filter((c) => !search || c.term.toLowerCase().includes(search.toLowerCase()) || c.definition.toLowerCase().includes(search.toLowerCase()))
+                .map((card) => {
+                  const deck = decks[card.deckId];
+                  return (
+                    <div key={card.id} className="term-row">
+                      <div className="flex-1 grid grid-cols-2 gap-4 min-w-0">
+                        <div>
+                          <p className="text-xs font-semibold text-[var(--text-muted)] mb-0.5">Từ vựng</p>
+                          <p className="text-[var(--text)] font-medium text-sm">{card.term}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-[var(--text-muted)] mb-0.5">Định nghĩa</p>
+                          <p className="text-[var(--text-muted)] text-sm">{card.definition}</p>
+                        </div>
+                      </div>
+                      {deck && (
+                        <Link
+                          href={`/study/${deck.id}`}
+                          className="badge badge-blue flex-shrink-0 text-xs"
+                        >
+                          {deck.name.slice(0, 12)}{deck.name.length > 12 ? '…' : ''}
+                        </Link>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

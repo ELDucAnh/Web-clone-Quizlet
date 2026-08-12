@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import type { AppState, Actions, Deck, Card, CardProgress, StudySession } from './types';
+import type { AppState, Actions, Deck, Card, CardProgress, StudySession, Folder } from './types';
 
 // CRITICAL: Wrap localStorage access để tránh SSR crash (Next.js)
 const safeStorage = {
@@ -11,7 +11,7 @@ const safeStorage = {
     try {
       return localStorage.getItem(name);
     } catch {
-      return null; // Safari private mode, quota exceeded, etc.
+      return null;
     }
   },
   setItem: (name: string, value: string) => {
@@ -31,10 +31,10 @@ const safeStorage = {
 };
 
 const DECK_COLORS = [
-  '#4F46E5', // Indigo
+  '#4255FF', // Quizlet Blue
   '#7C3AED', // Violet
-  '#DB2777', // Pink
   '#059669', // Emerald
+  '#DB2777', // Pink
   '#D97706', // Amber
   '#DC2626', // Red
   '#0891B2', // Cyan
@@ -59,21 +59,30 @@ function getDefaultProgress(cardId: string, deckId: string): CardProgress {
 export const useStore = create<AppState & Actions>()(
   persist(
     (set, get) => ({
+      folders: {},
       decks: {},
       cards: {},
       cardsByDeck: {},
       progress: {},
       sessions: [],
+      searchQuery: '',
+      sidebarCollapsed: false,
       settings: {
         answerLanguage: 'definition',
         shuffleCards: true,
         showTimer: true,
         dailyGoal: 20,
+        audioAutoPlay: false,
       },
 
-      // --- ACTIONS ---
+      // ─── Deck Actions ─────────────────────────────────────────────────
 
-      importDeck: (name: string, rawCards: Array<{ term: string; definition: string }>) => {
+      importDeck: (
+        name: string,
+        rawCards: Array<{ term: string; definition: string }>,
+        description?: string,
+        folderId?: string
+      ) => {
         const deckId = uuidv4();
         const color = DECK_COLORS[Math.floor(Math.random() * DECK_COLORS.length)];
 
@@ -82,6 +91,7 @@ export const useStore = create<AppState & Actions>()(
           term: rc.term,
           definition: rc.definition,
           deckId,
+          starred: false,
           createdAt: Date.now(),
         }));
 
@@ -104,9 +114,11 @@ export const useStore = create<AppState & Actions>()(
         const deck: Deck = {
           id: deckId,
           name: deckName,
+          description: description || '',
           cardCount: newCards.length,
           createdAt: Date.now(),
           color,
+          folderId: folderId,
         };
 
         set((state) => ({
@@ -115,7 +127,43 @@ export const useStore = create<AppState & Actions>()(
           cardsByDeck: { ...state.cardsByDeck, [deckId]: cardIds },
         }));
 
+        // If folderId specified, add deck to folder
+        if (folderId && get().folders[folderId]) {
+          set((state) => ({
+            folders: {
+              ...state.folders,
+              [folderId]: {
+                ...state.folders[folderId],
+                deckIds: [...(state.folders[folderId].deckIds || []), deckId],
+                updatedAt: Date.now(),
+              },
+            },
+          }));
+        }
+
         return deckId;
+      },
+
+      createDeck: (
+        name: string,
+        description: string,
+        cards: Array<{ term: string; definition: string }>,
+        folderId?: string
+      ) => {
+        return get().importDeck(name, cards, description, folderId);
+      },
+
+      updateDeck: (deckId: string, name: string, description?: string) => {
+        set((state) => ({
+          decks: {
+            ...state.decks,
+            [deckId]: {
+              ...state.decks[deckId],
+              name,
+              description: description ?? state.decks[deckId]?.description,
+            },
+          },
+        }));
       },
 
       updateProgress: (cardId: string, update: Partial<CardProgress>) => {
@@ -138,7 +186,6 @@ export const useStore = create<AppState & Actions>()(
           cardIds.forEach((id) => {
             delete newProgress[id];
           });
-          // Also reset lastStudied
           const newDecks = { ...state.decks };
           if (newDecks[deckId]) {
             newDecks[deckId] = { ...newDecks[deckId], lastStudied: undefined };
@@ -149,11 +196,14 @@ export const useStore = create<AppState & Actions>()(
 
       deleteDeck: (deckId: string) => {
         const cardIds = get().cardsByDeck[deckId] ?? [];
+        const deck = get().decks[deckId];
+
         set((state) => {
           const newCards = { ...state.cards };
           const newProgress = { ...state.progress };
           const newDecks = { ...state.decks };
           const newByDeck = { ...state.cardsByDeck };
+          const newFolders = { ...state.folders };
 
           cardIds.forEach((id) => {
             delete newCards[id];
@@ -162,13 +212,151 @@ export const useStore = create<AppState & Actions>()(
           delete newDecks[deckId];
           delete newByDeck[deckId];
 
+          // Remove from folder if applicable
+          if (deck?.folderId && newFolders[deck.folderId]) {
+            newFolders[deck.folderId] = {
+              ...newFolders[deck.folderId],
+              deckIds: newFolders[deck.folderId].deckIds.filter((id) => id !== deckId),
+              updatedAt: Date.now(),
+            };
+          }
+
           return {
             decks: newDecks,
             cards: newCards,
             progress: newProgress,
             cardsByDeck: newByDeck,
+            folders: newFolders,
           };
         });
+      },
+
+      // ─── Folder Actions ───────────────────────────────────────────────
+
+      createFolder: (name: string, description?: string) => {
+        const folderId = uuidv4();
+        const folder: Folder = {
+          id: folderId,
+          name: name.trim() || 'Thư mục không tên',
+          description: description || '',
+          deckIds: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        set((state) => ({
+          folders: { ...state.folders, [folderId]: folder },
+        }));
+        return folderId;
+      },
+
+      updateFolder: (folderId: string, name: string, description?: string) => {
+        set((state) => ({
+          folders: {
+            ...state.folders,
+            [folderId]: {
+              ...state.folders[folderId],
+              name: name.trim() || state.folders[folderId]?.name,
+              description: description ?? state.folders[folderId]?.description,
+              updatedAt: Date.now(),
+            },
+          },
+        }));
+      },
+
+      deleteFolder: (folderId: string) => {
+        set((state) => {
+          const newFolders = { ...state.folders };
+          const newDecks = { ...state.decks };
+          // Unlink decks from folder (don't delete them)
+          const folder = newFolders[folderId];
+          if (folder) {
+            folder.deckIds.forEach((deckId) => {
+              if (newDecks[deckId]) {
+                newDecks[deckId] = { ...newDecks[deckId], folderId: undefined };
+              }
+            });
+          }
+          delete newFolders[folderId];
+          return { folders: newFolders, decks: newDecks };
+        });
+      },
+
+      addDeckToFolder: (folderId: string, deckId: string) => {
+        set((state) => {
+          const folder = state.folders[folderId];
+          if (!folder) return {};
+          if (folder.deckIds.includes(deckId)) return {};
+
+          const deck = state.decks[deckId];
+          // Remove from old folder
+          const newFolders = { ...state.folders };
+          if (deck?.folderId && newFolders[deck.folderId]) {
+            newFolders[deck.folderId] = {
+              ...newFolders[deck.folderId],
+              deckIds: newFolders[deck.folderId].deckIds.filter((id) => id !== deckId),
+              updatedAt: Date.now(),
+            };
+          }
+          newFolders[folderId] = {
+            ...folder,
+            deckIds: [...folder.deckIds, deckId],
+            updatedAt: Date.now(),
+          };
+
+          return {
+            folders: newFolders,
+            decks: {
+              ...state.decks,
+              [deckId]: { ...state.decks[deckId], folderId },
+            },
+          };
+        });
+      },
+
+      removeDeckFromFolder: (folderId: string, deckId: string) => {
+        set((state) => {
+          const folder = state.folders[folderId];
+          if (!folder) return {};
+          return {
+            folders: {
+              ...state.folders,
+              [folderId]: {
+                ...folder,
+                deckIds: folder.deckIds.filter((id) => id !== deckId),
+                updatedAt: Date.now(),
+              },
+            },
+            decks: {
+              ...state.decks,
+              [deckId]: { ...state.decks[deckId], folderId: undefined },
+            },
+          };
+        });
+      },
+
+      // ─── Card Actions ─────────────────────────────────────────────────
+
+      toggleStarCard: (cardId: string) => {
+        set((state) => {
+          const card = state.cards[cardId];
+          if (!card) return {};
+          return {
+            cards: {
+              ...state.cards,
+              [cardId]: { ...card, starred: !card.starred },
+            },
+          };
+        });
+      },
+
+      // ─── Layout Actions ───────────────────────────────────────────────
+
+      setSearchQuery: (query: string) => {
+        set({ searchQuery: query });
+      },
+
+      toggleSidebar: () => {
+        set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed }));
       },
 
       updateSettings: (settings: Partial<AppState['settings']>) => {
@@ -177,7 +365,6 @@ export const useStore = create<AppState & Actions>()(
 
       addSession: (session: StudySession) => {
         set((state) => {
-          // Update lastStudied
           const newDecks = { ...state.decks };
           if (newDecks[session.deckId]) {
             newDecks[session.deckId] = {
@@ -193,15 +380,17 @@ export const useStore = create<AppState & Actions>()(
       },
     }),
     {
-      name: 'vocab-master-store',
+      name: 'vocab-master-v2',
       storage: createJSONStorage(() => safeStorage),
       partialize: (state) => ({
+        folders: state.folders,
         decks: state.decks,
         cards: state.cards,
         cardsByDeck: state.cardsByDeck,
         progress: state.progress,
         settings: state.settings,
         sessions: state.sessions,
+        sidebarCollapsed: state.sidebarCollapsed,
       }),
     }
   )
