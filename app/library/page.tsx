@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { BookOpen, Folder, Star, Plus, Search, SortAsc, MoreVertical, Trash2, RotateCcw, ChevronRight } from 'lucide-react';
@@ -36,7 +36,7 @@ function DeckMenu({ deck, onDelete, onReset }: { deck: Deck; onDelete: () => voi
   );
 }
 
-export default function LibraryPage() {
+function LibraryContent() {
   const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab') as Tab | null;
@@ -297,5 +297,13 @@ export default function LibraryPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function LibraryPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-20 text-[var(--text-muted)]">Đang tải...</div>}>
+      <LibraryContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Timer as TimerIcon } from 'lucide-react';
@@ -19,7 +19,7 @@ type StudyMode = 'flashcard' | 'learn' | 'match' | 'gravity' | 'test';
 type LearnStage = 'mcq1' | 'type1' | 'mcq2' | 'type2';
 const LEARN_STAGES: LearnStage[] = ['mcq1', 'type1', 'mcq2', 'type2'];
 
-export default function LearnPage() {
+function LearnContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const deckId = params.deckId as string;
@@ -268,5 +268,13 @@ export default function LearnPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function LearnPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-20 text-[var(--text-muted)]">Đang tải...</div>}>
+      <LearnContent />
+    </Suspense>
   );
 }
