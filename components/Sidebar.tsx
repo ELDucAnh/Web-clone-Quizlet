@@ -67,7 +67,7 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             </div>
             {!collapsed && (
               <span className="font-bold text-[15px] text-[var(--text)] tracking-tight truncate">
-                VocabMaster
+                Quizlu
               </span>
             )}
           </Link>
@@ -173,11 +173,10 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
                       key={folder.id}
                       href={`/folder/${folder.id}`}
                       onClick={onMobileClose}
-                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[13px] truncate transition-colors ${
-                        pathname === `/folder/${folder.id}`
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[13px] truncate transition-colors ${pathname === `/folder/${folder.id}`
                           ? 'bg-[var(--primary-light)] text-[var(--primary)] font-medium'
                           : 'text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--text)]'
-                      }`}
+                        }`}
                     >
                       <Folder size={14} className="flex-shrink-0" />
                       <span className="truncate">{folder.name}</span>
