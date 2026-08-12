@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Timer as TimerIcon } from 'lucide-react';
@@ -29,7 +29,12 @@ function LearnContent() {
 
   const deck = decks[deckId];
   const rawIds = cardsByDeck[deckId] ?? [];
-  const allCards: Card[] = rawIds.map(id => cards[id]).filter(Boolean);
+  // Memoize để tránh tạo array mới mỗi render → khiến MultipleChoice xáo trộn lại đáp án
+  const allCards: Card[] = useMemo(
+    () => rawIds.map(id => cards[id]).filter(Boolean) as Card[],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [deckId, rawIds.join(',')]
+  );
 
   const [studyCards, setStudyCards] = useState<Card[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -164,7 +169,7 @@ function LearnContent() {
           <h1 className="font-bold text-[var(--text)] truncate">{modeLabels[modeParam]}</h1>
           <p className="text-xs text-[var(--text-muted)] truncate">{deck.name}</p>
         </div>
-        {settings.showTimer && (
+        {settings.showTimer && !['flashcard', 'learn'].includes(modeParam) && (
           <div className="flex items-center gap-1.5 text-sm font-mono font-semibold text-[var(--text-muted)] flex-shrink-0">
             <TimerIcon size={14} /> {elapsedSecs}s
           </div>
