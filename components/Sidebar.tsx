@@ -1,11 +1,12 @@
 'use client';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useStore } from '@/lib/store';
 import {
   Home, Library, Folder, Plus, ChevronLeft, ChevronRight,
-  Settings, X, Sun, Moon,
+  Settings, X, Sun, Moon, Bell
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -39,9 +40,14 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { folders, sidebarCollapsed, toggleSidebar } = useStore();
+  const [mounted, setMounted] = useState(false);
   const folderList = Object.values(folders).sort((a, b) => b.createdAt - a.createdAt);
   const collapsed = sidebarCollapsed;
   const isDark = theme === 'dark';
+
+  useEffect(() => { setMounted(true); }, []);
+
+  if (!mounted) return null;
 
   return (
     <>
@@ -63,7 +69,7 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             onClick={onMobileClose}
           >
             <div className="w-8 h-8 bg-[var(--quizlet-blue)] text-white rounded-lg flex items-center justify-center font-black text-sm flex-shrink-0">
-              VM
+              Q
             </div>
             {!collapsed && (
               <span className="font-bold text-[15px] text-[var(--text)] tracking-tight truncate">
@@ -106,6 +112,13 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             icon={<Library size={18} />}
             label="Thư viện của bạn"
             active={pathname.startsWith('/library')}
+            collapsed={collapsed}
+          />
+          <NavItem
+            href="/notifications"
+            icon={<Bell size={18} />}
+            label="Thông báo"
+            active={pathname === '/notifications'}
             collapsed={collapsed}
           />
         </nav>

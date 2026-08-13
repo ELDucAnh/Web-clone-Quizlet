@@ -25,7 +25,7 @@ function LearnContent() {
   const deckId = params.deckId as string;
   const modeParam = (searchParams.get('mode') || 'flashcard') as StudyMode;
 
-  const { decks, cards, cardsByDeck, settings, progress, updateProgress, addSession, toggleStarCard } = useStore();
+  const { decks, cards, cardsByDeck, settings, progress, updateProgress, addSession, toggleStarCard, markDeckCompleted } = useStore();
 
   const deck = decks[deckId];
   const rawIds = cardsByDeck[deckId] ?? [];
@@ -56,7 +56,9 @@ function LearnContent() {
 
   useEffect(() => {
     if (allCards.length === 0) return;
-    const shuffled = settings.shuffleCards ? shuffleArray([...allCards]) : [...allCards];
+    const unmastered = allCards.filter(c => progress[c.id]?.learnStage !== 'mastered');
+    const cardsToStudy = (modeParam === 'learn' && unmastered.length > 0) ? unmastered : allCards;
+    const shuffled = settings.shuffleCards ? shuffleArray([...cardsToStudy]) : [...cardsToStudy];
     setStudyCards(shuffled);
     setCurrentIndex(0);
     setCorrectCount(0);
@@ -104,7 +106,9 @@ function LearnContent() {
     setLearnCorrect(0);
     setCorrectSteps(0);
     startTime.current = Date.now();
-    const shuffled = settings.shuffleCards ? shuffleArray([...allCards]) : [...allCards];
+    const unmastered = allCards.filter(c => progress[c.id]?.learnStage !== 'mastered');
+    const cardsToStudy = (modeParam === 'learn' && unmastered.length > 0) ? unmastered : allCards;
+    const shuffled = settings.shuffleCards ? shuffleArray([...cardsToStudy]) : [...cardsToStudy];
     setStudyCards(shuffled);
     if (settings.showTimer) {
       timerRef.current = setInterval(() => setElapsedSecs(s => s + 1), 1000);
@@ -129,6 +133,9 @@ function LearnContent() {
         const newMap = { ...p, [card.id]: nextStage };
         if (newLearnCorrect >= studyCards.length) {
           finishSession(newLearnCorrect, studyCards.length);
+          if (modeParam === 'learn') {
+            markDeckCompleted(deckId);
+          }
           return newMap;
         }
         let nextIdx = (currentIndex + 1) % studyCards.length;

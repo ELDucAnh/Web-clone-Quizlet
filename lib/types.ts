@@ -16,6 +16,7 @@ export interface Deck {
   cardCount: number;
   createdAt: number;
   lastStudied?: number;
+  completedAt?: number;
   folderId?: string;    // Thuộc thư mục nào (nếu có)
   color: string;        // Màu accent
   tags?: string[];
@@ -84,6 +85,7 @@ export interface Actions {
   updateDeck: (deckId: string, name: string, description?: string) => void;
   deleteDeck: (deckId: string) => void;
   resetDeckProgress: (deckId: string) => void;
+  markDeckCompleted: (deckId: string) => void;
 
   // Folder Actions
   createFolder: (name: string, description?: string) => string;

@@ -202,7 +202,7 @@ export default function SetDetailPage() {
 
   const studyModes = [
     { icon: <Layers size={20} />, label: 'Thẻ ghi nhớ', href: `/learn/${deckId}?mode=flashcard` },
-    { icon: <Brain size={20} />, label: 'Học', href: `/learn/${deckId}?mode=learn` },
+    { icon: <Brain size={20} />, label: pct === 100 ? 'Học lại' : (pct > 0 ? 'Học tiếp' : 'Học'), href: `/learn/${deckId}?mode=learn` },
     { icon: <PenLine size={20} />, label: 'Kiểm tra', href: `/learn/${deckId}?mode=test` },
     { icon: <ShuffleIcon size={20} />, label: 'Ghép thẻ', href: `/learn/${deckId}?mode=match` },
     { icon: <Droplets size={20} />, label: 'Gravity', href: `/learn/${deckId}?mode=gravity` },

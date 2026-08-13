@@ -179,9 +179,22 @@ export const useStore = create<AppState & Actions>()(
           });
           const newDecks = { ...state.decks };
           if (newDecks[deckId]) {
-            newDecks[deckId] = { ...newDecks[deckId], lastStudied: undefined };
+            newDecks[deckId] = { ...newDecks[deckId], lastStudied: undefined, completedAt: undefined };
           }
           return { progress: newProgress, decks: newDecks };
+        });
+      },
+
+      markDeckCompleted: (deckId: string) => {
+        set((state) => {
+          const deck = state.decks[deckId];
+          if (!deck || deck.completedAt) return state; // already completed
+          return {
+            decks: {
+              ...state.decks,
+              [deckId]: { ...deck, completedAt: Date.now() },
+            },
+          };
         });
       },
 
