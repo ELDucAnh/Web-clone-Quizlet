@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes';
 import { useStore } from '@/lib/store';
 import {
   Home, Library, Folder, Plus, ChevronLeft, ChevronRight,
-  Settings, CreditCard, Zap, Gamepad2, X, Sun, Moon,
+  Settings, X, Sun, Moon,
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -110,38 +110,8 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
           />
         </nav>
 
-        {/* ── Study Modes ───────────────────────────────────────────── */}
-        <div className="mx-2 my-1 border-t border-[var(--border)]" />
-        <nav className="p-2 space-y-0.5 flex-shrink-0">
-          {!collapsed && (
-            <p className="px-3 pb-1 pt-0.5 text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-              Chế độ học
-            </p>
-          )}
-          <NavItem
-            href="/library"
-            icon={<CreditCard size={18} />}
-            label="Thẻ ghi nhớ"
-            active={false}
-            collapsed={collapsed}
-          />
-          <NavItem
-            href="/library"
-            icon={<Zap size={18} />}
-            label="Chế độ học"
-            active={false}
-            collapsed={collapsed}
-          />
-          <NavItem
-            href="/library"
-            icon={<Gamepad2 size={18} />}
-            label="Ghép thẻ"
-            active={false}
-            collapsed={collapsed}
-          />
-        </nav>
 
-        {/* ── Folders ───────────────────────────────────────────────── */}
+        {/* ── Folders ──────────────────────────────────────────── */}
         {!collapsed && (
           <div className="px-3 pt-2 pb-1 flex-1 min-h-0 flex flex-col">
             <div className="flex items-center justify-between mb-1.5">
