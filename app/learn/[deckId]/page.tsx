@@ -44,6 +44,8 @@ function LearnContent() {
   const [fcFlipped, setFcFlipped] = useState(false);
   const [learnStageMap, setLearnStageMap] = useState<Record<string, number>>({});
   const [learnCorrect, setLearnCorrect] = useState(0);
+  // correctSteps: tăng mỗi lần đúng 1 bước nhỏ, dùng cho thanh tiến độ realtime
+  const [correctSteps, setCorrectSteps] = useState(0);
   const [mounted, setMounted] = useState(false);
 
   const startTime = useRef(Date.now());
@@ -61,6 +63,7 @@ function LearnContent() {
     setFcFlipped(false);
     setLearnStageMap({});
     setLearnCorrect(0);
+    setCorrectSteps(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deckId, modeParam]);
 
@@ -94,6 +97,7 @@ function LearnContent() {
     setFcFlipped(false);
     setLearnStageMap({});
     setLearnCorrect(0);
+    setCorrectSteps(0);
     startTime.current = Date.now();
     const shuffled = settings.shuffleCards ? shuffleArray([...allCards]) : [...allCards];
     setStudyCards(shuffled);
@@ -102,11 +106,12 @@ function LearnContent() {
     }
   };
 
-  // Learn mode handler
   const handleLearnAnswer = (isCorrect: boolean) => {
     const card = studyCards[currentIndex];
     const stageIdx = learnStageMap[card.id] ?? 0;
     if (isCorrect) {
+      // Tăng correctSteps ngay lập tức mỗi bước đúng
+      setCorrectSteps(s => s + 1);
       const nextStage = stageIdx + 1;
       if (nextStage >= LEARN_STAGES.length) {
         updateProgress(card.id, { learnStage: 'mastered', repetitions: (progress[card.id]?.repetitions ?? 0) + 1 });
@@ -141,11 +146,11 @@ function LearnContent() {
   if (!mounted) return null;
 
   const modeLabels: Record<StudyMode, string> = {
-    flashcard: '🎴 Thẻ ghi nhớ',
-    learn: '🧠 Học',
-    match: '🧩 Ghép thẻ',
-    gravity: '☄️ Gravity',
-    test: '📝 Kiểm tra',
+    flashcard: 'Thẻ ghi nhớ',
+    learn: 'Học',
+    match: 'Ghép thẻ',
+    gravity: 'Gravity',
+    test: 'Kiểm tra',
   };
 
   if (!deck) {
@@ -218,13 +223,19 @@ function LearnContent() {
       {/* ── Learn Mode ─────────────────────────────────── */}
       {!done && modeParam === 'learn' && studyCards.length > 0 && currentCard && (
         <div className="flex flex-col gap-4">
-          <ProgressBar current={learnCorrect} total={studyCards.length} label={`Đã thuộc: ${learnCorrect} / ${studyCards.length}`} />
+          {/* Realtime: correctSteps / (N * 4), label show mastered count */}
+          <ProgressBar
+            current={correctSteps}
+            total={studyCards.length * LEARN_STAGES.length}
+            label={`Đã thuộc: ${learnCorrect} / ${studyCards.length}`}
+          />
           {(() => {
             const stageIdx = learnStageMap[currentCard.id] ?? 0;
             const stage = LEARN_STAGES[stageIdx];
             const isType = stage.startsWith('type');
             return isType ? (
               <TypeAnswer
+                key={`${currentCard.id}-${stageIdx}`}
                 card={currentCard}
                 questionField={settings.answerLanguage === 'definition' ? 'term' : 'definition'}
                 answerField={settings.answerLanguage === 'definition' ? 'definition' : 'term'}
@@ -232,6 +243,7 @@ function LearnContent() {
               />
             ) : (
               <MultipleChoice
+                key={`${currentCard.id}-${stageIdx}`}
                 card={currentCard}
                 allCards={allCards}
                 questionField={settings.answerLanguage === 'definition' ? 'term' : 'definition'}

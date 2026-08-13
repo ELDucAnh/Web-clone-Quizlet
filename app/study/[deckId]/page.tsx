@@ -4,7 +4,8 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ChevronLeft, ChevronRight, RotateCcw, Shuffle, Volume2, Star,
-  BookOpen, Zap, FileText, Gamepad2, TrendingUp, Search, Pencil,
+  BookOpen, Layers, Brain, PenLine, Shuffle as ShuffleIcon, Droplets,
+  TrendingUp, Search, Pencil, Zap,
   MoreVertical, Trash2, Play, Pause, Folder, ChevronRight as CR,
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
@@ -100,7 +101,7 @@ function FlashcardPreview({ card, index, total, onPrev, onNext, onShuffle, shuff
             <span className="absolute bottom-4 text-xs text-[var(--text-muted)]/60">Nhấn để lật thẻ (Space)</span>
           </div>
           {/* Back */}
-          <div className="card-face card-back-face bg-gradient-to-br from-[#4255FF] to-[#6172E0] flex-col gap-4 p-8 rounded-2xl">
+          <div className="card-face card-back-face bg-[var(--primary)] flex-col gap-4 p-8 rounded-2xl">
             <span className="absolute top-4 left-5 text-xs font-semibold uppercase tracking-widest text-indigo-200">Định nghĩa</span>
             <button className="absolute top-3 right-4 text-indigo-200 hover:text-white transition-colors" onClick={e => { e.stopPropagation(); speak(back); }}>
               <Volume2 size={18} />
@@ -176,7 +177,9 @@ export default function SetDetailPage() {
   if (!deck) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <div className="text-5xl">🔍</div>
+        <div className="w-14 h-14 rounded-2xl bg-[var(--primary-light)] text-[var(--primary)] flex items-center justify-center">
+          <BookOpen size={28} />
+        </div>
         <h2 className="text-xl font-bold text-[var(--text)]">Không tìm thấy học phần</h2>
         <Link href="/" className="btn-primary"><ChevronLeft size={16} /> Về trang chủ</Link>
       </div>
@@ -198,11 +201,11 @@ export default function SetDetailPage() {
     });
 
   const studyModes = [
-    { icon: '🎴', label: 'Thẻ ghi nhớ', href: `/learn/${deckId}?mode=flashcard` },
-    { icon: '🧠', label: 'Học', href: `/learn/${deckId}?mode=learn` },
-    { icon: '📝', label: 'Kiểm tra', href: `/learn/${deckId}?mode=test` },
-    { icon: '🧩', label: 'Ghép thẻ', href: `/learn/${deckId}?mode=match` },
-    { icon: '☄️', label: 'Gravity', href: `/learn/${deckId}?mode=gravity` },
+    { icon: <Layers size={20} />, label: 'Thẻ ghi nhớ', href: `/learn/${deckId}?mode=flashcard` },
+    { icon: <Brain size={20} />, label: 'Học', href: `/learn/${deckId}?mode=learn` },
+    { icon: <PenLine size={20} />, label: 'Kiểm tra', href: `/learn/${deckId}?mode=test` },
+    { icon: <ShuffleIcon size={20} />, label: 'Ghép thẻ', href: `/learn/${deckId}?mode=match` },
+    { icon: <Droplets size={20} />, label: 'Gravity', href: `/learn/${deckId}?mode=gravity` },
   ];
 
   return (
@@ -282,15 +285,13 @@ export default function SetDetailPage() {
         </section>
       )}
 
-      {/* ── Study Modes ─────────────────────────────────────── */}
+      {/* ── Study Modes ─────────────────────────────────── */}
       <section>
-        <h2 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-          <Zap size={18} className="text-[var(--primary)]" /> Chế độ học
-        </h2>
+        <h2 className="text-base font-bold text-[var(--text)] mb-4">Chế độ học</h2>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {studyModes.map(m => (
             <Link key={m.label} href={m.href} className="study-mode-btn">
-              <span className="mode-icon">{m.icon}</span>
+              <span className="text-[var(--primary)]">{m.icon}</span>
               <span className="mode-label">{m.label}</span>
             </Link>
           ))}

@@ -32,7 +32,6 @@ export function DeckCard({ deck, progress, cardIds, cards, onDelete, onReset }: 
   return (
     <div
       className="relative bg-[var(--card)] rounded-xl border border-[var(--border)] flex flex-col overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-[var(--primary)] hover:-translate-y-0.5"
-      style={{ borderTop: `3px solid ${deck.color}` }}
     >
       <div className="p-5 flex-1 flex flex-col gap-3">
         {/* Title + menu */}
@@ -99,14 +98,14 @@ export function DeckCard({ deck, progress, cardIds, cards, onDelete, onReset }: 
             <span className="flex items-center gap-1">
               <TrendingUp size={12} /> Tiến độ
             </span>
-            <span className="font-semibold" style={{ color: deck.color }}>
+            <span className="font-semibold text-[var(--primary)] text-xs">
               {masteredCount}/{deck.cardCount}
             </span>
           </div>
           <div className="h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
             <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${progressPct}%`, background: deck.color }}
+              className="h-full rounded-full transition-all duration-500 bg-[var(--primary)]"
+              style={{ width: `${progressPct}%` }}
             />
           </div>
         </div>
@@ -114,8 +113,7 @@ export function DeckCard({ deck, progress, cardIds, cards, onDelete, onReset }: 
         {/* CTA */}
         <Link
           href={`/study/${deck.id}`}
-          className="mt-auto block text-center py-2.5 px-4 rounded-xl font-semibold text-sm text-white transition-all duration-200 hover:opacity-90 active:scale-95"
-          style={{ background: deck.color }}
+          className="mt-auto block text-center py-2.5 px-4 rounded-xl font-semibold text-sm text-white bg-[var(--primary)] transition-all duration-200 hover:opacity-90 active:scale-95"
         >
           {deck.lastStudied ? 'Tiếp tục học' : 'Bắt đầu học'}
         </Link>

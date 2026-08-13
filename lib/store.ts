@@ -30,16 +30,7 @@ const safeStorage = {
   },
 };
 
-const DECK_COLORS = [
-  '#4255FF', // Quizlet Blue
-  '#7C3AED', // Violet
-  '#059669', // Emerald
-  '#DB2777', // Pink
-  '#D97706', // Amber
-  '#DC2626', // Red
-  '#0891B2', // Cyan
-  '#65A30D', // Lime
-];
+const DECK_COLOR = '#4255FF';
 
 function getDefaultProgress(cardId: string, deckId: string): CardProgress {
   return {
@@ -84,7 +75,7 @@ export const useStore = create<AppState & Actions>()(
         folderId?: string
       ) => {
         const deckId = uuidv4();
-        const color = DECK_COLORS[Math.floor(Math.random() * DECK_COLORS.length)];
+        const color = DECK_COLOR;
 
         const newCards: Card[] = rawCards.map((rc) => ({
           id: uuidv4(),
