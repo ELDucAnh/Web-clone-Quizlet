@@ -38,7 +38,9 @@ export default function FolderDetailPage() {
   if (!folder) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <div className="text-5xl">🔍</div>
+        <div className="w-12 h-12 rounded-2xl bg-[var(--primary-light)] text-[var(--primary)] flex items-center justify-center">
+          <Folder size={24} />
+        </div>
         <h2 className="text-xl font-bold text-[var(--text)]">Không tìm thấy thư mục</h2>
         <Link href="/library" className="btn-primary">
           <ArrowLeft size={16} /> Về thư viện
@@ -195,9 +197,9 @@ export default function FolderDetailPage() {
         /* Quizlet-style empty state */
         <div className="empty-state">
           <div className="flex gap-3 mb-2">
-            <div className="w-14 h-20 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 opacity-90 transform -rotate-6" />
-            <div className="w-14 h-20 rounded-xl bg-gradient-to-br from-pink-400 to-rose-500 opacity-90" />
-            <div className="w-14 h-20 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 opacity-90 transform rotate-6" />
+            <div className="w-14 h-20 rounded-xl bg-[var(--primary-light)] opacity-90 transform -rotate-6 border border-[var(--border)]" />
+            <div className="w-14 h-20 rounded-xl bg-[var(--primary)] opacity-40" />
+            <div className="w-14 h-20 rounded-xl bg-[var(--primary-light)] opacity-90 transform rotate-6 border border-[var(--border)]" />
           </div>
           <div>
             <h3 className="font-bold text-[var(--text)] text-lg">Bắt đầu xây dựng thư mục của bạn</h3>
@@ -220,7 +222,6 @@ export default function FolderDetailPage() {
               <div
                 key={deck.id}
                 className="quizlet-card overflow-hidden group"
-                style={{ borderTop: `3px solid ${deck.color}` }}
               >
                 <div className="p-5 flex flex-col gap-3">
                   <div className="flex items-start justify-between gap-2">
@@ -241,16 +242,15 @@ export default function FolderDetailPage() {
                   <div className="flex flex-col gap-1.5">
                     <div className="flex justify-between text-xs text-[var(--text-muted)]">
                       <span className="flex items-center gap-0.5"><TrendingUp size={10} /> Tiến độ</span>
-                      <span className="font-semibold" style={{ color: deck.color }}>{mastered}/{deck.cardCount}</span>
+                      <span className="font-semibold text-[var(--primary)] text-xs">{mastered}/{deck.cardCount}</span>
                     </div>
                     <div className="progress-bar-track">
-                      <div className="progress-bar-fill" style={{ width: `${pct}%`, background: deck.color }} />
+                      <div className="progress-bar-fill" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                   <Link
                     href={`/study/${deck.id}`}
-                    className="block text-center py-2 rounded-lg text-white text-sm font-bold hover:opacity-90 transition-opacity"
-                    style={{ background: deck.color }}
+                    className="block text-center py-2 rounded-lg text-white text-sm font-bold bg-[var(--primary)] hover:opacity-90 transition-opacity"
                   >
                     {deck.lastStudied ? 'Tiếp tục học' : 'Bắt đầu học'}
                   </Link>
@@ -290,7 +290,7 @@ export default function FolderDetailPage() {
                         onClick={() => { addDeckToFolder(folderId, deck.id); setShowAddDeck(false); }}
                         className="w-full flex items-center gap-3 p-3 rounded-xl border border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary-light)] transition-all text-left group"
                       >
-                        <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white flex-shrink-0" style={{ background: deck.color }}>
+                        <div className="w-9 h-9 rounded-lg bg-[var(--primary-light)] text-[var(--primary)] flex items-center justify-center flex-shrink-0">
                           <BookOpen size={16} />
                         </div>
                         <div className="min-w-0">

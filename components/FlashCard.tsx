@@ -61,12 +61,12 @@ export function FlashCard({ card, flipped, onFlip, showSide = 'term' }: FlashCar
         </div>
 
         {/* Back */}
-        <div className="card-face card-back-face bg-gradient-to-br from-indigo-600 to-violet-700 flex-col gap-4 p-8">
-          <span className="absolute top-4 left-5 text-xs font-semibold uppercase tracking-widest text-indigo-200">
+        <div className="card-face card-back-face gradient-primary flex-col gap-4 p-8">
+          <span className="absolute top-4 left-5 text-xs font-semibold uppercase tracking-widest text-white/60">
             {backLabel}
           </span>
           <button
-            className="absolute top-3 right-4 text-indigo-200 hover:text-white transition-colors"
+            className="absolute top-3 right-4 text-white/60 hover:text-white transition-colors"
             onClick={(e) => { e.stopPropagation(); speak(backContent); }}
             aria-label="Đọc to"
           >

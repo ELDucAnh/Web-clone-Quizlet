@@ -364,7 +364,7 @@ body {
 
 /* ─── Gradients ──────────────────────────────────────────────────────────────── */
 .gradient-primary {
-  background: linear-gradient(135deg, #4255FF 0%, #6172E0 100%);
+  background: linear-gradient(135deg, #4255FF 0%, #2563EB 100%);
 }
 
 .gradient-success {

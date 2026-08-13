@@ -251,7 +251,7 @@ export default function GravityPage() {
     <div
       className="min-h-dvh flex flex-col"
       style={{
-        background: 'linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
+        background: 'linear-gradient(180deg, #0f172a 0%, #0d1b4b 50%, #0f172a 100%)',
       }}
     >
       {/* Header */}
@@ -321,8 +321,8 @@ export default function GravityPage() {
             className="absolute left-1/2 -translate-x-1/2 z-10 max-w-[80%]"
             style={{ top: `${fallingPct}%`, transition: 'none' }}
           >
-            <div className="bg-violet-900/80 border border-violet-400/40 backdrop-blur-sm rounded-2xl px-6 py-4 text-center shadow-2xl shadow-violet-500/20">
-              <p className="text-xs font-semibold uppercase tracking-widest text-violet-300 mb-1">
+            <div className="bg-blue-900/80 border border-blue-400/40 backdrop-blur-sm rounded-2xl px-6 py-4 text-center shadow-2xl shadow-blue-500/20">
+              <p className="text-xs font-semibold uppercase tracking-widest text-blue-300 mb-1">
                 Nghĩa / Definition
               </p>
               <p className="text-white font-bold text-lg leading-snug" dir="auto">
@@ -343,11 +343,11 @@ export default function GravityPage() {
               onKeyDown={handleKeyDown}
               placeholder="Gõ từ tiếng Anh và nhấn Enter..."
               aria-label="Nhập từ vựng"
-              className="flex-1 px-4 py-3.5 rounded-2xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 outline-none focus:border-violet-400 focus:bg-white/15 transition-all font-medium backdrop-blur-sm"
+              className="flex-1 px-4 py-3.5 rounded-2xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 outline-none focus:border-blue-400 focus:bg-white/15 transition-all font-medium backdrop-blur-sm"
             />
             <button
               onClick={handleSubmit}
-              className="px-4 py-3 rounded-2xl bg-violet-600 text-white font-bold hover:bg-violet-500 transition-colors"
+              className="px-4 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-colors"
             >
               ↵
             </button>

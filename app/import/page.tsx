@@ -158,7 +158,7 @@ export default function ImportPage() {
             disabled={!canImport || isImporting}
             className={`w-full py-4 rounded-xl font-bold text-base transition-all ${
               canImport
-                ? 'gradient-primary text-white hover:opacity-90 shadow-lg shadow-indigo-500/25 hover:-translate-y-0.5 active:scale-95'
+                ? 'gradient-primary text-white hover:opacity-90 shadow-lg shadow-blue-500/25 hover:-translate-y-0.5 active:scale-95'
                 : 'bg-[var(--border)] text-[var(--text-muted)] cursor-not-allowed'
             }`}
           >

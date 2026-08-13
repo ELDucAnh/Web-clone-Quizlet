@@ -227,14 +227,10 @@ export default function LearnPage() {
         {/* Mode badge */}
         {currentCard && (
           <div className="flex items-center gap-2">
-            <span
-              className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                state.phase === 'mcq'
-                  ? 'bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400'
-                  : 'bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400'
-              }`}
+          <span
+              className="text-xs font-bold px-2.5 py-1 rounded-full bg-[var(--primary-light)] text-[var(--primary)]"
             >
-              {state.phase === 'mcq' ? '🎯 Trắc nghiệm' : '⌨️ Gõ tay'}
+              {state.phase === 'mcq' ? 'Trắc nghiệm' : 'Gõ tay'}
             </span>
           </div>
         )}

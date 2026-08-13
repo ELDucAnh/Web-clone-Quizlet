@@ -102,8 +102,8 @@ function FlashcardPreview({ card, index, total, onPrev, onNext, onShuffle, shuff
           </div>
           {/* Back */}
           <div className="card-face card-back-face bg-[var(--primary)] flex-col gap-4 p-8 rounded-2xl">
-            <span className="absolute top-4 left-5 text-xs font-semibold uppercase tracking-widest text-indigo-200">Định nghĩa</span>
-            <button className="absolute top-3 right-4 text-indigo-200 hover:text-white transition-colors" onClick={e => { e.stopPropagation(); speak(back); }}>
+            <span className="absolute top-4 left-5 text-xs font-semibold uppercase tracking-widest text-white/60">Định nghĩa</span>
+            <button className="absolute top-3 right-4 text-white/60 hover:text-white transition-colors" onClick={e => { e.stopPropagation(); speak(back); }}>
               <Volume2 size={18} />
             </button>
             <p className="text-center font-bold text-white leading-relaxed" dir="auto"

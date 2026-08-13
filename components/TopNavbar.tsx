@@ -208,7 +208,7 @@ export function TopNavbar({ onMobileMenuOpen, onCreateFolder }: TopNavbarProps) 
           <div className="relative" ref={userMenuRef}>
             <button
               onClick={() => setShowUserMenu((v) => !v)}
-              className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--primary)] to-purple-600 text-white font-bold text-sm flex items-center justify-center hover:ring-2 hover:ring-[var(--primary-light)] transition-all"
+              className="w-9 h-9 rounded-full gradient-primary text-white font-bold text-sm flex items-center justify-center hover:ring-2 hover:ring-[var(--primary-light)] transition-all"
               aria-label="Menu người dùng"
             >
               {initials}
