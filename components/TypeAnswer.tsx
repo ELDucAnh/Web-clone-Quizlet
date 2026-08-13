@@ -62,13 +62,21 @@ export function TypeAnswer({
     setResult({ isCorrect, similarity, submitted: true });
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      if (submitted && !nearCorrectPending && result) {
-        onAnswer(result.isCorrect);
-      } else if (!submitted) {
-        handleSubmit();
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        if (result?.submitted && !nearCorrectPending && result) {
+          onAnswer(result.isCorrect);
+        }
       }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [result, nearCorrectPending, onAnswer]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !result?.submitted) {
+      handleSubmit();
     }
   };
 
