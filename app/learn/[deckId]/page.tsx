@@ -2,7 +2,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Timer as TimerIcon } from 'lucide-react';
+import { ArrowLeft, Timer as TimerIcon, Check } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { shuffleArray } from '@/lib/shuffle';
 import { FlashCard, FlashCardNav } from '@/components/FlashCard';
