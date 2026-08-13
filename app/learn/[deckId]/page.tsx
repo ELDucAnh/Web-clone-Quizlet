@@ -46,6 +46,7 @@ function LearnContent() {
   const [learnCorrect, setLearnCorrect] = useState(0);
   // correctSteps: tăng mỗi lần đúng 1 bước nhỏ, dùng cho thanh tiến độ realtime
   const [correctSteps, setCorrectSteps] = useState(0);
+  const [finishing, setFinishing] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const startTime = useRef(Date.now());
@@ -76,7 +77,11 @@ function LearnContent() {
   const finishSession = useCallback((correct: number, total: number) => {
     if (timerRef.current) clearInterval(timerRef.current);
     setCorrectCount(correct);
-    setDone(true);
+    setFinishing(true);
+    setTimeout(() => {
+      setDone(true);
+      setFinishing(false);
+    }, 1200);
     addSession({
       id: uuidv4(),
       deckId,
@@ -110,25 +115,43 @@ function LearnContent() {
     const card = studyCards[currentIndex];
     const stageIdx = learnStageMap[card.id] ?? 0;
     if (isCorrect) {
-      // Tăng correctSteps ngay lập tức mỗi bước đúng
       setCorrectSteps(s => s + 1);
       const nextStage = stageIdx + 1;
+      let newLearnCorrect = learnCorrect;
+
       if (nextStage >= LEARN_STAGES.length) {
         updateProgress(card.id, { learnStage: 'mastered', repetitions: (progress[card.id]?.repetitions ?? 0) + 1 });
-        const nc = learnCorrect + 1;
-        setLearnCorrect(nc);
-        if (currentIndex + 1 >= studyCards.length) {
-          finishSession(nc, studyCards.length);
-        } else {
-          setCurrentIndex(i => i + 1);
-        }
-      } else {
-        setLearnStageMap(p => ({ ...p, [card.id]: nextStage }));
-        setCurrentIndex(i => (i + 1) % studyCards.length);
+        newLearnCorrect++;
+        setLearnCorrect(newLearnCorrect);
       }
+
+      setLearnStageMap(p => {
+        const newMap = { ...p, [card.id]: nextStage };
+        if (newLearnCorrect >= studyCards.length) {
+          finishSession(newLearnCorrect, studyCards.length);
+          return newMap;
+        }
+        let nextIdx = (currentIndex + 1) % studyCards.length;
+        let loopCount = 0;
+        while ((newMap[studyCards[nextIdx].id] ?? 0) >= LEARN_STAGES.length && loopCount < studyCards.length) {
+          nextIdx = (nextIdx + 1) % studyCards.length;
+          loopCount++;
+        }
+        setCurrentIndex(nextIdx);
+        return newMap;
+      });
     } else {
-      setLearnStageMap(p => ({ ...p, [card.id]: Math.max(0, stageIdx - 1) }));
-      setCurrentIndex(i => (i + 1) % studyCards.length);
+      setLearnStageMap(p => {
+        const newMap = { ...p, [card.id]: Math.max(0, stageIdx - 1) };
+        let nextIdx = (currentIndex + 1) % studyCards.length;
+        let loopCount = 0;
+        while ((newMap[studyCards[nextIdx].id] ?? 0) >= LEARN_STAGES.length && loopCount < studyCards.length) {
+          nextIdx = (nextIdx + 1) % studyCards.length;
+          loopCount++;
+        }
+        setCurrentIndex(nextIdx);
+        return newMap;
+      });
     }
   };
 
@@ -195,8 +218,15 @@ function LearnContent() {
 
       {/* ── Flashcard Mode ─────────────────────────────── */}
       {!done && modeParam === 'flashcard' && studyCards.length > 0 && currentCard && (
-        <div className="flex flex-col gap-4">
-          <ProgressBar current={currentIndex} total={studyCards.length} label={`${currentIndex + 1} / ${studyCards.length}`} />
+        <div className="flex flex-col gap-4 relative">
+          {finishing && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--bg)]/80 backdrop-blur-sm rounded-3xl animate-fade-in">
+              <div className="bg-emerald-500 text-white px-8 py-4 rounded-2xl shadow-2xl font-bold text-2xl flex items-center gap-3 animate-slide-up">
+                <Check size={28} /> Hoàn thành! 🎉
+              </div>
+            </div>
+          )}
+          <ProgressBar current={currentIndex + (finishing ? 1 : 0)} total={studyCards.length} label={`${Math.min(currentIndex + 1 + (finishing ? 1 : 0), studyCards.length)} / ${studyCards.length}`} />
           <FlashCard
             card={currentCard}
             flipped={fcFlipped}
@@ -222,7 +252,14 @@ function LearnContent() {
 
       {/* ── Learn Mode ─────────────────────────────────── */}
       {!done && modeParam === 'learn' && studyCards.length > 0 && currentCard && (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 relative">
+          {finishing && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--bg)]/80 backdrop-blur-sm rounded-3xl animate-fade-in">
+              <div className="bg-emerald-500 text-white px-8 py-4 rounded-2xl shadow-2xl font-bold text-2xl flex items-center gap-3 animate-slide-up">
+                <Check size={28} /> Hoàn thành! 🎉
+              </div>
+            </div>
+          )}
           {/* Realtime: correctSteps / (N * 4), label show mastered count */}
           <ProgressBar
             current={correctSteps}
@@ -257,8 +294,15 @@ function LearnContent() {
 
       {/* ── Test Mode ──────────────────────────────────── */}
       {!done && modeParam === 'test' && studyCards.length > 0 && currentCard && (
-        <div className="flex flex-col gap-4">
-          <ProgressBar current={currentIndex} total={studyCards.length} label={`Câu ${currentIndex + 1} / ${studyCards.length}`} />
+        <div className="flex flex-col gap-4 relative">
+          {finishing && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--bg)]/80 backdrop-blur-sm rounded-3xl animate-fade-in">
+              <div className="bg-emerald-500 text-white px-8 py-4 rounded-2xl shadow-2xl font-bold text-2xl flex items-center gap-3 animate-slide-up">
+                <Check size={28} /> Hoàn thành! 🎉
+              </div>
+            </div>
+          )}
+          <ProgressBar current={currentIndex + (finishing ? 1 : 0)} total={studyCards.length} label={`${Math.min(currentIndex + 1 + (finishing ? 1 : 0), studyCards.length)} / ${studyCards.length}`} />
           <MultipleChoice
             card={currentCard}
             allCards={allCards}

@@ -76,6 +76,8 @@ export function TypeAnswer({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !result?.submitted) {
+      e.stopPropagation();
+      e.preventDefault();
       handleSubmit();
     }
   };
