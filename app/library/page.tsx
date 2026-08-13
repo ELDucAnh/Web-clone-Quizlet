@@ -105,13 +105,13 @@ function LibraryContent() {
       {/* ── Search & Filter ─────────────────────────────── */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm kiếm trong thư viện..."
-            className="q-input pl-9"
+            className="w-full h-10 pl-9 pr-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm outline-none transition-all focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-light)] placeholder:text-[var(--text-muted)]"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -119,7 +119,7 @@ function LibraryContent() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortBy)}
-            className="q-input w-auto pr-8 cursor-pointer"
+            className="h-10 px-3 pr-8 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm outline-none cursor-pointer focus:border-[var(--primary)] transition-colors"
           >
             <option value="recent">Mới nhất</option>
             <option value="studied">Đã học gần đây</option>
@@ -166,7 +166,7 @@ function LibraryContent() {
                 const mastered = cardIds.filter((id) => progress[id]?.learnStage === 'mastered').length;
                 const pct = deck.cardCount > 0 ? Math.round((mastered / deck.cardCount) * 100) : 0;
                 return (
-                  <div key={deck.id} className="quizlet-card overflow-hidden" style={{ borderTop: `3px solid ${deck.color}` }}>
+                  <div key={deck.id} className="quizlet-card overflow-hidden">
                     <div className="p-5 flex flex-col gap-3">
                       <div className="flex items-start justify-between gap-2">
                         <Link href={`/study/${deck.id}`} className="flex-1 min-w-0 group">
@@ -187,16 +187,15 @@ function LibraryContent() {
                       <div className="flex flex-col gap-1.5">
                         <div className="flex justify-between text-xs text-[var(--text-muted)]">
                           <span>Tiến độ</span>
-                          <span className="font-semibold" style={{ color: deck.color }}>{mastered}/{deck.cardCount}</span>
+                          <span className="font-semibold text-[var(--primary)]">{mastered}/{deck.cardCount}</span>
                         </div>
                         <div className="progress-bar-track">
-                          <div className="progress-bar-fill" style={{ width: `${pct}%`, background: deck.color }} />
+                          <div className="progress-bar-fill" style={{ width: `${pct}%` }} />
                         </div>
                       </div>
                       <Link
                         href={`/study/${deck.id}`}
-                        className="block text-center py-2 rounded-lg text-white text-sm font-bold transition-opacity hover:opacity-90"
-                        style={{ background: deck.color }}
+                        className="block text-center py-2 rounded-lg text-white text-sm font-bold bg-[var(--primary)] transition-opacity hover:opacity-90"
                       >
                         {deck.lastStudied ? 'Tiếp tục học' : 'Bắt đầu học'}
                       </Link>
@@ -226,8 +225,8 @@ function LibraryContent() {
               {folderList.map((folder) => (
                 <div key={folder.id} className="folder-card group">
                   <Link href={`/folder/${folder.id}`} className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
-                      <Folder size={22} />
+                    <div className="w-10 h-10 rounded-xl bg-[var(--primary-light)] text-[var(--primary)] flex items-center justify-center flex-shrink-0">
+                      <Folder size={20} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-[var(--text)] truncate">{folder.name}</p>

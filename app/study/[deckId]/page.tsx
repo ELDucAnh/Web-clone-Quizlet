@@ -313,7 +313,7 @@ export default function SetDetailPage() {
         </div>
         <div className="relative mb-4">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-          <input type="text" value={termSearch} onChange={e => setTermSearch(e.target.value)} placeholder="Tìm kiếm từ vựng..." className="q-input pl-9" />
+          <input type="text" value={termSearch} onChange={e => setTermSearch(e.target.value)} placeholder="Tìm kiếm từ vựng..." className="w-full h-10 pl-9 pr-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm outline-none transition-all focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-light)] placeholder:text-[var(--text-muted)]" />
         </div>
         <div className="flex flex-col gap-2">
           {termCardList.length === 0 ? (
