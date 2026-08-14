@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { useStore } from '@/lib/store';
 import {
-  Settings, User, Moon, Sun, Target, Shuffle,
-  Clock, Volume2, BookOpen, Zap, ChevronRight,
+  Settings, User, Moon, Target,
+  BookOpen, Download, Upload, Check, AlertTriangle,
 } from 'lucide-react';
 
 // ─── Reusable Toggle Component ──────────────────────────────────────────────
@@ -53,10 +53,102 @@ function ToggleRow({
 export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
-  const { settings, updateSettings, decks, sessions } = useStore();
+  const {
+    settings, updateSettings, decks, sessions,
+    folders, cards, cardsByDeck, progress,
+    studyHoursGoals, studyHoursLogs, writingSamples, speakingTopics,
+  } = useStore();
+  const [exportOk, setExportOk] = useState(false);
+  const [importStatus, setImportStatus] = useState<'idle' | 'ok' | 'error'>('idle');
+  const [importMsg, setImportMsg] = useState('');
+  const [lastBackup, setLastBackup] = useState<string | null>(null);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    setLastBackup(localStorage.getItem('vocab-master-last-backup'));
+  }, []);
   if (!mounted) return null;
+
+  // ── Export ──────────────────────────────────────────────────────────
+  const handleExport = () => {
+    const snapshot = {
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      data: {
+        folders, decks, cards, cardsByDeck, progress, settings, sessions,
+        studyHoursGoals, studyHoursLogs, writingSamples, speakingTopics,
+      },
+    };
+    const json = JSON.stringify(snapshot, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `vocab-master-backup-${dateStr}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    const now = new Date().toLocaleString('vi-VN');
+    localStorage.setItem('vocab-master-last-backup', now);
+    setLastBackup(now);
+    setExportOk(true);
+    setTimeout(() => setExportOk(false), 3000);
+  };
+
+  // ── Import ──────────────────────────────────────────────────────────
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = ''; // reset so same file can be picked again
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const raw = JSON.parse(ev.target?.result as string);
+        // Support both formats: wrapped {version, data} or flat state
+        const snap = raw.data ?? raw;
+
+        if (!snap.decks || !snap.cards) {
+          setImportStatus('error');
+          setImportMsg('File không hợp lệ — không tìm thấy dữ liệu học phần.');
+          setTimeout(() => setImportStatus('idle'), 5000);
+          return;
+        }
+
+        // Merge into Zustand store by directly updating localStorage key
+        // then reloading so Zustand hydrates fresh
+        const existing = JSON.parse(localStorage.getItem('vocab-master-v2') || '{}');
+        const merged = {
+          state: {
+            ...existing.state,
+            folders: snap.folders ?? existing.state?.folders ?? {},
+            decks: snap.decks,
+            cards: snap.cards,
+            cardsByDeck: snap.cardsByDeck ?? {},
+            progress: snap.progress ?? {},
+            settings: snap.settings ?? existing.state?.settings,
+            sessions: snap.sessions ?? [],
+            studyHoursGoals: snap.studyHoursGoals ?? existing.state?.studyHoursGoals ?? {},
+            studyHoursLogs: snap.studyHoursLogs ?? existing.state?.studyHoursLogs ?? [],
+            writingSamples: snap.writingSamples ?? existing.state?.writingSamples ?? {},
+            speakingTopics: snap.speakingTopics ?? existing.state?.speakingTopics ?? {},
+          },
+          version: existing.version ?? 0,
+        };
+        localStorage.setItem('vocab-master-v2', JSON.stringify(merged));
+        setImportStatus('ok');
+        setImportMsg(`Nhập thành công! Trang sẽ tải lại...`);
+        setTimeout(() => window.location.reload(), 1500);
+      } catch {
+        setImportStatus('error');
+        setImportMsg('Không đọc được file. Hãy chắc chắn đây là file backup .json của Vocab Master.');
+        setTimeout(() => setImportStatus('idle'), 5000);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+
 
   const deckCount = Object.keys(decks).length;
   const totalStudied = sessions.reduce((s, sess) => s + sess.totalCards, 0);
@@ -250,6 +342,78 @@ export default function SettingsPage() {
               {accuracy}%
             </span>
           </div>
+        </div>
+      </section>
+      {/* ── Sao lưu & Khôi phục ──────────────────────── */}
+      <section className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+        <h2 className="font-bold text-[var(--text)] mb-1 flex items-center gap-2 text-base">
+          <Download size={17} className="text-[var(--primary)]" />
+          Sao lưu &amp; Khôi phục
+        </h2>
+        <p className="text-xs text-[var(--text-muted)] mb-5">
+          Toàn bộ dữ liệu (học phần, tiến độ, bài mẫu, giờ học) được lưu vào file .json trên máy bạn.
+          Import lại bất cứ lúc nào để khôi phục.
+        </p>
+
+        <div className="flex flex-col gap-3">
+          {/* Export */}
+          <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
+            <div>
+              <p className="text-sm font-semibold text-[var(--text)]">Xuất dữ liệu (Export)</p>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                {lastBackup ? `Backup cuối: ${lastBackup}` : 'Chưa có backup nào được tạo'}
+              </p>
+            </div>
+            <button
+              onClick={handleExport}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all flex-shrink-0 ${
+                exportOk
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-[var(--primary)] text-white hover:opacity-90'
+              }`}
+            >
+              {exportOk ? <><Check size={15} /> Đã lưu!</> : <><Download size={15} /> Tải backup</>}
+            </button>
+          </div>
+
+          {/* Import */}
+          <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
+            <div>
+              <p className="text-sm font-semibold text-[var(--text)]">Nhập dữ liệu (Import)</p>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                Chọn file <code className="bg-[var(--border)] px-1 rounded text-[11px]">vocab-master-backup-*.json</code>
+              </p>
+            </div>
+            <label className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-[var(--border)] text-[var(--text)] hover:bg-[var(--text-muted)]/20 cursor-pointer transition-colors flex-shrink-0">
+              <Upload size={15} /> Chọn file
+              <input
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={handleImport}
+              />
+            </label>
+          </div>
+
+          {/* Status message */}
+          {importStatus !== 'idle' && (
+            <div className={`flex items-start gap-2 p-3 rounded-xl text-sm ${
+              importStatus === 'ok'
+                ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400'
+                : 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400'
+            }`}>
+              {importStatus === 'ok'
+                ? <Check size={16} className="mt-0.5 flex-shrink-0" />
+                : <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />}
+              <span>{importMsg}</span>
+            </div>
+          )}
+
+          {/* Warning */}
+          <p className="text-xs text-[var(--text-muted)] flex items-start gap-1.5">
+            <AlertTriangle size={12} className="flex-shrink-0 mt-0.5 text-amber-500" />
+            Import sẽ gộp dữ liệu từ file với dữ liệu hiện tại (ưu tiên file import). Nên export backup trước khi import.
+          </p>
         </div>
       </section>
     </div>

@@ -286,9 +286,9 @@ function LearnContent() {
             label={`Đã thuộc: ${learnCorrect} / ${studyCards.length}`}
           />
           {(() => {
-            const stageIdx = learnStageMap[currentCard.id] ?? 0;
+            const stageIdx = Math.min(learnStageMap[currentCard.id] ?? 0, LEARN_STAGES.length - 1);
             const stage = LEARN_STAGES[stageIdx];
-            const isType = stage.startsWith('type');
+            const isType = stage?.startsWith('type') ?? false;
             return isType ? (
               <TypeAnswer
                 key={`${currentCard.id}-${stageIdx}`}
