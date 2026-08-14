@@ -1,7 +1,7 @@
 'use client';
-import { Suspense, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Bell, BookOpen, Clock, ChevronLeft } from 'lucide-react';
+import { Bell, BookOpen, Clock } from 'lucide-react';
 import { useStore } from '@/lib/store';
 
 function NotificationsContent() {
@@ -127,9 +127,5 @@ function NotificationsContent() {
 }
 
 export default function NotificationsPage() {
-  return (
-    <Suspense fallback={<div className="flex items-center justify-center py-20 text-[var(--text-muted)]">Đang tải...</div>}>
-      <NotificationsContent />
-    </Suspense>
-  );
+  return <NotificationsContent />;
 }

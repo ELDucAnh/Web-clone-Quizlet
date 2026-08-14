@@ -6,7 +6,7 @@ import { useTheme } from 'next-themes';
 import { useStore } from '@/lib/store';
 import {
   Home, Library, Folder, Plus, ChevronLeft, ChevronRight,
-  Settings, X, Sun, Moon, Bell
+  Settings, X, Sun, Moon, Bell, Clock, PenLine, Mic
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -111,7 +111,7 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             href="/library"
             icon={<Library size={18} />}
             label="Thư viện của bạn"
-            active={pathname.startsWith('/library')}
+            active={!!pathname?.startsWith('/library')}
             collapsed={collapsed}
           />
           <NavItem
@@ -119,6 +119,27 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             icon={<Bell size={18} />}
             label="Thông báo"
             active={pathname === '/notifications'}
+            collapsed={collapsed}
+          />
+          <NavItem
+            href="/study-hours"
+            icon={<Clock size={18} />}
+            label="Ghi chú giờ học"
+            active={!!pathname?.startsWith('/study-hours')}
+            collapsed={collapsed}
+          />
+          <NavItem
+            href="/writing"
+            icon={<PenLine size={18} />}
+            label="Bài mẫu Writing"
+            active={!!pathname?.startsWith('/writing')}
+            collapsed={collapsed}
+          />
+          <NavItem
+            href="/speaking"
+            icon={<Mic size={18} />}
+            label="Chủ đề Speaking"
+            active={!!pathname?.startsWith('/speaking')}
             collapsed={collapsed}
           />
         </nav>

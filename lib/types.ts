@@ -97,10 +97,82 @@ export interface Actions {
   // Card Actions
   toggleStarCard: (cardId: string) => void;
   updateProgress: (cardId: string, update: Partial<CardProgress>) => void;
+  addCardToDeck: (deckId: string, term: string, definition: string) => void;
 
   // Layout / UI Actions
   setSearchQuery: (query: string) => void;
   toggleSidebar: () => void;
   updateSettings: (settings: Partial<AppState['settings']>) => void;
   addSession: (session: StudySession) => void;
+}
+// ─── IELTS Study Hours ─────────────────────────────────────────────────────
+export type IELTSSkill = 'Listening' | 'Reading' | 'Writing' | 'Speaking' | 'Vocabulary' | 'Grammar';
+
+export interface StudyHoursGoal {
+  id: string;
+  skill: IELTSSkill;
+  targetHours: number;      // max 1000
+  deadline?: number;        // timestamp
+  createdAt: number;
+}
+
+export interface StudyHoursLog {
+  id: string;
+  goalId: string;
+  skill: IELTSSkill;
+  minutes: number;          // số phút
+  content: string;          // nội dung ví dụ: "dictation, shadowing"
+  date: number;             // timestamp ngày học
+  createdAt: number;
+}
+
+// ─── Writing Samples ──────────────────────────────────────────────────────
+export type WritingTask = 'task1' | 'task2';
+
+export interface WritingSample {
+  id: string;
+  task: WritingTask;
+  title: string;
+  topic: string;
+  content: string;          // bài mẫu full
+  band?: number;            // band score
+  tags?: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+// ─── Speaking Topics ─────────────────────────────────────────────────────
+export interface SpeakingTopic {
+  id: string;
+  part: 1 | 2 | 3;
+  topic: string;
+  questions: string[];
+  sampleAnswer?: string;
+  keywords?: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+// ─── Extended AppState ────────────────────────────────────────────────────
+export interface IELTSState {
+  studyHoursGoals: Record<string, StudyHoursGoal>;
+  studyHoursLogs: StudyHoursLog[];
+  writingSamples: Record<string, WritingSample>;
+  speakingTopics: Record<string, SpeakingTopic>;
+}
+
+export interface IELTSActions {
+  // Study Hours
+  createStudyHoursGoal: (skill: IELTSSkill, targetHours: number, deadline?: number) => string;
+  deleteStudyHoursGoal: (goalId: string) => void;
+  addStudyHoursLog: (log: Omit<StudyHoursLog, 'id' | 'createdAt'>) => void;
+  deleteStudyHoursLog: (logId: string) => void;
+  // Writing
+  createWritingSample: (data: Omit<WritingSample, 'id' | 'createdAt' | 'updatedAt'>) => string;
+  updateWritingSample: (id: string, data: Partial<Omit<WritingSample, 'id' | 'createdAt'>>) => void;
+  deleteWritingSample: (id: string) => void;
+  // Speaking
+  createSpeakingTopic: (data: Omit<SpeakingTopic, 'id' | 'createdAt' | 'updatedAt'>) => string;
+  updateSpeakingTopic: (id: string, data: Partial<Omit<SpeakingTopic, 'id' | 'createdAt'>>) => void;
+  deleteSpeakingTopic: (id: string) => void;
 }

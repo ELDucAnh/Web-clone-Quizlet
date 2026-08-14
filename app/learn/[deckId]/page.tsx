@@ -118,38 +118,50 @@ function LearnContent() {
   const handleLearnAnswer = (isCorrect: boolean) => {
     const card = studyCards[currentIndex];
     const stageIdx = learnStageMap[card.id] ?? 0;
-    if (isCorrect) {
-      setCorrectSteps(s => s + 1);
-      const nextStage = stageIdx + 1;
-      let newLearnCorrect = learnCorrect;
 
-      if (nextStage >= LEARN_STAGES.length) {
-        updateProgress(card.id, { learnStage: 'mastered', repetitions: (progress[card.id]?.repetitions ?? 0) + 1 });
-        newLearnCorrect++;
-        setLearnCorrect(newLearnCorrect);
+    if (isCorrect) {
+      const nextStage = stageIdx + 1;
+      const nowMastered = nextStage >= LEARN_STAGES.length;
+
+      // Save to persistent store immediately
+      if (nowMastered) {
+        updateProgress(card.id, {
+          learnStage: 'mastered',
+          repetitions: (progress[card.id]?.repetitions ?? 0) + 1,
+          lastAnswered: Date.now(),
+        });
       }
 
-      setLearnStageMap(p => {
-        const newMap = { ...p, [card.id]: nextStage };
-        if (newLearnCorrect >= studyCards.length) {
-          finishSession(newLearnCorrect, studyCards.length);
-          if (modeParam === 'learn') {
-            markDeckCompleted(deckId);
-          }
+      setCorrectSteps(s => s + 1);
+
+      setLearnStageMap(prev => {
+        const newMap = { ...prev, [card.id]: nextStage };
+        // Count total mastered based on newMap
+        const totalMastered = studyCards.filter(c => (newMap[c.id] ?? 0) >= LEARN_STAGES.length).length;
+
+        if (totalMastered >= studyCards.length) {
+          // All done — finish session
+          setLearnCorrect(totalMastered);
+          finishSession(totalMastered, studyCards.length);
+          if (modeParam === 'learn') markDeckCompleted(deckId);
           return newMap;
         }
+
+        // Advance to next unmastered card
         let nextIdx = (currentIndex + 1) % studyCards.length;
         let loopCount = 0;
         while ((newMap[studyCards[nextIdx].id] ?? 0) >= LEARN_STAGES.length && loopCount < studyCards.length) {
           nextIdx = (nextIdx + 1) % studyCards.length;
           loopCount++;
         }
+        setLearnCorrect(totalMastered);
         setCurrentIndex(nextIdx);
         return newMap;
       });
     } else {
-      setLearnStageMap(p => {
-        const newMap = { ...p, [card.id]: Math.max(0, stageIdx - 1) };
+      // Wrong answer — step back but not below 0
+      setLearnStageMap(prev => {
+        const newMap = { ...prev, [card.id]: Math.max(0, stageIdx - 1) };
         let nextIdx = (currentIndex + 1) % studyCards.length;
         let loopCount = 0;
         while ((newMap[studyCards[nextIdx].id] ?? 0) >= LEARN_STAGES.length && loopCount < studyCards.length) {

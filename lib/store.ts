@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import type { AppState, Actions, Deck, Card, CardProgress, StudySession, Folder } from './types';
+import type { AppState, Actions, Deck, Card, CardProgress, StudySession, Folder, IELTSState, IELTSActions, StudyHoursGoal, StudyHoursLog, WritingSample, SpeakingTopic, IELTSSkill } from './types';
 
 // CRITICAL: Wrap localStorage access để tránh SSR crash (Next.js)
 const safeStorage = {
@@ -47,7 +47,7 @@ function getDefaultProgress(cardId: string, deckId: string): CardProgress {
   };
 }
 
-export const useStore = create<AppState & Actions>()(
+export const useStore = create<AppState & Actions & IELTSState & IELTSActions>()(
   persist(
     (set, get) => ({
       folders: {},
@@ -65,6 +65,12 @@ export const useStore = create<AppState & Actions>()(
         dailyGoal: 20,
         audioAutoPlay: false,
       },
+
+      // ─── IELTS State ─────────────────────────────────────────────────
+      studyHoursGoals: {},
+      studyHoursLogs: [],
+      writingSamples: {},
+      speakingTopics: {},
 
       // ─── Deck Actions ─────────────────────────────────────────────────
 
@@ -353,6 +359,21 @@ export const useStore = create<AppState & Actions>()(
         });
       },
 
+      addCardToDeck: (deckId: string, term: string, definition: string) => {
+        const id = uuidv4();
+        const newCard = { id, term, definition, deckId, starred: false, createdAt: Date.now() };
+        set((state) => {
+          const deck = state.decks[deckId];
+          if (!deck) return {};
+          const ids = state.cardsByDeck[deckId] ?? [];
+          return {
+            cards: { ...state.cards, [id]: newCard },
+            cardsByDeck: { ...state.cardsByDeck, [deckId]: [...ids, id] },
+            decks: { ...state.decks, [deckId]: { ...deck, cardCount: ids.length + 1 } },
+          };
+        });
+      },
+
       // ─── Layout Actions ───────────────────────────────────────────────
 
       setSearchQuery: (query: string) => {
@@ -382,6 +403,80 @@ export const useStore = create<AppState & Actions>()(
           };
         });
       },
+
+      // ─── IELTS Study Hours Actions ────────────────────────────────────────────
+      createStudyHoursGoal: (skill: IELTSSkill, targetHours: number, deadline?: number) => {
+        const id = uuidv4();
+        const goal: StudyHoursGoal = { id, skill, targetHours: Math.min(1000, targetHours), deadline, createdAt: Date.now() };
+        set((state) => ({ studyHoursGoals: { ...state.studyHoursGoals, [id]: goal } }));
+        return id;
+      },
+
+      deleteStudyHoursGoal: (goalId: string) => {
+        set((state) => {
+          const newGoals = { ...state.studyHoursGoals };
+          delete newGoals[goalId];
+          const newLogs = state.studyHoursLogs.filter(l => l.goalId !== goalId);
+          return { studyHoursGoals: newGoals, studyHoursLogs: newLogs };
+        });
+      },
+
+      addStudyHoursLog: (log: Omit<StudyHoursLog, 'id' | 'createdAt'>) => {
+        const newLog: StudyHoursLog = { ...log, id: uuidv4(), createdAt: Date.now() };
+        set((state) => ({ studyHoursLogs: [...state.studyHoursLogs, newLog] }));
+      },
+
+      deleteStudyHoursLog: (logId: string) => {
+        set((state) => ({ studyHoursLogs: state.studyHoursLogs.filter(l => l.id !== logId) }));
+      },
+
+      // ─── Writing Sample Actions ────────────────────────────────────────────────
+      createWritingSample: (data: Omit<WritingSample, 'id' | 'createdAt' | 'updatedAt'>) => {
+        const id = uuidv4();
+        const now = Date.now();
+        const sample: WritingSample = { ...data, id, createdAt: now, updatedAt: now };
+        set((state) => ({ writingSamples: { ...state.writingSamples, [id]: sample } }));
+        return id;
+      },
+
+      updateWritingSample: (id: string, data: Partial<Omit<WritingSample, 'id' | 'createdAt'>>) => {
+        set((state) => {
+          if (!state.writingSamples[id]) return state;
+          return { writingSamples: { ...state.writingSamples, [id]: { ...state.writingSamples[id], ...data, updatedAt: Date.now() } } };
+        });
+      },
+
+      deleteWritingSample: (id: string) => {
+        set((state) => {
+          const newSamples = { ...state.writingSamples };
+          delete newSamples[id];
+          return { writingSamples: newSamples };
+        });
+      },
+
+      // ─── Speaking Topic Actions ────────────────────────────────────────────────
+      createSpeakingTopic: (data: Omit<SpeakingTopic, 'id' | 'createdAt' | 'updatedAt'>) => {
+        const id = uuidv4();
+        const now = Date.now();
+        const topic: SpeakingTopic = { ...data, id, createdAt: now, updatedAt: now };
+        set((state) => ({ speakingTopics: { ...state.speakingTopics, [id]: topic } }));
+        return id;
+      },
+
+      updateSpeakingTopic: (id: string, data: Partial<Omit<SpeakingTopic, 'id' | 'createdAt'>>) => {
+        set((state) => {
+          if (!state.speakingTopics[id]) return state;
+          return { speakingTopics: { ...state.speakingTopics, [id]: { ...state.speakingTopics[id], ...data, updatedAt: Date.now() } } };
+        });
+      },
+
+      deleteSpeakingTopic: (id: string) => {
+        set((state) => {
+          const newTopics = { ...state.speakingTopics };
+          delete newTopics[id];
+          return { speakingTopics: newTopics };
+        });
+      },
     }),
     {
       name: 'vocab-master-v2',
@@ -395,6 +490,10 @@ export const useStore = create<AppState & Actions>()(
         settings: state.settings,
         sessions: state.sessions,
         sidebarCollapsed: state.sidebarCollapsed,
+        studyHoursGoals: state.studyHoursGoals,
+        studyHoursLogs: state.studyHoursLogs,
+        writingSamples: state.writingSamples,
+        speakingTopics: state.speakingTopics,
       }),
     }
   )
