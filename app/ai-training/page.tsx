@@ -185,7 +185,9 @@ function AIHistoryRoom() {
               <div key={item.id} onClick={() => setSelectedItem(item)} className="p-4 bg-[var(--bg)] rounded-xl border border-[var(--border)] cursor-pointer hover:border-blue-300 hover:shadow-md transition-all group">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-bold text-sm text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-1">{item.title}</h3>
-                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-black rounded-md">{item.band}</span>
+                  {item.band !== undefined && (
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-black rounded-md">{Number(item.band).toFixed(1)}</span>
+                )}
                 </div>
                 <div className="flex gap-2 text-xs text-gray-500">
                   <span className="uppercase font-bold text-gray-400">{item.task}</span>
@@ -227,7 +229,9 @@ function AIHistoryRoom() {
               <div key={item.id} onClick={() => setSelectedItem(item)} className="p-4 bg-[var(--bg)] rounded-xl border border-[var(--border)] cursor-pointer hover:border-purple-300 hover:shadow-md transition-all group">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-bold text-sm text-gray-800 group-hover:text-purple-600 transition-colors line-clamp-1">{item.topic || 'Part ' + item.part}</h3>
-                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-black rounded-md">{item.band}</span>
+                  {item.band !== undefined && (
+                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-black rounded-md">{Number(item.band).toFixed(1)}</span>
+                )}
                 </div>
                 <div className="flex gap-2 text-xs text-gray-500">
                   <span className="uppercase font-bold text-gray-400">Part {item.part}</span>

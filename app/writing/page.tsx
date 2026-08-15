@@ -312,7 +312,7 @@ function SampleCard({ sample }: { sample: WritingSample }) {
             {sample.content.replace(/<[^>]*>?/gm, '').trim().split(/\s+/).filter(w => w.length > 0).length} từ
             {sample.band && (
               <span className="ml-2 font-bold" style={{ color: bandColor(sample.band) }}>
-                Band {sample.band}
+                Band {Number(sample.band).toFixed(1)}
               </span>
             )}
           </p>
