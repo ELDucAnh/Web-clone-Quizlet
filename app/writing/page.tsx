@@ -1,23 +1,47 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { PenLine, Plus, Trash2, Edit2, X, ChevronDown, ChevronRight, Check, Search } from 'lucide-react';
+import { PenLine, Plus, Trash2, Edit2, X, ChevronDown, ChevronRight, Check, Search, Highlighter, FolderPlus, BookOpen } from 'lucide-react';
+import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import type { WritingTask, WritingSample } from '@/lib/types';
+
+// ── Image Paste Helper ────────────────────────────────────────────────
+const handleImagePaste = (e: React.ClipboardEvent, currentText: string, setter: (val: string) => void) => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      e.preventDefault();
+      const file = items[i].getAsFile();
+      if (!file) continue;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        setter(currentText + `\n<img src="${base64}" alt="Pasted" class="max-w-full max-h-96 rounded-lg my-2 border border-[var(--border)]" />\n`);
+      };
+      reader.readAsDataURL(file);
+      break;
+    }
+  }
+};
 
 // ── Highlight vocab popup ─────────────────────────────────────────────
 function HighlightVocabPopup({
   text,
   onAdd,
+  onHighlight,
   onClose,
 }: {
   text: string;
   onAdd: (term: string, def: string, deckId: string) => void;
+  onHighlight: () => void;
   onClose: () => void;
+  linkedDeckId?: string;
 }) {
   const { decks } = useStore();
   const deckList = Object.values(decks);
   const [def, setDef] = useState('');
-  const [deckId, setDeckId] = useState(deckList[0]?.id || '');
+  const [deckId, setDeckId] = useState(linkedDeckId || deckList[0]?.id || '');
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Focus the input when popup appears
@@ -63,13 +87,25 @@ function HighlightVocabPopup({
       ) : (
         <p className="text-xs text-[var(--text-muted)] italic">Bạn chưa có học phần nào. Hãy tạo học phần trước.</p>
       )}
-      <button
-        className="btn-primary text-sm py-2 disabled:opacity-40"
-        onClick={handleSubmit}
-        disabled={!def.trim() || !deckId}
-      >
-        <Check size={13} /> Thêm vào học phần
-      </button>
+      <div className="flex gap-2">
+        <button
+          className="btn-primary flex-1 text-sm py-2 disabled:opacity-40"
+          onClick={handleSubmit}
+          disabled={!def.trim() || !deckId}
+        >
+          <Check size={13} /> Lưu từ vựng
+        </button>
+        <button
+          className="bg-yellow-200 text-yellow-800 hover:bg-yellow-300 transition-colors rounded-xl px-3 flex items-center justify-center font-bold"
+          onClick={() => {
+            onHighlight();
+            onClose();
+          }}
+          title="Highlight văn bản này"
+        >
+          <Highlighter size={16} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -113,7 +149,7 @@ function useHighlight(
 
 // ── Sample Card ────────────────────────────────────────────────────────
 function SampleCard({ sample }: { sample: WritingSample }) {
-  const { deleteWritingSample, updateWritingSample, addCardToDeck } = useStore();
+  const { deleteWritingSample, updateWritingSample, addCardToDeck, createDeck } = useStore();
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -140,6 +176,14 @@ function SampleCard({ sample }: { sample: WritingSample }) {
     bodyRef,
     (term, def, deckId) => addCardToDeck(deckId, term, def)
   );
+
+  const handleHighlight = (textToHighlight: string) => {
+    const escaped = textToHighlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const newContent = sample.content.replace(textToHighlight, `<mark class="bg-yellow-200 text-yellow-900 rounded px-1">${textToHighlight}</mark>`);
+    if (newContent !== sample.content) {
+      updateWritingSample(sample.id, { content: newContent });
+    }
+  };
 
   const handleSave = () => {
     if (!editData.title.trim() || !editData.content.trim()) return;
@@ -168,6 +212,15 @@ function SampleCard({ sample }: { sample: WritingSample }) {
     !b ? 'var(--text-muted)' : b >= 7 ? '#059669' : b >= 6 ? '#D97706' : '#DC2626';
 
   const isTask1 = sample.task === 'task1';
+  const linkedDeckTag = sample.tags?.find(t => t.startsWith('deck:'));
+  const linkedDeckId = linkedDeckTag ? linkedDeckTag.split(':')[1] : undefined;
+
+  const handleCreateDeck = () => {
+    if (linkedDeckId) return;
+    const newDeckId = createDeck(sample.title, `Từ vựng từ bài viết: ${sample.title}`, []);
+    const newTags = [...(sample.tags || []), `deck:${newDeckId}`];
+    updateWritingSample(sample.id, { tags: newTags });
+  };
 
   return (
     <div className={`bg-[var(--card)] border rounded-2xl overflow-hidden transition-colors ${editing ? 'border-[var(--primary)]' : 'border-[var(--border)]'}`}>
@@ -187,7 +240,10 @@ function SampleCard({ sample }: { sample: WritingSample }) {
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-[var(--text)] leading-snug truncate">{sample.title}</h3>
           {sample.topic && (
-            <p className="text-sm text-[var(--text-muted)] truncate mt-0.5 italic">{sample.topic}</p>
+            <div 
+              className="text-[var(--text)] font-medium mt-1.5 mb-2 whitespace-pre-wrap text-sm leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: sample.topic }}
+            />
           )}
           <p className="text-xs text-[var(--text-muted)] mt-1">
             {sample.content.length} ký tự
@@ -206,17 +262,34 @@ function SampleCard({ sample }: { sample: WritingSample }) {
       </button>
 
       {/* ── Action buttons row (always visible) ─────── */}
-      <div className="px-4 pb-3 flex items-center gap-2 justify-end -mt-2">
+      <div className="px-4 pb-3 flex flex-wrap items-center justify-end gap-2 -mt-2">
         {!editing ? (
           <>
+            {linkedDeckId ? (
+              <Link
+                href={`/study/${linkedDeckId}`}
+                className="flex items-center gap-1 text-xs font-bold text-white bg-[var(--primary)] hover:bg-[var(--primary-hover)] transition-colors py-1.5 px-3 rounded-lg shadow-sm"
+                onClick={e => e.stopPropagation()}
+              >
+                <BookOpen size={13} /> Học bộ từ của bài này
+              </Link>
+            ) : (
+              <button
+                onClick={(e) => { e.stopPropagation(); handleCreateDeck(); }}
+                className="flex items-center gap-1 text-xs font-bold text-[var(--primary)] bg-[var(--primary-light)] hover:opacity-80 transition-opacity py-1.5 px-3 rounded-lg mr-auto"
+              >
+                <FolderPlus size={13} /> Tạo bộ học phần
+              </button>
+            )}
+            
             <button
-              onClick={() => { setEditing(true); setExpanded(true); }}
-              className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors py-1 px-2 rounded-lg hover:bg-[var(--primary-light)]"
+              onClick={(e) => { e.stopPropagation(); setEditing(true); setExpanded(true); }}
+              className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors py-1 px-2 rounded-lg hover:bg-[var(--primary-light)] ml-auto"
             >
               <Edit2 size={12} /> Sửa
             </button>
             <button
-              onClick={() => { if (confirm('Xóa bài mẫu này?')) deleteWritingSample(sample.id); }}
+              onClick={(e) => { e.stopPropagation(); if (confirm('Xóa bài mẫu này?')) deleteWritingSample(sample.id); }}
               className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-red-500 transition-colors py-1 px-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20"
             >
               <Trash2 size={12} /> Xóa
@@ -269,11 +342,13 @@ function SampleCard({ sample }: { sample: WritingSample }) {
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2">
-                  <label className="text-xs text-[var(--text-muted)] block mb-1">Đề / Topic</label>
-                  <input
-                    className="q-input"
+                  <label className="text-xs text-[var(--text-muted)] block mb-1">Đề / Topic (hỗ trợ dán ảnh Ctrl+V)</label>
+                  <textarea
+                    rows={3}
+                    className="q-input resize-y font-mono text-xs leading-relaxed"
                     value={editData.topic}
                     onChange={e => setEditData(p => ({ ...p, topic: e.target.value }))}
+                    onPaste={e => handleImagePaste(e, editData.topic, (val) => setEditData(p => ({ ...p, topic: val })))}
                   />
                 </div>
                 <div>
@@ -302,11 +377,12 @@ function SampleCard({ sample }: { sample: WritingSample }) {
           ) : (
             <div ref={bodyRef}>
               <p className="text-xs text-[var(--text-muted)] mb-3 italic select-none">
-                💡 Bôi đen từ hoặc cụm từ để thêm vào học phần từ vựng
+                💡 Bôi đen từ hoặc cụm từ để thêm vào học phần từ vựng hoặc Highlight
               </p>
-              <pre className="text-sm text-[var(--text)] leading-relaxed whitespace-pre-wrap font-sans">
-                {sample.content}
-              </pre>
+              <div 
+                className="text-base text-[var(--text)] leading-relaxed whitespace-pre-wrap font-sans"
+                dangerouslySetInnerHTML={{ __html: sample.content }}
+              />
               {popup && (
                 <div
                   className="fixed z-50"
@@ -315,7 +391,9 @@ function SampleCard({ sample }: { sample: WritingSample }) {
                   <HighlightVocabPopup
                     text={popup.text}
                     onAdd={handleAdd}
+                    onHighlight={() => handleHighlight(popup.text)}
                     onClose={closePopup}
+                    linkedDeckId={linkedDeckId}
                   />
                 </div>
               )}
@@ -375,12 +453,14 @@ function CreateForm({ onClose }: { onClose: () => void }) {
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div className="col-span-2">
-          <label className="text-xs text-[var(--text-muted)] block mb-1">Đề / Topic</label>
-          <input
-            className="q-input"
-            placeholder="Dán nguyên văn đề bài vào đây..."
+          <label className="text-xs text-[var(--text-muted)] block mb-1">Đề / Topic (hỗ trợ dán ảnh Ctrl+V)</label>
+          <textarea
+            rows={3}
+            className="q-input resize-y font-mono text-xs leading-relaxed"
+            placeholder="Dán nguyên văn đề bài hoặc Ctrl+V ảnh vào đây..."
             value={form.topic}
             onChange={e => setForm(p => ({ ...p, topic: e.target.value }))}
+            onPaste={e => handleImagePaste(e, form.topic, (val) => setForm(p => ({ ...p, topic: val })))}
           />
         </div>
         <div>
