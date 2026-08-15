@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { PenLine, Mic, Sparkles, BookOpen, Check, X, Loader2, Play, Square, AlertCircle, Plus, Upload, History } from 'lucide-react';
+import { PenLine, Mic, Sparkles, BookOpen, Check, X, Loader2, Play, Square, AlertCircle, Plus, Upload, History, Trash2 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import Link from 'next/link';
 
@@ -82,7 +82,7 @@ export default function AITrainingPage() {
 
 // ─── AI History Room ────────────────────────────────────────────────────────────
 function AIHistoryRoom() {
-  const { writingSamples, speakingSubmissions } = useStore();
+  const { writingSamples, speakingSubmissions, deleteWritingSample, deleteSpeakingSubmission } = useStore();
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
   const gradedWritings = Object.values(writingSamples || {}).filter(s => s.tags?.includes('ai_graded')).sort((a, b) => b.createdAt - a.createdAt);
@@ -92,9 +92,23 @@ function AIHistoryRoom() {
     const isWriting = selectedItem.task !== undefined;
     return (
       <div className="flex flex-col gap-6 animate-fade-in">
-        <button onClick={() => setSelectedItem(null)} className="self-start text-sm font-bold text-gray-500 hover:text-gray-900 flex items-center gap-1">
-          ← Quay lại Lịch sử
-        </button>
+        <div className="flex items-center justify-between">
+          <button onClick={() => setSelectedItem(null)} className="self-start text-sm font-bold text-gray-500 hover:text-gray-900 flex items-center gap-1">
+            ← Quay lại Lịch sử
+          </button>
+          <button 
+            onClick={() => {
+              if (confirm('Bạn có chắc chắn muốn xoá bài đã chữa này?')) {
+                if (isWriting) deleteWritingSample(selectedItem.id);
+                else deleteSpeakingSubmission(selectedItem.id);
+                setSelectedItem(null);
+              }
+            }}
+            className="text-sm font-bold text-red-500 hover:text-red-600 flex items-center gap-1"
+          >
+            <Trash2 size={16} /> Xoá bài
+          </button>
+        </div>
         <div className="flex flex-col gap-6">
           <div className="w-full bg-[var(--card)] rounded-2xl p-6 shadow-sm">
             <h2 className="text-xl font-bold mb-4">{isWriting ? selectedItem.title : `Speaking Part ${selectedItem.part}: ${selectedItem.topic || 'No topic'}`}</h2>
@@ -198,7 +212,7 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   const [feedback, setFeedback] = useState<any>(null);
   const [topicImage, setTopicImage] = useState<string | null>(null);
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+  const handlePaste = (e: any) => {
     if (task !== 'task1') return;
     const items = e.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
@@ -217,7 +231,9 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   };
 
   const handleGrade = async () => {
-    if ((!topic.trim() && !topicImage) || !content.trim()) return alert('Vui lòng cung cấp đủ đề bài (hoặc ảnh) và bài làm!');
+    if (task === 'task1' && !topicImage) return alert('Vui lòng tải lên ảnh đề bài!');
+    if (task === 'task2' && !topic.trim()) return alert('Vui lòng nhập đề bài!');
+    if (!content.trim()) return alert('Vui lòng cung cấp bài làm!');
     setIsGrading(true);
     setFeedback(null);
     try {
@@ -246,7 +262,7 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="w-full flex flex-col gap-4">
-        <div className="bg-[var(--card)] rounded-2xl p-5 shadow-sm">
+        <div className="bg-[var(--card)] rounded-2xl p-5 shadow-sm" onPaste={handlePaste}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-50 text-blue-600 flex items-center justify-center shadow-sm border border-blue-100">
@@ -272,7 +288,7 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
               ) : (
                 <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[var(--border)] rounded-xl cursor-pointer hover:bg-[var(--bg)] transition-colors">
                   <Upload size={24} className="text-[var(--text-muted)] mb-1" />
-                  <span className="text-xs text-[var(--text-muted)] font-medium text-center">Bấm tải ảnh lên, hoặc <b>Ctrl+V</b> dán ảnh trực tiếp vào ô Đề bài bên dưới</span>
+                  <span className="text-xs text-[var(--text-muted)] font-medium text-center">Bấm tải ảnh lên, hoặc <b>Ctrl+V</b> dán ảnh trực tiếp vào bất cứ đâu</span>
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
@@ -285,12 +301,13 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
               )}
             </div>
           )}
-          <textarea
-            className="q-input resize-y font-sans font-medium text-[15px] leading-relaxed mb-4 w-full bg-[var(--bg)] border border-[var(--border)] focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10 shadow-inner rounded-xl p-4 transition-all"
-            rows={3} placeholder="Dán đề bài (Prompt) vào đây..."
-            value={topic} onChange={e => setTopic(e.target.value)}
-            onPaste={handlePaste}
-          />
+          {task === 'task2' && (
+            <textarea
+              className="q-input resize-y font-sans font-medium text-[15px] leading-relaxed mb-4 w-full bg-[var(--bg)] border border-[var(--border)] focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10 shadow-inner rounded-xl p-4 transition-all"
+              rows={3} placeholder="Dán đề bài (Prompt) vào đây..."
+              value={topic} onChange={e => setTopic(e.target.value)}
+            />
+          )}
           <textarea
             className="q-input resize-y font-sans font-medium text-[15px] leading-relaxed w-full min-h-[300px] bg-[var(--bg)] border border-[var(--border)] focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10 shadow-inner rounded-xl p-4 transition-all"
             placeholder="Viết bài làm của bạn vào đây..."
@@ -299,7 +316,7 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
           <div className="mt-4 flex justify-end">
             <button
               onClick={handleGrade}
-              disabled={isGrading || (!topic.trim() && !topicImage) || !content.trim()}
+              disabled={isGrading || (task === 'task1' && !topicImage) || (task === 'task2' && !topic.trim()) || !content.trim()}
               className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-white font-bold rounded-xl hover:bg-[var(--primary-hover)] shadow-md disabled:opacity-50 transition-all"
             >
               {isGrading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
@@ -620,9 +637,9 @@ function FeedbackPanel({ feedback, isGrading, defaultDeckId, type }: { feedback:
                   {feedback.improvedVersion.band8Sample}
                 </p>
               </div>
-              <div className="p-3 bg-white rounded-xl border border-indigo-100 text-sm">
-                <p className="font-bold text-indigo-800 mb-1">💡 Điểm khác biệt mấu chốt:</p>
-                <p className="text-gray-700 leading-relaxed">{feedback.improvedVersion.differences}</p>
+              <div className="p-4 bg-white rounded-xl border border-indigo-100">
+                <p className="font-bold text-indigo-800 mb-2 text-base">💡 Điểm khác biệt mấu chốt:</p>
+                <p className="text-gray-800 leading-relaxed text-[15px]">{feedback.improvedVersion.differences}</p>
               </div>
             </div>
           </div>

@@ -59,7 +59,7 @@ BẠN BẮT BUỘC TRẢ VỀ CHUỖI JSON HỢP LỆ (KHÔNG bọc trong \`\`\`
   "generalComment": "NHẬN XÉT SIÊU CHI TIẾT (dài khoảng 2-3 đoạn văn): Tổng kết toàn diện về ưu điểm, khuyết điểm cốt lõi. Đưa ra lộ trình hành động (actionable advice) cực kỳ rõ ràng để thí sinh nâng ngay lập tức 0.5 - 1.0 band trong bài nói tới.",
   "improvedVersion": {
     "band8Sample": "Bài nói được viết lại HOÀN TOÀN dựa trên ý tưởng gốc của thí sinh nhưng được nâng cấp toàn diện lên văn phong nói Band 8+ (từ vựng xịn, idioms, cấu trúc câu tự nhiên như người bản xứ).",
-    "differences": "Giải thích ngắn gọn (3-4 câu) chỉ ra những điểm khác biệt lớn nhất giúp bài này đạt Band 8 so với bài gốc của thí sinh."
+    "differences": "PHÂN TÍCH RẤT SÂU: Giải thích cặn kẽ và chi tiết (từ 5-7 câu) chỉ ra những điểm khác biệt lớn nhất giúp bài này đạt Band 8 so với bài gốc của thí sinh. Phân tích cụ thể cách phát triển ý, idioms, ngữ điệu và tự nhiên."
   }
 }
 `;
