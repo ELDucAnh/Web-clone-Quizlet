@@ -10,11 +10,11 @@ export const db = new Pool({
   connectionTimeoutMillis: 5000,
 });
 
-db.on('error', (err) => {
+db.on('error', (err: Error) => {
   console.error('[DB] Unexpected client error', err);
 });
 
 // Test connection on startup
 db.query('SELECT 1')
   .then(() => console.log('[DB] PostgreSQL connected'))
-  .catch((err) => console.error('[DB] Connection failed:', err.message));
+  .catch((err: Error) => console.error('[DB] Connection failed:', err.message));
