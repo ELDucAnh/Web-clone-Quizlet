@@ -8,6 +8,7 @@ import {
   Shuffle, Droplets, ChevronRight, Zap,
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false);
@@ -48,18 +49,7 @@ export default function HomePage() {
 
   // ── Loading State ───────────────────────────────────────────────────────────
   if (status === 'loading' || (status === 'authenticated' && !isHydrated)) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 animate-fade-in">
-        <div className="relative w-14 h-14 flex items-center justify-center">
-          <div className="absolute inset-0 border-4 border-[var(--border)] rounded-full"></div>
-          <div className="absolute inset-0 border-4 border-[var(--primary)] rounded-full border-t-transparent animate-spin"></div>
-          <div className="absolute inset-2 bg-[var(--primary-light)] rounded-full animate-pulse opacity-50"></div>
-        </div>
-        <p className="text-sm font-semibold text-[var(--primary)] tracking-wide animate-pulse">
-          Đang tải dữ liệu...
-        </p>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   // ── Empty State ─────────────────────────────────────────────────────────────

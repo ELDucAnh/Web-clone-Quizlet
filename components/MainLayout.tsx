@@ -7,6 +7,7 @@ import { useStore } from '@/lib/store';
 import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 import { LandingPage } from './LandingPage';
+import { LoadingScreen } from './LoadingScreen';
 
 interface CreateFolderModalProps {
   onClose: () => void;
@@ -118,6 +119,11 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   const isAuthenticated = status === 'authenticated';
   const isUnauthenticated = status === 'unauthenticated';
+  const isLoading = status === 'loading';
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   // Full-screen landing page when unauthenticated — no sidebar, no navbar
   if (isUnauthenticated) {

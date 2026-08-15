@@ -7,6 +7,7 @@ import { useStore } from '@/lib/store';
 import { ImportZone, ParseFeedback, PreviewTable } from '@/components/ImportZone';
 import { parseCSVFile } from '@/lib/csv-parser';
 import type { ParseResult } from '@/lib/csv-parser';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 interface CardRow {
   id: string;
@@ -338,11 +339,7 @@ function CreateSetContent() {
 
 export default function CreateSetPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
+    <Suspense fallback={<LoadingScreen message="Đang tải dữ liệu..." />}>
       <CreateSetContent />
     </Suspense>
   );

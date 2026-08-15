@@ -854,3 +854,32 @@ input:checked + .toggle-track::before { transform: translateX(19px); }
   transition: opacity 0.3s;
 }
 .gradient-border:hover::before { opacity: 1; }
+
+/* ─── Animated Loading Dots ────────────────────────────────────────────────── */
+.dot-flashing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.dot-flashing .dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--gradient-primary, linear-gradient(135deg, #4255FF, #7C3AED));
+  animation: dot-flashing 1s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dot-flashing .dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot-flashing .dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dot-flashing {
+  0% { transform: scale(0.6); opacity: 0.3; }
+  100% { transform: scale(1.4); opacity: 1; }
+}
