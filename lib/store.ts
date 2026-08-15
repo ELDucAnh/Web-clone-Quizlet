@@ -61,6 +61,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           studyHoursLogs: data.studyHoursLogs || [],
           writingSamples: data.writingSamples || {},
           speakingTopics: data.speakingTopics || {},
+          speakingSubmissions: data.speakingSubmissions || {},
           settings: data.settings && Object.keys(data.settings).length > 0 ? data.settings : get().settings,
           isHydrated: true,
           // keep local UI state (searchQuery, sidebarCollapsed)

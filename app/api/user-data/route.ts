@@ -24,6 +24,7 @@ export async function GET() {
       studyHoursLogs: [],
       writingSamples: {},
       speakingTopics: {},
+      speakingSubmissions: {},
       settings: {}
     };
 
@@ -155,6 +156,7 @@ export async function GET() {
           content: w.content,
           band: w.band || undefined,
           tags: w.tags || [],
+          aiFeedback: w.ai_feedback,
           createdAt: new Date(w.created_at).getTime(),
           updatedAt: new Date(w.updated_at).getTime(),
         };
@@ -169,6 +171,20 @@ export async function GET() {
           questions: s.questions || [],
           sampleAnswer: s.sample_answer || undefined,
           keywords: s.keywords || [], 
+          createdAt: new Date(s.created_at).getTime(),
+          updatedAt: new Date(s.updated_at).getTime(),
+        };
+      });
+
+      const { rows: speakingSubs } = await client.query('SELECT * FROM speaking_submissions WHERE user_id = $1', [userId]);
+      speakingSubs.forEach(s => {
+        payload.speakingSubmissions[s.id] = {
+          id: s.id,
+          part: s.part,
+          topic: s.topic,
+          transcript: s.transcript,
+          band: s.band || undefined,
+          aiFeedback: s.ai_feedback,
           createdAt: new Date(s.created_at).getTime(),
           updatedAt: new Date(s.updated_at).getTime(),
         };
