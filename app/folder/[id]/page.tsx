@@ -221,38 +221,51 @@ export default function FolderDetailPage() {
             return (
               <div
                 key={deck.id}
-                className="quizlet-card overflow-hidden group"
+                className="relative bg-[var(--card)] rounded-xl border border-[var(--border)] flex flex-col overflow-hidden transition-all duration-200 hover:shadow-md hover:border-[var(--border-strong)] hover:-translate-y-0.5 group"
               >
-                <div className="p-5 flex flex-col gap-3">
+                <div className="p-4 flex-1 flex flex-col gap-3">
                   <div className="flex items-start justify-between gap-2">
                     <Link href={`/study/${deck.id}`} className="flex-1 min-w-0 group/link">
-                      <h3 className="font-bold text-[var(--text)] truncate group-hover/link:text-[var(--primary)] transition-colors">
+                      <h3 className="font-bold text-[var(--text)] truncate group-hover/link:text-[var(--primary)] transition-colors text-[0.9375rem] leading-snug tracking-tight">
                         {deck.name}
                       </h3>
-                      <p className="text-sm text-[var(--text-muted)] mt-0.5">{deck.cardCount} thẻ</p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="text-xs text-[var(--text-muted)]">{deck.cardCount} thẻ</span>
+                        {pct === 100 && deck.cardCount > 0 && (
+                          <span className="badge badge-green text-[10px]">Hoàn thành</span>
+                        )}
+                      </div>
                     </Link>
                     <button
                       onClick={() => removeDeckFromFolder(folderId, deck.id)}
-                      className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg)] transition-all flex-shrink-0"
+                      className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg-subtle)] transition-all flex-shrink-0"
                       title="Xóa khỏi thư mục"
                     >
-                      <X size={14} />
+                      <X size={15} />
                     </button>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <div className="flex justify-between text-xs text-[var(--text-muted)]">
-                      <span className="flex items-center gap-0.5"><TrendingUp size={10} /> Tiến độ</span>
-                      <span className="font-semibold text-[var(--primary)] text-xs">{mastered}/{deck.cardCount}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-[var(--text-muted)]">{mastered}/{deck.cardCount} đã thuộc</span>
+                      <span className="text-xs font-bold text-[var(--primary)]">{pct}%</span>
                     </div>
                     <div className="progress-bar-track">
-                      <div className="progress-bar-fill" style={{ width: `${pct}%` }} />
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${pct}%`,
+                          background: pct === 100
+                            ? 'linear-gradient(90deg, #16A34A, #22C55E)'
+                            : 'linear-gradient(90deg, var(--primary) 0%, #818CF8 100%)',
+                        }}
+                      />
                     </div>
                   </div>
                   <Link
                     href={`/study/${deck.id}`}
-                    className="block text-center py-2 rounded-lg text-white text-sm font-bold bg-[var(--primary)] hover:opacity-90 transition-opacity"
+                    className="block text-center py-2 px-4 rounded-lg font-semibold text-sm text-white bg-[var(--primary)] hover:bg-[var(--primary-hover)] transition-colors active:scale-95"
                   >
-                    {deck.lastStudied ? 'Tiếp tục học' : 'Bắt đầu học'}
+                    {pct === 100 ? 'Học lại' : deck.lastStudied ? 'Tiếp tục học' : 'Bắt đầu học'}
                   </Link>
                 </div>
               </div>

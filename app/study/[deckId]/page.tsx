@@ -288,11 +288,14 @@ export default function SetDetailPage() {
       {/* ── Study Modes ─────────────────────────────────── */}
       <section>
         <h2 className="text-base font-bold text-[var(--text)] mb-4">Chế độ học</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {studyModes.map(m => (
             <Link key={m.label} href={m.href} className="study-mode-btn">
-              <span className="text-[var(--primary)]">{m.icon}</span>
-              <span className="mode-label">{m.label}</span>
+              <span className="mode-icon">{m.icon}</span>
+              <div className="flex-1 min-w-0">
+                <span className="mode-label block">{m.label}</span>
+              </div>
+              <ChevronRight size={15} className="text-[var(--text-muted)] flex-shrink-0" />
             </Link>
           ))}
         </div>

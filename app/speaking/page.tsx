@@ -180,11 +180,11 @@ function TopicCard({ topic }: { topic: SpeakingTopic }) {
           <div className="flex items-center gap-3 mt-1 flex-wrap">
             <span className="text-xs text-[var(--text-muted)]">{topic.questions.length} câu hỏi</span>
             {topic.sampleAnswer && (
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">✓ Có bài mẫu</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Có bài mẫu</span>
             )}
             {topic.keywords && topic.keywords.length > 0 && (
               <span className="text-xs text-[var(--text-muted)] truncate max-w-[200px]">
-                🔑 {topic.keywords.slice(0, 3).join(' · ')}{topic.keywords.length > 3 ? '...' : ''}
+                {topic.keywords.slice(0, 3).join(' · ')}{topic.keywords.length > 3 ? '...' : ''}
               </span>
             )}
           </div>
@@ -290,7 +290,7 @@ function TopicCard({ topic }: { topic: SpeakingTopic }) {
           ) : (
             <div className="flex flex-col gap-5" ref={bodyRef}>
               <p className="text-xs text-[var(--text-muted)] italic select-none">
-                💡 Bôi đen từ/cụm từ để thêm vào học phần từ vựng
+                Bôi đen từ/cụm từ để thêm vào học phần từ vựng
               </p>
 
               {/* Questions */}

@@ -16,12 +16,12 @@ const SKILL_COLORS: Record<IELTSSkill, string> = {
 };
 
 const SKILL_LABELS: Record<IELTSSkill, string> = {
-  Listening: '🎧 Listening',
-  Reading: '📖 Reading',
-  Writing: '✍️ Writing',
-  Speaking: '🗣️ Speaking',
-  Vocabulary: '📚 Vocabulary',
-  Grammar: '📐 Grammar',
+  Listening: 'Listening',
+  Reading: 'Reading',
+  Writing: 'Writing',
+  Speaking: 'Speaking',
+  Vocabulary: 'Vocabulary',
+  Grammar: 'Grammar',
 };
 
 function fmt(mins: number) {
@@ -106,7 +106,7 @@ function GoalCard({ goal }: { goal: StudyHoursGoal }) {
             </span>
             {pct === 100 && (
               <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400 px-2 py-0.5 rounded-full">
-                ✓ Hoàn thành!
+                Hoàn thành!
               </span>
             )}
           </div>
@@ -120,7 +120,7 @@ function GoalCard({ goal }: { goal: StudyHoursGoal }) {
             <p className="text-xs text-[var(--text-muted)]">{pct}% • còn {remaining > 0 ? fmt(Math.round(remaining * 60)) : 'đã đạt mục tiêu'}</p>
             {daysLeft !== null && (
               <p className={`text-xs font-medium ${daysLeft < 7 ? 'text-red-500' : 'text-[var(--text-muted)]'}`}>
-                {daysLeft > 0 ? `⏰ còn ${daysLeft} ngày` : daysLeft === 0 ? '⏰ hôm nay hạn chót' : `❗ quá hạn ${Math.abs(daysLeft)} ngày`}
+                {daysLeft > 0 ? `Còn ${daysLeft} ngày` : daysLeft === 0 ? 'Hôm nay hạn chót' : `Quá hạn ${Math.abs(daysLeft)} ngày`}
               </p>
             )}
           </div>

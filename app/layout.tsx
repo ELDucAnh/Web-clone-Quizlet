@@ -4,11 +4,18 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { MainLayout } from '@/components/MainLayout';
 
 export const metadata: Metadata = {
-  title: 'VocabMaster — Học từ vựng thông minh',
+  title: 'Quizlu — Học từ vựng IELTS thông minh',
   description:
-    'Ứng dụng học từ vựng miễn phí với thuật toán spaced repetition SM-2, nhiều chế độ học: flashcard, học, kiểm tra, ghép thẻ và gravity.',
-  keywords: ['học từ vựng', 'flashcard', 'spaced repetition', 'quizlet', 'anki', 'ielts'],
+    'Ứng dụng học từ vựng miễn phí với thuật toán spaced repetition, nhiều chế độ học: flashcard, học, kiểm tra, ghép thẻ và gravity.',
+  keywords: ['học từ vựng', 'flashcard', 'spaced repetition', 'quizlet', 'ielts'],
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+  },
 };
+
+
+import { AuthProvider } from '@/components/AuthProvider';
 
 export default function RootLayout({
   children,
@@ -18,9 +25,11 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <body>
-        <ThemeProvider>
-          <MainLayout>{children}</MainLayout>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <MainLayout>{children}</MainLayout>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

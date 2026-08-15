@@ -275,7 +275,7 @@ function LearnContent() {
           {finishing && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--bg)]/80 backdrop-blur-sm rounded-3xl animate-fade-in">
               <div className="bg-emerald-500 text-white px-8 py-4 rounded-2xl shadow-2xl font-bold text-2xl flex items-center gap-3 animate-slide-up">
-                <Check size={28} /> Hoàn thành! 🎉
+                <Check size={28} /> Hoàn thành!
               </div>
             </div>
           )}

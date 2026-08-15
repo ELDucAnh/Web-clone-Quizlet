@@ -9,6 +9,8 @@ import type { Deck } from '@/lib/types';
 type Tab = 'sets' | 'folders' | 'starred';
 type SortBy = 'recent' | 'alpha' | 'studied';
 
+import { DeckCard } from '@/components/DeckCard';
+
 function DeckMenu({ deck, onDelete, onReset }: { deck: Deck; onDelete: () => void; onReset: () => void }) {
   const [open, setOpen] = useState(false);
   return (
@@ -146,7 +148,9 @@ function LibraryContent() {
         <div className="animate-fade-in">
           {deckList.length === 0 ? (
             <div className="empty-state">
-              <div className="text-5xl">📚</div>
+              <div className="w-16 h-16 rounded-2xl bg-[var(--primary-light)] text-[var(--primary)] flex items-center justify-center mx-auto mb-2">
+                <BookOpen size={32} />
+              </div>
               <div>
                 <h3 className="font-bold text-[var(--text)] text-lg">Chưa có học phần nào</h3>
                 <p className="text-[var(--text-muted)] text-sm mt-1">
@@ -161,48 +165,17 @@ function LibraryContent() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {deckList.map((deck) => {
-                const cardIds = cardsByDeck[deck.id] ?? [];
-                const mastered = cardIds.filter((id) => progress[id]?.learnStage === 'mastered').length;
-                const pct = deck.cardCount > 0 ? Math.round((mastered / deck.cardCount) * 100) : 0;
-                return (
-                  <div key={deck.id} className="quizlet-card overflow-hidden">
-                    <div className="p-5 flex flex-col gap-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <Link href={`/study/${deck.id}`} className="flex-1 min-w-0 group">
-                          <h3 className="font-bold text-[var(--text)] truncate group-hover:text-[var(--primary)] transition-colors">
-                            {deck.name}
-                          </h3>
-                          {deck.description && (
-                            <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">{deck.description}</p>
-                          )}
-                          <p className="text-sm text-[var(--text-muted)] mt-1">{deck.cardCount} thẻ</p>
-                        </Link>
-                        <DeckMenu
-                          deck={deck}
-                          onDelete={() => handleDeleteDeck(deck.id, deck.name)}
-                          onReset={() => handleResetDeck(deck.id)}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex justify-between text-xs text-[var(--text-muted)]">
-                          <span>Tiến độ</span>
-                          <span className="font-semibold text-[var(--primary)]">{mastered}/{deck.cardCount}</span>
-                        </div>
-                        <div className="progress-bar-track">
-                          <div className="progress-bar-fill" style={{ width: `${pct}%` }} />
-                        </div>
-                      </div>
-                      <Link
-                        href={`/study/${deck.id}`}
-                        className="block text-center py-2 rounded-lg text-white text-sm font-bold bg-[var(--primary)] transition-opacity hover:opacity-90"
-                      >
-                        {deck.lastStudied ? 'Tiếp tục học' : 'Bắt đầu học'}
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
+              {deckList.map((deck) => (
+                <DeckCard
+                  key={deck.id}
+                  deck={deck}
+                  progress={progress}
+                  cardIds={cardsByDeck[deck.id] ?? []}
+                  cards={cards}
+                  onDelete={() => handleDeleteDeck(deck.id, deck.name)}
+                  onReset={() => handleResetDeck(deck.id)}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -212,7 +185,9 @@ function LibraryContent() {
         <div className="animate-fade-in">
           {folderList.length === 0 ? (
             <div className="empty-state">
-              <div className="text-5xl">📁</div>
+              <div className="w-16 h-16 rounded-2xl bg-[var(--primary-light)] text-[var(--primary)] flex items-center justify-center mx-auto mb-2">
+                <Folder size={32} />
+              </div>
               <div>
                 <h3 className="font-bold text-[var(--text)] text-lg">Chưa có thư mục nào</h3>
                 <p className="text-[var(--text-muted)] text-sm mt-1">
@@ -254,7 +229,9 @@ function LibraryContent() {
         <div className="animate-fade-in">
           {starredCards.length === 0 ? (
             <div className="empty-state">
-              <div className="text-5xl">⭐</div>
+              <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/30 text-amber-500 flex items-center justify-center mx-auto mb-2">
+                <Star size={32} fill="currentColor" />
+              </div>
               <div>
                 <h3 className="font-bold text-[var(--text)] text-lg">Chưa có từ gắn sao</h3>
                 <p className="text-[var(--text-muted)] text-sm mt-1">

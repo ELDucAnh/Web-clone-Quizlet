@@ -218,7 +218,7 @@ export function TopNavbar({ onMobileMenuOpen, onCreateFolder }: TopNavbarProps) 
               <div className="absolute right-0 top-11 w-56 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-xl z-50 overflow-hidden animate-scale-in">
                 <div className="px-4 py-3 border-b border-[var(--border)]">
                   <p className="font-semibold text-[var(--text)] text-sm">{userName}</p>
-                  <p className="text-xs text-[var(--text-muted)] mt-0.5">Miễn phí • Vocab Master</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">Quizlu — IELTS Vocab</p>
                 </div>
                 <div className="p-1">
                   <Link

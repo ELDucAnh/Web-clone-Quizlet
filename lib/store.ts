@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
+import { syncToBackend } from './api';
 import type { AppState, Actions, Deck, Card, CardProgress, StudySession, Folder, IELTSState, IELTSActions, StudyHoursGoal, StudyHoursLog, WritingSample, SpeakingTopic, IELTSSkill } from './types';
 
 // CRITICAL: Wrap localStorage access để tránh SSR crash (Next.js)
@@ -138,6 +139,9 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions>()
           }));
         }
 
+        // Async sync to backend
+        syncToBackend('/decks', 'POST', { deck, cards: newCards });
+
         return deckId;
       },
 
@@ -161,6 +165,8 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions>()
             },
           },
         }));
+        
+        syncToBackend(`/decks/${deckId}`, 'PUT', { name, description });
       },
 
       updateProgress: (cardId: string, update: Partial<CardProgress>) => {
@@ -174,6 +180,11 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions>()
             },
           },
         }));
+        
+        const currentProgress = get().progress[cardId];
+        if (currentProgress) {
+          syncToBackend(`/progress/${cardId}`, 'PUT', currentProgress);
+        }
       },
 
       resetDeckProgress: (deckId: string) => {
@@ -239,6 +250,8 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions>()
             folders: newFolders,
           };
         });
+        
+        syncToBackend(`/decks/${deckId}`, 'DELETE');
       },
 
       // ─── Folder Actions ───────────────────────────────────────────────
@@ -402,6 +415,8 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions>()
             decks: newDecks,
           };
         });
+        
+        syncToBackend('/sessions', 'POST', session);
       },
 
       // ─── IELTS Study Hours Actions ────────────────────────────────────────────
