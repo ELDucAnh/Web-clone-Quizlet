@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { syncToBackend } from './api';
-import type { AppState, Actions, Deck, Card, CardProgress, StudySession, Folder, IELTSState, IELTSActions, StudyHoursGoal, StudyHoursLog, WritingSample, SpeakingTopic, IELTSSkill } from './types';
+import type { AppState, Actions, Deck, Card, CardProgress, StudySession, Folder, IELTSState, IELTSActions, StudyHoursGoal, StudyHoursLog, WritingSample, SpeakingTopic, SpeakingSubmission, IELTSSkill } from './types';
 
 // Cloud-only mode: No localStorage wrappers needed
 
