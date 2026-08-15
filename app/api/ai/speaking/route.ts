@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Không nhận được nội dung bài nói (transcript).' }, { status: 400 });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash' });
 
     const prompt = `
 Bạn là cựu giám khảo IELTS Speaking. Học viên vừa thực hiện bài nói IELTS Speaking Part ${part || 1}.

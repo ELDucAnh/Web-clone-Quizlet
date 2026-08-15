@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     }
 
     // Chọn model (gemini-1.5-flash là model cực nhanh và đủ thông minh để chấm bài)
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash' });
 
     // Prompt siêu chi tiết ép Gemini trả về JSON
     const prompt = `
