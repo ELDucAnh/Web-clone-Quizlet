@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Clock, Plus, Trash2, Target, ChevronDown, ChevronRight, Pencil, Check, X } from 'lucide-react';
 import { useStore } from '@/lib/store';
+import { appConfirm } from '@/lib/dialog';
 import type { IELTSSkill, StudyHoursGoal } from '@/lib/types';
 
 const SKILLS: IELTSSkill[] = ['Listening', 'Reading', 'Writing', 'Speaking', 'Vocabulary', 'Grammar'];
@@ -146,7 +147,7 @@ function GoalCard({ goal }: { goal: StudyHoursGoal }) {
                 <Plus size={13} /> Thêm buổi học
               </button>
               <button
-                onClick={() => { if (confirm(`Xóa mục tiêu "${goal.skill}" và toàn bộ ${logs.length} log liên quan?`)) deleteStudyHoursGoal(goal.id); }}
+                onClick={async () => { if (await appConfirm(`Xóa mục tiêu "${goal.skill}" và toàn bộ ${logs.length} log liên quan?`)) deleteStudyHoursGoal(goal.id); }}
                 className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-muted)] hover:text-red-500 transition-colors py-1 px-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20"
               >
                 <Trash2 size={12} /> Xóa mục tiêu
@@ -232,7 +233,7 @@ function GoalCard({ goal }: { goal: StudyHoursGoal }) {
                     </p>
                   </div>
                   <button
-                    onClick={() => { if (confirm('Xóa log này?')) deleteStudyHoursLog(log.id); }}
+                    onClick={async () => { if (await appConfirm('Xóa log này?')) deleteStudyHoursLog(log.id); }}
                     className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all flex-shrink-0"
                     title="Xóa buổi học này"
                   >

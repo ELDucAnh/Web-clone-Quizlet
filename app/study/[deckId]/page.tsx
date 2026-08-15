@@ -9,6 +9,7 @@ import {
   MoreVertical, Trash2, Play, Pause, Folder, ChevronRight as CR,
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
+import { appConfirm } from '@/lib/dialog';
 import { shuffleArray } from '@/lib/shuffle';
 import type { Card } from '@/lib/types';
 
@@ -256,10 +257,10 @@ export default function SetDetailPage() {
                 <Link href={`/create-set?edit=${deckId}`} className="flex items-center gap-2.5 px-4 py-3 text-sm hover:bg-[var(--bg)] transition-colors" onClick={() => setShowMenu(false)}>
                   <Pencil size={14} /> Chỉnh sửa học phần
                 </Link>
-                <button onClick={() => { setShowMenu(false); if (confirm('Đặt lại tiến độ?')) resetDeckProgress(deckId); }} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm hover:bg-[var(--bg)] transition-colors text-left">
+                <button onClick={async () => { setShowMenu(false); if (await appConfirm('Đặt lại tiến độ?')) resetDeckProgress(deckId); }} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm hover:bg-[var(--bg)] transition-colors text-left">
                   <RotateCcw size={14} /> Đặt lại tiến độ
                 </button>
-                <button onClick={() => { setShowMenu(false); if (confirm(`Xóa học phần "${deck.name}"?`)) { deleteDeck(deckId); window.location.href = '/'; } }} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors text-left">
+                <button onClick={async () => { setShowMenu(false); if (await appConfirm(`Xóa học phần "${deck.name}"?`)) { deleteDeck(deckId); window.location.href = '/'; } }} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors text-left">
                   <Trash2 size={14} /> Xóa học phần
                 </button>
               </div>

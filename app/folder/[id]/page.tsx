@@ -7,6 +7,7 @@ import {
   ChevronRight, ArrowLeft, TrendingUp
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
+import { appConfirm } from '@/lib/dialog';
 
 export default function FolderDetailPage() {
   const params = useParams();
@@ -59,8 +60,8 @@ export default function FolderDetailPage() {
     setEditing(false);
   };
 
-  const handleDeleteFolder = () => {
-    if (confirm(`Xóa thư mục "${folder.name}"? Các học phần bên trong sẽ không bị xóa.`)) {
+  const handleDeleteFolder = async () => {
+    if (await appConfirm(`Xóa thư mục "${folder.name}"? Các học phần bên trong sẽ không bị xóa.`)) {
       deleteFolder(folderId);
       router.push('/library');
     }

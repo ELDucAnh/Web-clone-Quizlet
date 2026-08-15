@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Mic, Plus, Trash2, Edit2, X, Check, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import type { SpeakingTopic } from '@/lib/types';
+import { appConfirm } from '@/lib/dialog';
 
 // ── Highlight vocab popup ─────────────────────────────────────────────
 function HighlightVocabPopup({
@@ -207,7 +208,7 @@ function TopicCard({ topic }: { topic: SpeakingTopic }) {
               <Edit2 size={12} /> Sửa
             </button>
             <button
-              onClick={() => { if (confirm(`Xóa chủ đề "${topic.topic}"?`)) deleteSpeakingTopic(topic.id); }}
+              onClick={async () => { if (await appConfirm(`Xóa chủ đề "${topic.topic}"?`)) deleteSpeakingTopic(topic.id); }}
               className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-red-500 transition-colors py-1 px-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20"
             >
               <Trash2 size={12} /> Xóa

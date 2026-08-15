@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { PenLine, Mic, Sparkles, BookOpen, Check, X, Loader2, Play, Square, AlertCircle, Plus, Upload, History, Trash2 } from 'lucide-react';
+import { PenLine, Mic, Sparkles, BookOpen, Check, X, Loader2, Play, Square, AlertCircle, Plus, Upload, History, Trash2, Search } from 'lucide-react';
 import { useStore } from '@/lib/store';
+import { appAlert, appConfirm } from '@/lib/dialog';
 import Link from 'next/link';
 
 // SpeechRecognition type definitions
@@ -84,9 +85,21 @@ export default function AITrainingPage() {
 function AIHistoryRoom() {
   const { writingSamples, speakingSubmissions, deleteWritingSample, deleteSpeakingSubmission } = useStore();
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [writeFilter, setWriteFilter] = useState<'all' | 'task1' | 'task2'>('all');
+  const [writeSearch, setWriteSearch] = useState('');
+  const [speakFilter, setSpeakFilter] = useState<'all' | 1 | 2 | 3>('all');
+  const [speakSearch, setSpeakSearch] = useState('');
 
-  const gradedWritings = Object.values(writingSamples || {}).filter(s => s.tags?.includes('ai_graded')).sort((a, b) => b.createdAt - a.createdAt);
-  const gradedSpeakings = Object.values(speakingSubmissions || {}).sort((a, b) => b.createdAt - a.createdAt);
+  const gradedWritings = Object.values(writingSamples || {})
+    .filter(s => s.tags?.includes('ai_graded'))
+    .filter(s => writeFilter === 'all' || s.task === writeFilter)
+    .filter(s => !writeSearch || s.title.toLowerCase().includes(writeSearch.toLowerCase()) || s.topic.toLowerCase().includes(writeSearch.toLowerCase()))
+    .sort((a, b) => b.createdAt - a.createdAt);
+
+  const gradedSpeakings = Object.values(speakingSubmissions || {})
+    .filter(s => speakFilter === 'all' || s.part === speakFilter)
+    .filter(s => !speakSearch || (s.topic || '').toLowerCase().includes(speakSearch.toLowerCase()))
+    .sort((a, b) => b.createdAt - a.createdAt);
 
   if (selectedItem) {
     const isWriting = selectedItem.task !== undefined;
@@ -97,8 +110,8 @@ function AIHistoryRoom() {
             ← Quay lại Lịch sử
           </button>
           <button 
-            onClick={() => {
-              if (confirm('Bạn có chắc chắn muốn xoá bài đã chữa này?')) {
+            onClick={async () => {
+              if (await appConfirm('Bạn có chắc chắn muốn xoá bài đã chữa này?')) {
                 if (isWriting) deleteWritingSample(selectedItem.id);
                 else deleteSpeakingSubmission(selectedItem.id);
                 setSelectedItem(null);
@@ -146,9 +159,23 @@ function AIHistoryRoom() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
       {/* Cột Writing */}
       <div className="bg-[var(--card)] rounded-2xl p-6 shadow-sm border border-[var(--border)]">
-        <div className="flex items-center gap-2 mb-6 text-blue-600">
+        <div className="flex items-center gap-2 mb-4 text-blue-600">
           <PenLine size={20} />
           <h2 className="text-lg font-bold text-[var(--text)]">Bài Writing đã chữa</h2>
+        </div>
+        
+        <div className="flex flex-col gap-3 mb-4">
+          <div className="flex gap-2">
+            {(['all', 'task1', 'task2'] as const).map(f => (
+              <button key={f} onClick={() => setWriteFilter(f)} className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${writeFilter === f ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                {f === 'all' ? 'Tất cả' : f === 'task1' ? 'Task 1' : 'Task 2'}
+              </button>
+            ))}
+          </div>
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input type="text" placeholder="Tìm kiếm đề bài hoặc tiêu đề..." value={writeSearch} onChange={e => setWriteSearch(e.target.value)} className="w-full pl-8 pr-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-xl text-sm font-medium outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/10 transition-all" />
+          </div>
         </div>
         {gradedWritings.length === 0 ? (
           <p className="text-sm text-gray-400 italic">Chưa có bài nào được AI chấm.</p>
@@ -174,9 +201,23 @@ function AIHistoryRoom() {
 
       {/* Cột Speaking */}
       <div className="bg-[var(--card)] rounded-2xl p-6 shadow-sm border border-[var(--border)]">
-        <div className="flex items-center gap-2 mb-6 text-purple-600">
+        <div className="flex items-center gap-2 mb-4 text-purple-600">
           <Mic size={20} />
           <h2 className="text-lg font-bold text-[var(--text)]">Bài Speaking đã chữa</h2>
+        </div>
+
+        <div className="flex flex-col gap-3 mb-4">
+          <div className="flex gap-2">
+            {(['all', 1, 2, 3] as const).map(f => (
+              <button key={f} onClick={() => setSpeakFilter(f)} className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${speakFilter === f ? 'bg-purple-600 text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                {f === 'all' ? 'Tất cả' : `Part ${f}`}
+              </button>
+            ))}
+          </div>
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input type="text" placeholder="Tìm kiếm chủ đề speaking..." value={speakSearch} onChange={e => setSpeakSearch(e.target.value)} className="w-full pl-8 pr-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-xl text-sm font-medium outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/10 transition-all" />
+          </div>
         </div>
         {gradedSpeakings.length === 0 ? (
           <p className="text-sm text-gray-400 italic">Chưa có bài nào được AI chấm.</p>
@@ -232,9 +273,9 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   };
 
   const handleGrade = async () => {
-    if (task === 'task1' && !topicImage) return alert('Vui lòng tải lên ảnh đề bài!');
-    if (task === 'task2' && !topic.trim()) return alert('Vui lòng nhập đề bài!');
-    if (!content.trim()) return alert('Vui lòng cung cấp bài làm!');
+    if (task === 'task1' && !topicImage) return appAlert('Vui lòng tải lên ảnh đề bài!');
+    if (task === 'task2' && !topic.trim()) return appAlert('Vui lòng nhập đề bài!');
+    if (!content.trim()) return appAlert('Vui lòng cung cấp bài làm!');
     setIsGrading(true);
     setFeedback(null);
     try {
@@ -250,11 +291,24 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
         createWritingSample({
           task, title: topic.trim() ? topic.slice(0, 50) + '...' : 'Task 1 (Ảnh)', topic, content, band: data.overallBand, aiFeedback: data, tags: ['ai_graded']
         });
+        
+        // Save Band 8 suggested essay to the repo
+        if (data.band8Sample) {
+          createWritingSample({
+            task, 
+            title: `[Band 8] ${topic.trim() ? topic.slice(0, 40) + '...' : 'Task 1'}`, 
+            topic, 
+            content: data.band8Sample, 
+            band: 8.0, 
+            tags: [], 
+            aiFeedback: { topicImage } 
+          });
+        }
       } else {
-        alert(data.error);
+        appAlert(data.error);
       }
     } catch (e) {
-      alert('Lỗi kết nối tới AI!');
+      appAlert('Lỗi kết nối tới AI!');
     } finally {
       setIsGrading(false);
     }
@@ -377,7 +431,7 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   }, []);
 
   const toggleRecording = () => {
-    if (!recognitionRef.current) return alert('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói (Hãy dùng Chrome).');
+    if (!recognitionRef.current) return appAlert('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói (Hãy dùng Chrome).');
     if (isRecording) {
       recognitionRef.current.stop();
       setIsRecording(false);
@@ -399,7 +453,7 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   };
 
   const handleGrade = async () => {
-    if (!transcript.trim()) return alert('Chưa có nội dung nói!');
+    if (!transcript.trim()) return appAlert('Chưa có nội dung nói!');
     setIsGrading(true);
     setFeedback(null);
     try {
@@ -415,10 +469,10 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
           part: parseInt(part) as any, topic, transcript, band: data.overallBand, aiFeedback: data
         });
       } else {
-        alert(data.error);
+        appAlert(data.error);
       }
     } catch (e) {
-      alert('Lỗi kết nối tới AI!');
+      appAlert('Lỗi kết nối tới AI!');
     } finally {
       setIsGrading(false);
     }
@@ -638,7 +692,7 @@ function FeedbackPanel({ feedback, isGrading, defaultDeckId, type }: { feedback:
                   addCardToDeck(selectedDeckId, vocab.upgrade, vocab.explanation);
                   count++;
                 });
-                alert(`Đã thêm nhanh ${count} từ vựng Band 8 vào bộ học!`);
+                appAlert(`Đã thêm nhanh ${count} từ vựng Band 8 vào bộ học!`);
               }}
               className={`px-4 py-1.5 bg-${themeColor}-600 text-white text-xs font-bold rounded-lg hover:bg-${themeColor}-700 transition-colors whitespace-nowrap shadow-sm`}
             >

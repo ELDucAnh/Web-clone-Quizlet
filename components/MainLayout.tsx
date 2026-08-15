@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 import { LandingPage } from './LandingPage';
 import { LoadingScreen } from './LoadingScreen';
+import { GlobalDialog } from './GlobalDialog';
 
 interface CreateFolderModalProps {
   onClose: () => void;
@@ -160,6 +161,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       {showCreateFolder && isAuthenticated && (
         <CreateFolderModal onClose={() => setShowCreateFolder(false)} />
       )}
+      <GlobalDialog />
     </div>
   );
 }

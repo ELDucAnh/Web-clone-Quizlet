@@ -4,6 +4,7 @@ import { PenLine, Plus, Trash2, Edit2, X, ChevronDown, ChevronRight, Check, Sear
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import type { WritingTask, WritingSample } from '@/lib/types';
+import { appAlert, appConfirm } from '@/lib/dialog';
 
 // ── Image Paste Helper ────────────────────────────────────────────────
 const handleImagePaste = (e: React.ClipboardEvent, currentText: string, setter: (val: string) => void) => {
@@ -248,7 +249,7 @@ function SampleCard({ sample }: { sample: WritingSample }) {
 
   const handleGradeWithAI = async () => {
     if (!sample.topic || !sample.content) {
-      alert('Cần có đủ Đề bài (Topic) và Nội dung bài làm để AI chấm điểm!');
+      appAlert('Cần có đủ Đề bài (Topic) và Nội dung bài làm để AI chấm điểm!');
       return;
     }
     setIsGrading(true);
@@ -271,11 +272,11 @@ function SampleCard({ sample }: { sample: WritingSample }) {
           updateWritingSample(sample.id, { band: data.overallBand });
         }
       } else {
-        alert(data.error || 'Có lỗi xảy ra khi chấm bài.');
+        appAlert(data.error || 'Có lỗi xảy ra khi chấm bài.');
       }
     } catch (err) {
       console.error(err);
-      alert('Không thể kết nối đến AI.');
+      appAlert('Không thể kết nối đến AI.');
     } finally {
       setIsGrading(false);
     }
@@ -298,6 +299,9 @@ function SampleCard({ sample }: { sample: WritingSample }) {
         </span>
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-[var(--text)] leading-snug truncate">{sample.title}</h3>
+          {sample.aiFeedback?.topicImage && (
+            <img src={sample.aiFeedback.topicImage} alt="Topic" className="max-h-48 rounded-lg mb-2 mt-2 object-contain border border-[var(--border)] bg-[var(--bg)]" />
+          )}
           {sample.topic && (
             <div 
               className="text-[var(--text)] font-medium mt-1.5 mb-2 whitespace-pre-wrap text-sm leading-relaxed"
@@ -356,7 +360,7 @@ function SampleCard({ sample }: { sample: WritingSample }) {
               {isGrading ? 'AI đang chấm...' : 'Chấm bằng AI'}
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); if (confirm('Xóa bài mẫu này?')) deleteWritingSample(sample.id); }}
+              onClick={async (e) => { e.stopPropagation(); if (await appConfirm('Xóa bài mẫu này?')) deleteWritingSample(sample.id); }}
               className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-red-500 transition-colors py-1 px-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20"
             >
               <Trash2 size={12} /> Xóa

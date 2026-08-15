@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { BookOpen, Folder, Star, Plus, Search, SortAsc, MoreVertical, Trash2, RotateCcw, ChevronRight } from 'lucide-react';
 import { useStore } from '@/lib/store';
+import { appConfirm } from '@/lib/dialog';
 import type { Deck } from '@/lib/types';
 
 type Tab = 'sets' | 'folders' | 'starred';
@@ -67,20 +68,20 @@ function LibraryContent() {
   // Starred terms: collect all starred cards
   const starredCards = Object.values(cards).filter((c) => c.starred);
 
-  const handleDeleteDeck = (id: string, name: string) => {
-    if (confirm(`Xóa học phần "${name}"? Thao tác này không thể hoàn tác.`)) {
+  const handleDeleteDeck = async (id: string, name: string) => {
+    if (await appConfirm(`Xóa học phần "${name}"? Thao tác này không thể hoàn tác.`)) {
       deleteDeck(id);
     }
   };
 
-  const handleResetDeck = (id: string) => {
-    if (confirm('Đặt lại toàn bộ tiến độ của học phần này?')) {
+  const handleResetDeck = async (id: string) => {
+    if (await appConfirm('Đặt lại toàn bộ tiến độ của học phần này?')) {
       resetDeckProgress(id);
     }
   };
 
-  const handleDeleteFolder = (id: string, name: string) => {
-    if (confirm(`Xóa thư mục "${name}"? Các học phần bên trong sẽ không bị xóa.`)) {
+  const handleDeleteFolder = async (id: string, name: string) => {
+    if (await appConfirm(`Xóa thư mục "${name}"? Các học phần bên trong sẽ không bị xóa.`)) {
       deleteFolder(id);
     }
   };
