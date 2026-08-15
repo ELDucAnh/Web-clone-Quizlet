@@ -103,16 +103,16 @@ export default function HomePage() {
       {/* ── Greeting ───────────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">
+          <h1 className="text-3xl font-extrabold text-[var(--text)] tracking-tight mb-2">
             {settings.userName ? `Chào mừng trở lại, ${settings.userName}` : 'Trang chủ'}
           </h1>
-          <p className="text-[var(--text-muted)] text-sm mt-1">
-            {deckList.length} học phần · {totalCards.toLocaleString()} thẻ · {masteredCards.toLocaleString()} đã thuộc
+          <p className="text-[var(--text-muted)] text-sm font-medium">
+            {deckList.length} học phần &nbsp;·&nbsp; {totalCards.toLocaleString()} thẻ &nbsp;·&nbsp; {masteredCards.toLocaleString()} đã thuộc
           </p>
         </div>
 
         {/* Daily Goal pill */}
-        <div className="flex items-center gap-3 bg-[var(--card)] border border-[var(--border)] rounded-xl px-4 py-3 min-w-[220px] shadow-xs">
+        <div className="flex items-center gap-3 bg-[var(--card)] border-none rounded-xl px-4 py-3 min-w-[220px] shadow-sm">
           <div className="w-8 h-8 rounded-lg bg-[var(--primary-light)] text-[var(--primary)] flex items-center justify-center flex-shrink-0">
             <Target size={15} />
           </div>
@@ -165,11 +165,11 @@ export default function HomePage() {
               <Link
                 key={deck.id}
                 href={`/study/${deck.id}`}
-                className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex flex-col gap-3 hover:shadow-md hover:border-[var(--border-strong)] hover:-translate-y-0.5 transition-all duration-200 group"
+                className="bg-[var(--card)] border-none rounded-2xl p-5 flex flex-col gap-4 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group"
               >
                 <div className="flex items-start justify-between">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--primary-light)] text-[var(--primary)] flex items-center justify-center flex-shrink-0">
-                    <BookOpen size={14} />
+                  <div className="w-10 h-10 rounded-xl bg-[var(--primary-light)] text-[var(--primary)] flex items-center justify-center flex-shrink-0">
+                    <BookOpen size={18} />
                   </div>
                   <span className="text-xs font-semibold text-[var(--primary)]">{pct}%</span>
                 </div>
@@ -182,7 +182,7 @@ export default function HomePage() {
                 <div className="progress-bar-track">
                   <div className="progress-bar-fill" style={{ width: `${pct}%` }} />
                 </div>
-                <div className="text-center py-2 rounded-lg bg-[var(--primary)] text-white text-xs font-semibold">
+                <div className="text-center py-2.5 mt-2 rounded-xl bg-gradient-to-r from-[var(--primary)] to-blue-500 text-white text-sm font-bold shadow-sm group-hover:shadow-[var(--shadow-primary)] transition-shadow">
                   {deck.lastStudied ? 'Tiếp tục học' : 'Bắt đầu học'}
                 </div>
               </Link>
@@ -192,10 +192,10 @@ export default function HomePage() {
           {/* Add new deck */}
           <Link
             href="/create-set"
-            className="flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed border-[var(--border)] rounded-xl text-[var(--text-muted)] hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--primary-light)] transition-all min-h-[160px]"
+            className="flex flex-col items-center justify-center gap-3 p-5 border-2 border-dashed border-[var(--border)] rounded-2xl text-[var(--text-muted)] hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--primary-light)] transition-all min-h-[180px]"
           >
-            <div className="w-9 h-9 rounded-xl border-2 border-current flex items-center justify-center">
-              <Plus size={18} />
+            <div className="w-12 h-12 rounded-full bg-[var(--bg)] group-hover:bg-white flex items-center justify-center">
+              <Plus size={24} />
             </div>
             <span className="text-sm font-semibold">Tạo học phần</span>
           </Link>

@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { ThemeProvider } from '@/components/ThemeProvider';
 import { MainLayout } from '@/components/MainLayout';
 
 export const metadata: Metadata = {
@@ -26,9 +25,7 @@ export default function RootLayout({
     <html lang="vi" suppressHydrationWarning>
       <body>
         <AuthProvider>
-          <ThemeProvider>
-            <MainLayout>{children}</MainLayout>
-          </ThemeProvider>
+          <MainLayout>{children}</MainLayout>
         </AuthProvider>
       </body>
     </html>

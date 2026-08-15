@@ -89,8 +89,8 @@ export function TopNavbar({ onMobileMenuOpen, onCreateFolder }: TopNavbarProps) 
   const initials = userName.slice(0, 1).toUpperCase();
 
   return (
-    <header className="app-topbar bg-[var(--card)] border-b border-[var(--border)]">
-      <div className="h-full flex items-center gap-3 px-4">
+    <header className="app-topbar border-none shadow-sm z-30 relative bg-white">
+      <div className="h-full flex items-center justify-between px-4">
         {/* Mobile hamburger */}
         <button
           onClick={onMobileMenuOpen}
@@ -100,9 +100,8 @@ export function TopNavbar({ onMobileMenuOpen, onCreateFolder }: TopNavbarProps) 
           <Menu size={20} />
         </button>
 
-        {/* ── Global Search ─────────────────────────────────────── */}
-        <div className="flex-1 relative max-w-xl" ref={searchRef}>
-          <div className="relative">
+        <div className="hidden md:flex flex-1 justify-center relative max-w-2xl mx-auto" ref={searchRef}>
+          <div className="relative w-full">
             <Search
               size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none"
@@ -114,7 +113,7 @@ export function TopNavbar({ onMobileMenuOpen, onCreateFolder }: TopNavbarProps) 
               onFocus={() => setShowSearchResults(true)}
               onKeyDown={handleSearchKeyDown}
               placeholder="Tìm kiếm học phần, thư mục, từ vựng..."
-              className="w-full h-9 pl-9 pr-8 rounded-full bg-[var(--bg)] border border-[var(--border)] text-[var(--text)] text-sm outline-none transition-all focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-light)] placeholder:text-[var(--text-muted)]"
+              className="w-full h-11 pl-10 pr-8 rounded-full bg-[var(--bg)] border-none text-[var(--text)] text-sm outline-none transition-all focus:bg-white focus:ring-2 focus:ring-[var(--primary)] shadow-inner placeholder:text-[var(--text-muted)]"
               aria-label="Tìm kiếm"
             />
             {searchQuery && (
@@ -158,7 +157,7 @@ export function TopNavbar({ onMobileMenuOpen, onCreateFolder }: TopNavbarProps) 
           {status === 'unauthenticated' ? (
             <button
               onClick={() => signIn('google')}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-all shadow-sm"
+              className="flex items-center gap-2 px-6 py-2 rounded-full text-sm font-semibold bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
             >
               <LogIn size={16} /> Đăng nhập
             </button>
@@ -166,7 +165,7 @@ export function TopNavbar({ onMobileMenuOpen, onCreateFolder }: TopNavbarProps) 
             <>
               {/* Streak badge */}
               {streakDays > 0 && (
-                <div className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 rounded-full text-xs font-bold">
+                <div className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
                   <Flame size={13} />
                   <span>{streakDays}</span>
                 </div>
@@ -202,7 +201,7 @@ export function TopNavbar({ onMobileMenuOpen, onCreateFolder }: TopNavbarProps) 
                         onClick={() => { setShowCreateMenu(false); onCreateFolder?.(); }}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[var(--bg)] transition-colors"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
                           <Folder size={16} />
                         </div>
                         <div className="text-left">

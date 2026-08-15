@@ -2,11 +2,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useTheme } from 'next-themes';
 import { useStore } from '@/lib/store';
 import {
   Home, Library, Folder, Plus, ChevronLeft, ChevronRight,
-  Settings, X, Sun, Moon, Bell, Clock, PenLine, Mic
+  Settings, X, Bell, Clock, PenLine, Mic
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -38,12 +37,10 @@ interface SidebarProps {
 
 export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: SidebarProps) {
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
   const { folders, sidebarCollapsed, toggleSidebar } = useStore();
   const [mounted, setMounted] = useState(false);
   const folderList = Object.values(folders).sort((a, b) => b.createdAt - a.createdAt);
   const collapsed = sidebarCollapsed;
-  const isDark = theme === 'dark';
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -68,11 +65,11 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             className="flex items-center gap-2.5 overflow-hidden min-w-0"
             onClick={onMobileClose}
           >
-            <div className="w-8 h-8 bg-[var(--quizlet-blue)] text-white rounded-lg flex items-center justify-center font-black text-sm flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center font-black text-sm flex-shrink-0 shadow-sm shadow-[var(--primary)]/30">
               Q
             </div>
             {!collapsed && (
-              <span className="font-bold text-[15px] text-[var(--text)] tracking-tight truncate">
+              <span className="font-extrabold text-[16px] text-[var(--primary)] tracking-tight truncate">
                 Quizlu
               </span>
             )}
@@ -208,23 +205,6 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             active={pathname === '/settings'}
             collapsed={collapsed}
           />
-
-          {/* Theme toggle — dùng inline style để tránh lỗi Tailwind dynamic class */}
-          <button
-            onClick={() => setTheme(isDark ? 'light' : 'dark')}
-            className="sidebar-nav-item w-full text-left"
-            title={collapsed ? (isDark ? 'Chế độ sáng' : 'Chế độ tối') : undefined}
-          >
-            <span className="nav-icon flex-shrink-0">
-              {isDark
-                ? <Sun size={18} className="text-amber-400" />
-                : <Moon size={18} />
-              }
-            </span>
-            {!collapsed && (
-              <span className="text-sm">{isDark ? 'Chế độ sáng' : 'Chế độ tối'}</span>
-            )}
-          </button>
         </div>
       </aside>
     </>
