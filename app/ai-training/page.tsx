@@ -207,6 +207,7 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   const { createWritingSample } = useStore();
   const [topic, setTopic] = useState('');
   const [content, setContent] = useState('');
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
   const [task, setTask] = useState<'task1' | 'task2'>('task2');
   const [isGrading, setIsGrading] = useState(false);
   const [feedback, setFeedback] = useState<any>(null);
@@ -308,11 +309,16 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
               value={topic} onChange={e => setTopic(e.target.value)}
             />
           )}
-          <textarea
-            className="q-input resize-y font-sans font-medium text-[15px] leading-relaxed w-full min-h-[300px] bg-[var(--bg)] border border-[var(--border)] focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10 shadow-inner rounded-xl p-4 transition-all"
-            placeholder="Viết bài làm của bạn vào đây..."
-            value={content} onChange={e => setContent(e.target.value)}
-          />
+          <div className="relative">
+            <textarea
+              className="q-input resize-y font-sans font-medium text-[15px] leading-relaxed w-full min-h-[300px] bg-[var(--bg)] border border-[var(--border)] focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10 shadow-inner rounded-xl p-4 transition-all"
+              placeholder="Viết bài làm của bạn vào đây..."
+              value={content} onChange={e => setContent(e.target.value)}
+            />
+            <div className="absolute bottom-4 right-4 text-xs font-bold text-gray-400 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-md shadow-sm border border-gray-100">
+              {wordCount} words
+            </div>
+          </div>
           <div className="mt-4 flex justify-end">
             <button
               onClick={handleGrade}
@@ -342,7 +348,13 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   const [transcript, setTranscript] = useState('');
   const [isGrading, setIsGrading] = useState(false);
   const [feedback, setFeedback] = useState<any>(null);
+  const [timer, setTimer] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -369,11 +381,21 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
     if (isRecording) {
       recognitionRef.current.stop();
       setIsRecording(false);
+      if (timerRef.current) clearInterval(timerRef.current);
     } else {
       setTranscript('');
+      setTimer(0);
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = setInterval(() => setTimer(t => t + 1), 1000);
       recognitionRef.current.start();
       setIsRecording(true);
     }
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
   };
 
   const handleGrade = async () => {
@@ -436,7 +458,7 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
               {isRecording ? <Square size={28} className="fill-current"/> : <Mic size={32} />}
             </button>
             <p className="mt-4 font-semibold text-purple-900">
-              {isRecording ? 'Đang ghi âm (Bấm để Dừng)...' : 'Bấm để Bắt đầu nói'}
+              {isRecording ? `Đang ghi âm (${formatTime(timer)})... Bấm để Dừng` : timer > 0 ? `Thời gian: ${formatTime(timer)} - Bấm để ghi lại` : 'Bấm để Bắt đầu nói'}
             </p>
           </div>
 
