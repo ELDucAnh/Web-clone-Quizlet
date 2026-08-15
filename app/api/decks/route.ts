@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       
       const { rows: [newDeck] } = await client.query(
         `INSERT INTO decks (id, user_id, folder_id, name, description, color, tags)
-         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7::text[]) RETURNING *`,
         [deck.id, userId, deck.folderId || null, deck.name, deck.description || null, deck.color, deck.tags || []]
       );
       
@@ -81,8 +81,8 @@ export async function POST(request: Request) {
     } finally {
       client.release();
     }
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[Deck API Error]', error);
+    return NextResponse.json({ error: 'Internal Server Error', message: error?.message || String(error) }, { status: 500 });
   }
 }
