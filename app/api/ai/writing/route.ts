@@ -57,14 +57,14 @@ BẠN BẮT BUỘC PHẢI TRẢ VỀ KẾT QUẢ DƯỚI DẠNG CHUỖI JSON H�
       "correction": "Sửa lại cho đúng",
       "explanation": "PHÂN TÍCH RỄ CÂY (Root cause): Giải thích cặn kẽ tại sao lại sai luật ngữ pháp này. Hướng dẫn tư duy logic để thí sinh KHÔNG BAO GIỜ lặp lại lỗi này nữa (bằng tiếng Việt)"
     }
-  ], // YÊU CẦU QUAN TRỌNG: KHÔNG GIỚI HẠN SỐ LƯỢNG LỖI. Hãy chỉ ra TOÀN BỘ các lỗi sai trong bài (tối thiểu 5-10 lỗi nếu có), KHÔNG bao giờ dừng lại ở 3 lỗi.
+  ], // YÊU CẦU QUAN TRỌNG: CHỈ LIỆT KÊ NHỮNG LỖI THỰC SỰ SAI. NẾU BÀI RẤT XUẤT SẮC (BAND 8.0+), đừng bịa ra lỗi, mảng này có thể trống. NẾU BÀI TỆ (Nhiều lỗi), hãy liệt kê TOÀN BỘ lỗi sai, đừng bao giờ giới hạn ở 3 lỗi (cứ có lỗi là liệt kê hết).
   "vocabularyUpgrades": [
     {
       "original": "Từ/cụm từ cơ bản trong bài (vd: very happy)",
       "upgrade": "Từ/cụm từ Band 8-9 thay thế siêu đỉnh (vd: ecstatic, over the moon)",
       "explanation": "Nghĩa tiếng Việt, sắc thái nghĩa và ví dụ cách dùng trong câu."
     }
-  ], // YÊU CẦU QUAN TRỌNG: KHÔNG GIỚI HẠN SỐ LƯỢNG TỪ. Hãy tìm và nâng cấp TOÀN BỘ các từ vựng/cấu trúc cơ bản trong bài (tối thiểu 5-10 từ), KHÔNG bao giờ dừng lại ở 3 từ.
+  ], // YÊU CẦU QUAN TRỌNG: Hãy đề xuất nâng cấp TOÀN BỘ các từ vựng/cấu trúc cơ bản trong bài. Tuy nhiên, nếu bài ĐÃ SỬ DỤNG TỪ VỰNG XUẤT SẮC, đừng bắt ép nâng cấp những từ đã hay sẵn. 
   "generalComment": "NHẬN XÉT SIÊU CHI TIẾT (dài khoảng 2-3 đoạn văn): Tổng kết toàn diện về ưu điểm, khuyết điểm cốt lõi. Đưa ra lộ trình hành động (actionable advice) cực kỳ rõ ràng để thí sinh nâng ngay lập tức 0.5 - 1.0 band trong bài viết tới.",
   "improvedVersion": {
     "band8Sample": "Bài viết được viết lại HOÀN TOÀN dựa trên ý tưởng gốc của thí sinh nhưng được nâng cấp toàn diện lên Band 8+ (từ vựng xịn, cấu trúc câu phức tạp, mạch lạc tuyệt đối).",
