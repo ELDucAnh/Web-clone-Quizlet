@@ -1,35 +1,10 @@
 // lib/store.ts
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { syncToBackend } from './api';
 import type { AppState, Actions, Deck, Card, CardProgress, StudySession, Folder, IELTSState, IELTSActions, StudyHoursGoal, StudyHoursLog, WritingSample, SpeakingTopic, IELTSSkill } from './types';
 
-// CRITICAL: Wrap localStorage access để tránh SSR crash (Next.js)
-const safeStorage = {
-  getItem: (name: string) => {
-    if (typeof window === 'undefined') return null;
-    try {
-      return localStorage.getItem(name);
-    } catch {
-      return null;
-    }
-  },
-  setItem: (name: string, value: string) => {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(name, value);
-    } catch (e) {
-      console.warn('localStorage quota exceeded:', e);
-    }
-  },
-  removeItem: (name: string) => {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.removeItem(name);
-    } catch {}
-  },
-};
+// Cloud-only mode: No localStorage wrappers needed
 
 const DECK_COLOR = '#4255FF';
 
@@ -48,9 +23,7 @@ function getDefaultProgress(cardId: string, deckId: string): CardProgress {
   };
 }
 
-export const useStore = create<AppState & Actions & IELTSState & IELTSActions>()(
-  persist(
-    (set, get) => ({
+export const useStore = create<AppState & Actions & IELTSState & IELTSActions & { hydrate: (data: any) => void; clearData: () => void }>()((set, get) => ({
       folders: {},
       decks: {},
       cards: {},
@@ -72,6 +45,37 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions>()
       studyHoursLogs: [],
       writingSamples: {},
       speakingTopics: {},
+
+      // ─── Cloud Actions ───────────────────────────────────────────────
+      hydrate: (data: any) => {
+        set({
+          folders: data.folders || {},
+          decks: data.decks || {},
+          cards: data.cards || {},
+          cardsByDeck: data.cardsByDeck || {},
+          progress: data.progress || {},
+          sessions: data.sessions || [],
+          studyHoursGoals: data.studyHoursGoals || {},
+          studyHoursLogs: data.studyHoursLogs || [],
+          writingSamples: data.writingSamples || {},
+          speakingTopics: data.speakingTopics || {},
+          // keep local UI state (searchQuery, sidebarCollapsed)
+        });
+      },
+      clearData: () => {
+        set({
+          folders: {},
+          decks: {},
+          cards: {},
+          cardsByDeck: {},
+          progress: {},
+          sessions: [],
+          studyHoursGoals: {},
+          studyHoursLogs: [],
+          writingSamples: {},
+          speakingTopics: {},
+        });
+      },
 
       // ─── Deck Actions ─────────────────────────────────────────────────
 
@@ -493,25 +497,6 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions>()
         });
       },
     }),
-    {
-      name: 'vocab-master-v2',
-      storage: createJSONStorage(() => safeStorage),
-      partialize: (state) => ({
-        folders: state.folders,
-        decks: state.decks,
-        cards: state.cards,
-        cardsByDeck: state.cardsByDeck,
-        progress: state.progress,
-        settings: state.settings,
-        sessions: state.sessions,
-        sidebarCollapsed: state.sidebarCollapsed,
-        studyHoursGoals: state.studyHoursGoals,
-        studyHoursLogs: state.studyHoursLogs,
-        writingSamples: state.writingSamples,
-        speakingTopics: state.speakingTopics,
-      }),
-    }
-  )
-);
+}));
 
 export { getDefaultProgress };

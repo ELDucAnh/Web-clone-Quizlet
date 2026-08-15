@@ -7,8 +7,7 @@ import {
   BookOpen, Download, Upload, Check, AlertTriangle,
   BarChart2, Layers, Zap, Cloud, CloudOff, LogOut, LogIn
 } from 'lucide-react';
-import { useSession, signIn, signOut } from 'next-auth/react';
-import { syncToBackend } from '@/lib/api';
+import { useSession, signOut } from 'next-auth/react';
 
 // ─── Reusable Toggle Component ──────────────────────────────────────────────
 function ToggleRow({
@@ -60,125 +59,14 @@ export default function SettingsPage() {
     folders, cards, cardsByDeck, progress,
     studyHoursGoals, studyHoursLogs, writingSamples, speakingTopics,
   } = useStore();
-  const [exportOk, setExportOk] = useState(false);
-  const [importStatus, setImportStatus] = useState<'idle' | 'ok' | 'error'>('idle');
-  const [importMsg, setImportMsg] = useState('');
-  const [lastBackup, setLastBackup] = useState<string | null>(null);
   const { data: session, status } = useSession();
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSync, setLastSync] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    setLastBackup(localStorage.getItem('vocab-master-last-backup'));
   }, []);
   if (!mounted) return null;
 
-  // ── Export ──────────────────────────────────────────────────────────
-  const handleExport = () => {
-    const snapshot = {
-      version: 2,
-      exportedAt: new Date().toISOString(),
-      data: {
-        folders, decks, cards, cardsByDeck, progress, settings, sessions,
-        studyHoursGoals, studyHoursLogs, writingSamples, speakingTopics,
-      },
-    };
-    const json = JSON.stringify(snapshot, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const dateStr = new Date().toISOString().slice(0, 10);
-    a.download = `quizlu-backup-${dateStr}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    const now = new Date().toLocaleString('vi-VN');
-    localStorage.setItem('vocab-master-last-backup', now);
-    setLastBackup(now);
-    setExportOk(true);
-    setTimeout(() => setExportOk(false), 3000);
-  };
 
-  // ── Import ──────────────────────────────────────────────────────────
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = '';
-
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const raw = JSON.parse(ev.target?.result as string);
-        const snap = raw.data ?? raw;
-
-        if (!snap.decks || !snap.cards) {
-          setImportStatus('error');
-          setImportMsg('File không hợp lệ — không tìm thấy dữ liệu học phần.');
-          setTimeout(() => setImportStatus('idle'), 5000);
-          return;
-        }
-
-        const existing = JSON.parse(localStorage.getItem('vocab-master-v2') || '{}');
-        const merged = {
-          state: {
-            ...existing.state,
-            folders: snap.folders ?? existing.state?.folders ?? {},
-            decks: snap.decks,
-            cards: snap.cards,
-            cardsByDeck: snap.cardsByDeck ?? {},
-            progress: snap.progress ?? {},
-            settings: snap.settings ?? existing.state?.settings,
-            sessions: snap.sessions ?? [],
-            studyHoursGoals: snap.studyHoursGoals ?? existing.state?.studyHoursGoals ?? {},
-            studyHoursLogs: snap.studyHoursLogs ?? existing.state?.studyHoursLogs ?? [],
-            writingSamples: snap.writingSamples ?? existing.state?.writingSamples ?? {},
-            speakingTopics: snap.speakingTopics ?? existing.state?.speakingTopics ?? {},
-          },
-          version: existing.version ?? 0,
-        };
-        localStorage.setItem('vocab-master-v2', JSON.stringify(merged));
-        setImportStatus('ok');
-        setImportMsg('Nhập thành công! Trang sẽ tải lại...');
-        setTimeout(() => window.location.reload(), 1500);
-      } catch {
-        setImportStatus('error');
-        setImportMsg('Không đọc được file. Hãy chắc chắn đây là file backup .json của Quizlu.');
-        setTimeout(() => setImportStatus('idle'), 5000);
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const handleSyncToCloud = async () => {
-    if (!session) return signIn('google');
-    setIsSyncing(true);
-    
-    // Simulate pushing all local store to backend
-    try {
-      const state = useStore.getState();
-      const payload = {
-        decks: state.decks,
-        cards: state.cards,
-        progress: state.progress,
-        sessions: state.sessions,
-        folders: state.folders,
-        studyHoursGoals: state.studyHoursGoals,
-        studyHoursLogs: state.studyHoursLogs,
-        writingSamples: state.writingSamples,
-        speakingTopics: state.speakingTopics,
-      };
-      
-      const res = await syncToBackend('/sync', 'POST', payload);
-      if (res && res.ok) {
-        setLastSync(new Date().toLocaleString('vi-VN'));
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
 
   const deckCount = Object.keys(decks).length;
   const totalStudied = sessions.reduce((s, sess) => s + sess.totalCards, 0);
@@ -221,9 +109,19 @@ export default function SettingsPage() {
 
       {/* ── Hồ sơ ──────────────────────────────────────── */}
       <section className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
-        <h2 className="font-bold text-[var(--text)] mb-4 flex items-center gap-2 text-base">
-          <User size={17} className="text-[var(--primary)]" />
-          Hồ sơ
+        <h2 className="font-bold text-[var(--text)] mb-4 flex items-center justify-between text-base">
+          <div className="flex items-center gap-2">
+            <User size={17} className="text-[var(--primary)]" />
+            Hồ sơ
+          </div>
+          {session && (
+            <button
+              onClick={() => signOut()}
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[var(--danger-light)] text-[var(--danger)] hover:bg-[var(--danger)] hover:text-white transition-colors flex items-center gap-1"
+            >
+              <LogOut size={14} /> Đăng xuất
+            </button>
+          )}
         </h2>
         <div className="flex flex-col gap-2">
           <label className="text-sm font-semibold text-[var(--text)]">
@@ -376,147 +274,7 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* ── Đồng bộ đám mây ─────────────────────────────── */}
-      <section className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
-        <h2 className="font-bold text-[var(--text)] mb-1 flex items-center gap-2 text-base">
-          <Cloud size={17} className="text-[var(--primary)]" />
-          Đồng bộ đám mây
-        </h2>
-        <p className="text-xs text-[var(--text-muted)] mb-5">
-          Đăng nhập để đồng bộ và sao lưu dữ liệu tự động, sử dụng trên nhiều thiết bị.
-        </p>
-        
-        <div className="flex flex-col gap-3">
-          {status === 'loading' ? (
-            <div className="text-sm text-[var(--text-muted)] p-4 text-center">Đang tải...</div>
-          ) : session ? (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3 p-4 bg-[var(--bg-subtle)] border border-[var(--border)] rounded-xl">
-                <img src={session.user?.image || ''} alt="Avatar" className="w-10 h-10 rounded-full bg-[var(--border)]" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-[var(--text)] truncate">{session.user?.name}</p>
-                  <p className="text-xs text-[var(--text-muted)] truncate">{session.user?.email}</p>
-                </div>
-                <button
-                  onClick={() => signOut()}
-                  className="p-2 text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--danger-light)] rounded-lg transition-colors"
-                  title="Đăng xuất"
-                >
-                  <LogOut size={16} />
-                </button>
-              </div>
-              
-              <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border)]">
-                <div>
-                  <p className="text-sm font-semibold text-[var(--text)]">Đồng bộ dữ liệu</p>
-                  <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                    {lastSync ? `Đồng bộ lần cuối: ${lastSync}` : 'Chưa đồng bộ trong phiên này'}
-                  </p>
-                </div>
-                <button
-                  onClick={handleSyncToCloud}
-                  disabled={isSyncing}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-all flex-shrink-0 disabled:opacity-50"
-                >
-                  {isSyncing ? (
-                    <>Đang đồng bộ...</>
-                  ) : (
-                    <><Cloud size={15} /> Đồng bộ ngay</>
-                  )}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border)]">
-              <div>
-                <p className="text-sm font-semibold text-[var(--text)] text-amber-600 dark:text-amber-500">Chưa đăng nhập</p>
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                  Dữ liệu hiện chỉ lưu cục bộ trên trình duyệt này.
-                </p>
-              </div>
-              <button
-                onClick={() => signIn('google')}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 transition-all flex-shrink-0 shadow-sm"
-              >
-                <LogIn size={15} /> Đăng nhập Google
-              </button>
-            </div>
-          )}
-        </div>
-      </section>
 
-      {/* ── Sao lưu & Khôi phục ──────────────────────── */}
-      <section className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
-        <h2 className="font-bold text-[var(--text)] mb-1 flex items-center gap-2 text-base">
-          <Download size={17} className="text-[var(--primary)]" />
-          Sao lưu & Khôi phục
-        </h2>
-        <p className="text-xs text-[var(--text-muted)] mb-5">
-          Toàn bộ dữ liệu (học phần, tiến độ, bài mẫu, giờ học) được lưu vào file .json.
-          Import lại bất cứ lúc nào để khôi phục.
-        </p>
-
-        <div className="flex flex-col gap-3">
-          {/* Export */}
-          <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border)]">
-            <div>
-              <p className="text-sm font-semibold text-[var(--text)]">Xuất dữ liệu (Export)</p>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                {lastBackup ? `Backup cuối: ${lastBackup}` : 'Chưa có backup nào được tạo'}
-              </p>
-            </div>
-            <button
-              onClick={handleExport}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all flex-shrink-0 ${
-                exportOk
-                  ? 'bg-[var(--success)] text-white'
-                  : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]'
-              }`}
-            >
-              {exportOk ? <><Check size={15} /> Đã lưu!</> : <><Download size={15} /> Tải backup</>}
-            </button>
-          </div>
-
-          {/* Import */}
-          <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border)]">
-            <div>
-              <p className="text-sm font-semibold text-[var(--text)]">Nhập dữ liệu (Import)</p>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                Chọn file <code className="bg-[var(--border)] px-1 rounded text-[11px]">quizlu-backup-*.json</code>
-              </p>
-            </div>
-            <label className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-[var(--border)] text-[var(--text)] hover:bg-[var(--text-muted)]/20 cursor-pointer transition-colors flex-shrink-0">
-              <Upload size={15} /> Chọn file
-              <input
-                type="file"
-                accept=".json,application/json"
-                className="hidden"
-                onChange={handleImport}
-              />
-            </label>
-          </div>
-
-          {/* Status message */}
-          {importStatus !== 'idle' && (
-            <div className={`flex items-start gap-2 p-3 rounded-xl text-sm ${
-              importStatus === 'ok'
-                ? 'bg-[var(--success-light)] text-[var(--success)]'
-                : 'bg-[var(--danger-light)] text-[var(--danger)]'
-            }`}>
-              {importStatus === 'ok'
-                ? <Check size={16} className="mt-0.5 flex-shrink-0" />
-                : <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />}
-              <span>{importMsg}</span>
-            </div>
-          )}
-
-          {/* Warning */}
-          <p className="text-xs text-[var(--text-muted)] flex items-start gap-1.5">
-            <AlertTriangle size={12} className="flex-shrink-0 mt-0.5 text-amber-500" />
-            Import sẽ gộp dữ liệu từ file với dữ liệu hiện tại (ưu tiên file import). Nên export backup trước khi import.
-          </p>
-        </div>
-      </section>
     </div>
   );
 }

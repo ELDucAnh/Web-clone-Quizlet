@@ -4,6 +4,8 @@ import { X } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { TopNavbar } from './TopNavbar';
 import { useStore } from '@/lib/store';
+import { useSession } from 'next-auth/react';
+import { useEffect } from 'react';
 
 interface CreateFolderModalProps {
   onClose: () => void;
@@ -93,9 +95,25 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const { sidebarCollapsed } = useStore();
+  const { sidebarCollapsed, hydrate, clearData } = useStore() as any;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetch('/api/user-data')
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data.error) {
+            hydrate(data);
+          }
+        })
+        .catch((err) => console.error('Failed to hydrate data', err));
+    } else if (status === 'unauthenticated') {
+      clearData();
+    }
+  }, [status, hydrate, clearData]);
 
   return (
     <div className="app-shell">
