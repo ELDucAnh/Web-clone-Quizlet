@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Trash2, GripVertical, ArrowLeft, FileText, RotateCcw, ChevronRight } from 'lucide-react';
@@ -14,7 +14,7 @@ interface CardRow {
   definition: string;
 }
 
-export default function CreateSetPage() {
+function CreateSetContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams?.get('edit');
@@ -333,5 +333,17 @@ export default function CreateSetPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function CreateSetPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-10 h-10 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <CreateSetContent />
+    </Suspense>
   );
 }
