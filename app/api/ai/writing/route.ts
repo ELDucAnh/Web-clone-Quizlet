@@ -24,8 +24,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Chọn model (gemini-1.5-flash là model cực nhanh và đủ thông minh để chấm bài)
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.7-flash' });
+    // Model được cấu hình bên dưới phần gọi API bằng cơ chế fallback
 
     // Prompt siêu chi tiết ép Gemini trả về JSON
     const prompt = `
@@ -85,8 +84,16 @@ BẠN BẮT BUỘC PHẢI TRẢ VỀ KẾT QUẢ DƯỚI DẠNG CHUỖI JSON H�
       }
     }
 
-    // Gọi Gemini API
-    const result = await model.generateContent(parts);
+    // Gọi Gemini API với cơ chế Fallback (dự phòng)
+    let result;
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-3.7-flash' });
+      result = await model.generateContent(parts);
+    } catch (aiError: any) {
+      console.warn('gemini-3.7-flash đang quá tải hoặc lỗi, chuyển sang gemini-2.5-flash dự phòng...', aiError.message);
+      const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      result = await fallbackModel.generateContent(parts);
+    }
     const response = await result.response;
     let text = response.text();
 

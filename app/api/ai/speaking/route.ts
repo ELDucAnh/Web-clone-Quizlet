@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Không nhận được nội dung bài nói (transcript).' }, { status: 400 });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.7-flash' });
+    // Model được cấu hình bên dưới bằng cơ chế fallback
 
     const prompt = `
 Bạn là cựu giám khảo IELTS Speaking. Học viên vừa thực hiện bài nói IELTS Speaking Part ${part || 1}.
@@ -60,7 +60,15 @@ BẠN BẮT BUỘC TRẢ VỀ CHUỖI JSON HỢP LỆ (KHÔNG bọc trong \`\`\`
 }
 `;
 
-    const result = await model.generateContent(prompt);
+    let result;
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-3.7-flash' });
+      result = await model.generateContent(prompt);
+    } catch (aiError: any) {
+      console.warn('gemini-3.7-flash đang quá tải hoặc lỗi, chuyển sang gemini-2.5-flash dự phòng...', aiError.message);
+      const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      result = await fallbackModel.generateContent(prompt);
+    }
     const response = await result.response;
     let text = response.text();
 
