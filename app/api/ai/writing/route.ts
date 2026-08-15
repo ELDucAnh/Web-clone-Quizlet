@@ -63,7 +63,22 @@ Band 6:
 - LR: Đủ từ vựng cho bài. Có cố gắng dùng từ vựng phức tạp nhưng bị sai.
 - GRA: Có kết hợp câu đơn và phức nhưng linh hoạt kém. Có lỗi ngữ pháp nhưng không cản trở giao tiếp.
 
-Hãy đối chiếu CỰC KỲ KHÁCH QUAN. Nếu bài có lỗi, hãy chỉ ra. Nếu bài xuất sắc, HÃY CHO ĐIỂM CAO (8.0 - 9.0).
+Band 5:
+- TR/TA: Nhìn chung giải quyết được yêu cầu nhưng không đầy đủ. Định dạng có thể chưa phù hợp.
+- CC: Có tổ chức nhưng thiếu logic toàn cục. Lạm dụng hoặc thiếu từ nối.
+- LR: Từ vựng hạn chế, lặp từ nhiều, hay dùng sai ngữ cảnh.
+- GRA: Chỉ dùng tốt câu đơn. Cố dùng câu phức nhưng sai nhiều, lỗi ngữ pháp gây khó khăn cho người đọc.
+
+Band 4:
+- TR/TA: Chỉ cố gắng trả lời mức tối thiểu, lạc đề hoặc không rõ ý chính.
+- CC: Thông tin không liền mạch, không có sự phát triển ý. Lỗi dùng từ nối rất nhiều.
+- LR: Rất hạn chế, lặp lại. Hay dùng sai từ làm hỏng ý nghĩa câu.
+- GRA: Rất ít cấu trúc. Lỗi sai chằng chịt cản trở ý nghĩa.
+
+Band 3-1:
+- Lạc đề hoàn toàn, hoặc quá ngắn không đủ đánh giá. Từ vựng và ngữ pháp quá kém không thể hiểu.
+
+Hãy đối chiếu CỰC KỲ KHÁCH QUAN. Nếu bài có lỗi, hãy chỉ ra. Nếu bài xuất sắc, HÃY CHO ĐIỂM CAO (8.0 - 9.0). Bám sát đúng mô tả của Official IELTS Writing Band Descriptors May 2023.
 
 BẠN BẮT BUỘC PHẢI TRẢ VỀ KẾT QUẢ DƯỚI DẠNG CHUỖI JSON HỢP LỆ (KHÔNG bọc trong markdown \`\`\`json). Cấu trúc JSON phải chính xác như sau:
 {
