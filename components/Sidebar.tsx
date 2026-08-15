@@ -139,6 +139,13 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             active={!!pathname?.startsWith('/speaking')}
             collapsed={collapsed}
           />
+          <NavItem
+            href="/ai-training"
+            icon={<Sparkles size={18} className="text-purple-500" />}
+            label="Phòng thi AI"
+            active={pathname === '/ai-training'}
+            collapsed={collapsed}
+          />
         </nav>
 
 
@@ -198,20 +205,6 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
 
         {/* ── Bottom ───────────────────────────────────────────────── */}
         <div className="p-2 border-t border-[var(--border)] flex-shrink-0 mt-auto space-y-0.5">
-          <NavItem
-            href="/writing"
-            icon={<PenLine size={18} />}
-            label="Kho bài mẫu W"
-            active={pathname === '/writing'}
-            collapsed={collapsed}
-          />
-          <NavItem
-            href="/ai-training"
-            icon={<Sparkles size={18} className="text-purple-500" />}
-            label="Phòng thi AI"
-            active={pathname === '/ai-training'}
-            collapsed={collapsed}
-          />
           <NavItem
             href="/settings"
             icon={<Settings size={18} />}
