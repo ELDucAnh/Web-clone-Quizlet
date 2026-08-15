@@ -11,14 +11,14 @@ export async function POST(request: Request) {
   try {
     const sample = await request.json();
     await db.query(
-      `INSERT INTO writing_samples (id, user_id, task, title, topic, content, band, tags, ai_feedback) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::text[], $9::jsonb) 
-       ON CONFLICT (id) DO UPDATE SET task=$3, title=$4, topic=$5, content=$6, band=$7, tags=$8::text[], ai_feedback=$9::jsonb, updated_at=NOW()`,
-      [sample.id, userId, sample.task, sample.title, sample.topic, sample.content, sample.band || null, sample.tags || [], sample.aiFeedback ? JSON.stringify(sample.aiFeedback) : null]
+      `INSERT INTO speaking_submissions (id, user_id, part, topic, transcript, band, ai_feedback) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb) 
+       ON CONFLICT (id) DO UPDATE SET part=$3, topic=$4, transcript=$5, band=$6, ai_feedback=$7::jsonb, updated_at=NOW()`,
+      [sample.id, userId, sample.part, sample.topic, sample.transcript, sample.band || null, sample.aiFeedback ? JSON.stringify(sample.aiFeedback) : null]
     );
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error: any) {
-    console.error('[Writing Samples API Error]', error);
+    console.error('[Speaking Submissions API Error]', error);
     return NextResponse.json({ error: 'Internal Server Error', message: error?.message || String(error) }, { status: 500 });
   }
 }
