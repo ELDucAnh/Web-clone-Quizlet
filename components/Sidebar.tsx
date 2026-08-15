@@ -59,26 +59,26 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
       <aside className={`app-sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
 
         {/* ── Brand Header ────────────────────────────────────────── */}
-        <div className="h-[60px] flex items-center justify-between px-3 border-b border-[var(--border)] flex-shrink-0">
-          <Link
-            href="/"
-            className="flex items-center gap-2.5 overflow-hidden min-w-0"
-            onClick={onMobileClose}
-          >
-            <div className="w-8 h-8 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center font-black text-sm flex-shrink-0 shadow-sm shadow-[var(--primary)]/30">
-              Q
-            </div>
-            {!collapsed && (
+        <div className={`h-[64px] flex items-center px-4 flex-shrink-0 transition-all ${collapsed ? 'justify-center' : 'justify-between'}`}>
+          {!collapsed && (
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 overflow-hidden min-w-0"
+              onClick={onMobileClose}
+            >
+              <div className="w-8 h-8 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center font-black text-sm flex-shrink-0 shadow-sm shadow-[var(--primary)]/30">
+                Q
+              </div>
               <span className="font-extrabold text-[16px] text-[var(--primary)] tracking-tight truncate">
                 Quizlu
               </span>
-            )}
-          </Link>
+            </Link>
+          )}
 
           {/* Collapse toggle (desktop) */}
           <button
             onClick={toggleSidebar}
-            className="hidden md:flex w-7 h-7 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--text)] transition-colors flex-shrink-0 ml-1"
+            className={`hidden md:flex w-7 h-7 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--text)] transition-colors flex-shrink-0 ${collapsed ? '' : 'ml-1'}`}
             aria-label={collapsed ? 'Mở rộng menu' : 'Thu nhỏ menu'}
           >
             {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}

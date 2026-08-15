@@ -113,7 +113,7 @@ export function TopNavbar({ onMobileMenuOpen, onCreateFolder }: TopNavbarProps) 
               onFocus={() => setShowSearchResults(true)}
               onKeyDown={handleSearchKeyDown}
               placeholder="Tìm kiếm học phần, thư mục, từ vựng..."
-              className="w-full h-11 pl-10 pr-8 rounded-full bg-[var(--bg)] border-none text-[var(--text)] text-sm outline-none transition-all focus:bg-white focus:ring-2 focus:ring-[var(--primary)] shadow-inner placeholder:text-[var(--text-muted)]"
+              className="w-full h-11 pl-10 pr-8 rounded-lg bg-[var(--bg)] border-2 border-transparent text-[var(--text)] text-sm outline-none transition-all focus:bg-white focus:border-[var(--primary)] placeholder:text-[var(--text-muted)]"
               aria-label="Tìm kiếm"
             />
             {searchQuery && (
