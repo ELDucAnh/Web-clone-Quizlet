@@ -46,7 +46,7 @@ BẠN BẮT BUỘC TRẢ VỀ CHUỖI JSON HỢP LỆ (KHÔNG bọc trong \`\`\`
     {
       "error": "Trích dẫn lại chính xác câu/cụm từ nói sai",
       "correction": "Sửa lại cho đúng tự nhiên",
-      "explanation": "Giải thích cặn kẽ lỗi sai và cách khắc phục (bằng tiếng Việt)"
+      "explanation": "PHÂN TÍCH RỄ CÂY (Root cause): Giải thích cặn kẽ tại sao lại sai luật ngữ pháp này. Hướng dẫn tư duy logic để thí sinh KHÔNG BAO GIỜ lặp lại lỗi này nữa (bằng tiếng Việt)"
     }
   ],
   "vocabularyUpgrades": [
@@ -56,7 +56,11 @@ BẠN BẮT BUỘC TRẢ VỀ CHUỖI JSON HỢP LỆ (KHÔNG bọc trong \`\`\`
       "explanation": "Nghĩa tiếng Việt, sắc thái nghĩa và ví dụ cách dùng khi nói."
     }
   ],
-  "generalComment": "NHẬN XÉT SIÊU CHI TIẾT (dài khoảng 2-3 đoạn văn): Tổng kết toàn diện về ưu điểm, khuyết điểm cốt lõi. Đưa ra lộ trình hành động (actionable advice) cực kỳ rõ ràng để thí sinh nâng ngay lập tức 0.5 - 1.0 band trong bài nói tới."
+  "generalComment": "NHẬN XÉT SIÊU CHI TIẾT (dài khoảng 2-3 đoạn văn): Tổng kết toàn diện về ưu điểm, khuyết điểm cốt lõi. Đưa ra lộ trình hành động (actionable advice) cực kỳ rõ ràng để thí sinh nâng ngay lập tức 0.5 - 1.0 band trong bài nói tới.",
+  "improvedVersion": {
+    "band8Sample": "Bài nói được viết lại HOÀN TOÀN dựa trên ý tưởng gốc của thí sinh nhưng được nâng cấp toàn diện lên văn phong nói Band 8+ (từ vựng xịn, idioms, cấu trúc câu tự nhiên như người bản xứ).",
+    "differences": "Giải thích ngắn gọn (3-4 câu) chỉ ra những điểm khác biệt lớn nhất giúp bài này đạt Band 8 so với bài gốc của thí sinh."
+  }
 }
 `;
 

@@ -38,11 +38,21 @@ export default function HomePage() {
   const dailyGoalPct = Math.min(100, Math.round((todayStudied / (settings.dailyGoal || 20)) * 100));
 
   // ── Analytics Data Prep ───────────────────────────────────────────
-  const wSamples = Object.values(writingSamples || {}).filter(w => w.band);
-  const avgWriting = wSamples.length > 0 ? (wSamples.reduce((acc, curr) => acc + (curr.band || 0), 0) / wSamples.length).toFixed(1) : 'N/A';
+  const aiWritings = Object.values(writingSamples || {}).filter(s => s.tags?.includes('ai_graded') && s.band && !isNaN(Number(s.band))).sort((a,b)=>a.createdAt-b.createdAt);
+  const avgWriting = aiWritings.length > 0 ? (aiWritings.reduce((acc, curr) => acc + Number(curr.band), 0) / aiWritings.length).toFixed(1) : 'N/A';
   
-  const sSubmissions = Object.values(speakingSubmissions || {}).filter(s => s.band);
-  const avgSpeaking = sSubmissions.length > 0 ? (sSubmissions.reduce((acc, curr) => acc + (curr.band || 0), 0) / sSubmissions.length).toFixed(1) : 'N/A';
+  const aiSpeakings = Object.values(speakingSubmissions || {}).filter(s => s.band && !isNaN(Number(s.band))).sort((a,b)=>a.createdAt-b.createdAt);
+  const avgSpeaking = aiSpeakings.length > 0 ? (aiSpeakings.reduce((acc, curr) => acc + Number(curr.band), 0) / aiSpeakings.length).toFixed(1) : 'N/A';
+
+  const getPointsByIndex = (arr: any[], width: number, height: number) => {
+    if (arr.length === 0) return '';
+    if (arr.length === 1) return `0,${height - ((Number(arr[0].band) - 4) / 5) * height} ${width},${height - ((Number(arr[0].band) - 4) / 5) * height}`;
+    return arr.map((item, i) => {
+      const x = (i / (arr.length - 1)) * width;
+      const y = height - ((Math.min(9, Math.max(4, Number(item.band))) - 4) / 5) * height;
+      return `${x},${y}`;
+    }).join(' ');
+  };
 
   // Last 7 days vocab progress
   const today = new Date();
@@ -218,15 +228,34 @@ export default function HomePage() {
             <h2 className="text-sm font-bold text-white/90 mb-4">IELTS AI Band Score</h2>
             <div className="flex justify-between items-end">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-purple-200">Writing</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">Writing Avg</p>
                 <div className="text-3xl font-black">{avgWriting}</div>
               </div>
-              <div className="h-8 w-[1px] bg-white/20 mx-2"></div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-purple-200">Speaking</p>
-                <div className="text-3xl font-black">{avgSpeaking}</div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-pink-200 text-right">Speaking Avg</p>
+                <div className="text-3xl font-black text-right">{avgSpeaking}</div>
               </div>
             </div>
+
+            {/* Line Chart */}
+            <div className="relative h-16 mt-3 w-full bg-black/10 rounded-xl overflow-hidden">
+              <svg width="100%" height="100%" viewBox="0 0 100 40" preserveAspectRatio="none">
+                 {/* Lưới ngang (Band 9, 6.5, 4) */}
+                 <line x1="0" y1="0" x2="100" y2="0" stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" />
+                 <line x1="0" y1="20" x2="100" y2="20" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" strokeDasharray="2" />
+                 <line x1="0" y1="40" x2="100" y2="40" stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" />
+                 
+                 {/* Line Writing (Blue) */}
+                 {aiWritings.length > 0 && (
+                   <polyline points={getPointsByIndex(aiWritings, 100, 40)} fill="none" stroke="#93c5fd" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+                 )}
+                 {/* Line Speaking (Pink) */}
+                 {aiSpeakings.length > 0 && (
+                   <polyline points={getPointsByIndex(aiSpeakings, 100, 40)} fill="none" stroke="#f9a8d4" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+                 )}
+              </svg>
+            </div>
+
             <div className="mt-4 pt-3 border-t border-white/20 text-[11px] font-semibold flex items-center justify-between">
               Vào phòng luyện AI <ChevronRight size={12} />
             </div>

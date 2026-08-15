@@ -645,7 +645,7 @@ export default function WritingPage() {
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
 
-  const all = Object.values(writingSamples).sort((a, b) => b.updatedAt - a.updatedAt);
+  const all = Object.values(writingSamples).filter(s => !s.tags?.includes('ai_graded')).sort((a, b) => b.updatedAt - a.updatedAt);
   const task1Count = all.filter(s => s.task === 'task1').length;
   const task2Count = all.filter(s => s.task === 'task2').length;
 

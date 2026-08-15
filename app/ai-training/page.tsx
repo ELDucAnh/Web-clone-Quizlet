@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { PenLine, Mic, Sparkles, BookOpen, Check, X, Loader2, Play, Square, AlertCircle, Plus, Upload } from 'lucide-react';
+import { PenLine, Mic, Sparkles, BookOpen, Check, X, Loader2, Play, Square, AlertCircle, Plus, Upload, History } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import Link from 'next/link';
 
@@ -25,16 +25,25 @@ export default function AITrainingPage() {
 
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full animate-fade-in pb-12">
-      <div className="flex flex-col items-center justify-center text-center gap-3 bg-gradient-to-r from-blue-50 to-purple-50 p-8 rounded-3xl">
-        <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-purple-600 mb-2">
+      <div className="relative flex flex-col items-center justify-center text-center gap-3 bg-gradient-to-r from-blue-50 to-purple-50 p-8 rounded-3xl shadow-2xl overflow-hidden">
+        {/* Animated glowing border */}
+        <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{
+          background: 'transparent',
+          boxShadow: '0 0 0 2px rgba(99,102,241,0.3), 0 0 40px 4px rgba(99,102,241,0.15), 0 0 80px 8px rgba(139,92,246,0.08)',
+        }}></div>
+        {/* Glowing top streak */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-blue-400/60 to-transparent"></div>
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-purple-400/40 to-transparent"></div>
+
+        <div className="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center text-purple-600 mb-2 z-10 ring-1 ring-purple-100">
           <Sparkles size={32} />
         </div>
-        <h1 className="text-3xl font-extrabold text-[var(--text)] tracking-tight">AI Training Room</h1>
-        <p className="text-[var(--text-muted)] max-w-xl">
+        <h1 className="text-3xl font-extrabold text-[var(--text)] tracking-tight z-10">AI Training Room</h1>
+        <p className="text-[var(--text-muted)] max-w-xl z-10">
           Luyện tập Speaking & Writing chuẩn format IELTS. AI đóng vai cựu giám khảo để chấm điểm 4 tiêu chí, bắt lỗi chi tiết và gợi ý từ vựng Band 8+.
         </p>
 
-        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl shadow-sm mt-4">
+        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl shadow-sm mt-4 z-10 ring-1 ring-gray-100">
           <button
             onClick={() => setActiveTab('writing')}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${
@@ -51,11 +60,129 @@ export default function AITrainingPage() {
           >
             <Mic size={16} /> AI Speaking
           </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${
+              activeTab === 'history' ? 'bg-amber-500 text-white shadow-md' : 'text-[var(--text-muted)] hover:bg-[var(--bg)]'
+            }`}
+          >
+            <History size={16} /> Bài đã chữa
+          </button>
         </div>
       </div>
 
       <div className="mt-2">
-        {activeTab === 'writing' ? <AIWritingRoom defaultDeckId={defaultDeckId} /> : <AISpeakingRoom defaultDeckId={defaultDeckId} />}
+        {activeTab === 'writing' && <AIWritingRoom defaultDeckId={defaultDeckId} />}
+        {activeTab === 'speaking' && <AISpeakingRoom defaultDeckId={defaultDeckId} />}
+        {activeTab === 'history' && <AIHistoryRoom />}
+      </div>
+    </div>
+  );
+}
+
+// ─── AI History Room ────────────────────────────────────────────────────────────
+function AIHistoryRoom() {
+  const { writingSamples, speakingSubmissions } = useStore();
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+
+  const gradedWritings = Object.values(writingSamples || {}).filter(s => s.tags?.includes('ai_graded')).sort((a, b) => b.createdAt - a.createdAt);
+  const gradedSpeakings = Object.values(speakingSubmissions || {}).sort((a, b) => b.createdAt - a.createdAt);
+
+  if (selectedItem) {
+    const isWriting = selectedItem.task !== undefined;
+    return (
+      <div className="flex flex-col gap-6 animate-fade-in">
+        <button onClick={() => setSelectedItem(null)} className="self-start text-sm font-bold text-gray-500 hover:text-gray-900 flex items-center gap-1">
+          ← Quay lại Lịch sử
+        </button>
+        <div className="flex flex-col gap-6">
+          <div className="w-full bg-[var(--card)] rounded-2xl p-6 shadow-sm">
+            <h2 className="text-xl font-bold mb-4">{isWriting ? selectedItem.title : `Speaking Part ${selectedItem.part}: ${selectedItem.topic || 'No topic'}`}</h2>
+            
+            {isWriting && selectedItem.aiFeedback?.topicImage && (
+              <div className="mb-4">
+                <p className="text-xs font-bold text-gray-500 uppercase mb-2">Ảnh đề bài:</p>
+                <img src={selectedItem.aiFeedback.topicImage} alt="Topic" className="max-h-64 object-contain rounded-xl border border-gray-200 p-2 bg-white" />
+              </div>
+            )}
+            
+            {selectedItem.topic && (
+              <div className="mb-4">
+                <p className="text-xs font-bold text-gray-500 uppercase mb-2">Đề bài / Chủ đề:</p>
+                <div className="p-4 bg-gray-50 rounded-xl whitespace-pre-wrap text-[15px] text-gray-800 border border-gray-100 font-medium leading-relaxed">
+                  {selectedItem.topic}
+                </div>
+              </div>
+            )}
+            
+            <p className="text-xs font-bold text-gray-500 uppercase mb-2">Bài làm:</p>
+            <div className="p-4 bg-gray-50 rounded-xl whitespace-pre-wrap text-sm text-gray-800 border border-gray-100">
+              {isWriting ? selectedItem.content : selectedItem.transcript}
+            </div>
+          </div>
+          <div className="w-full">
+            <FeedbackPanel feedback={selectedItem.aiFeedback} isGrading={false} defaultDeckId="" type={isWriting ? "writing" : "speaking"} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
+      {/* Cột Writing */}
+      <div className="bg-[var(--card)] rounded-2xl p-6 shadow-sm border border-[var(--border)]">
+        <div className="flex items-center gap-2 mb-6 text-blue-600">
+          <PenLine size={20} />
+          <h2 className="text-lg font-bold text-[var(--text)]">Bài Writing đã chữa</h2>
+        </div>
+        {gradedWritings.length === 0 ? (
+          <p className="text-sm text-gray-400 italic">Chưa có bài nào được AI chấm.</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {gradedWritings.map(item => (
+              <div key={item.id} onClick={() => setSelectedItem(item)} className="p-4 bg-[var(--bg)] rounded-xl border border-[var(--border)] cursor-pointer hover:border-blue-300 hover:shadow-md transition-all group">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-bold text-sm text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-1">{item.title}</h3>
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-black rounded-md">{item.band}</span>
+                </div>
+                <div className="flex gap-2 text-xs text-gray-500">
+                  <span className="uppercase font-bold text-gray-400">{item.task}</span>
+                  <span>•</span>
+                  <span>{new Date(item.createdAt).toLocaleDateString('vi-VN')}</span>
+                  {item.aiFeedback?.topicImage && <span className="text-blue-500 font-bold ml-auto flex items-center gap-1"><Sparkles size={12}/> Có ảnh</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Cột Speaking */}
+      <div className="bg-[var(--card)] rounded-2xl p-6 shadow-sm border border-[var(--border)]">
+        <div className="flex items-center gap-2 mb-6 text-purple-600">
+          <Mic size={20} />
+          <h2 className="text-lg font-bold text-[var(--text)]">Bài Speaking đã chữa</h2>
+        </div>
+        {gradedSpeakings.length === 0 ? (
+          <p className="text-sm text-gray-400 italic">Chưa có bài nào được AI chấm.</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {gradedSpeakings.map(item => (
+              <div key={item.id} onClick={() => setSelectedItem(item)} className="p-4 bg-[var(--bg)] rounded-xl border border-[var(--border)] cursor-pointer hover:border-purple-300 hover:shadow-md transition-all group">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-bold text-sm text-gray-800 group-hover:text-purple-600 transition-colors line-clamp-1">{item.topic || 'Part ' + item.part}</h3>
+                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-black rounded-md">{item.band}</span>
+                </div>
+                <div className="flex gap-2 text-xs text-gray-500">
+                  <span className="uppercase font-bold text-gray-400">Part {item.part}</span>
+                  <span>•</span>
+                  <span>{new Date(item.createdAt).toLocaleDateString('vi-VN')}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -90,7 +217,7 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   };
 
   const handleGrade = async () => {
-    if (!topic.trim() || !content.trim()) return alert('Vui lòng nhập đủ đề bài và bài làm!');
+    if ((!topic.trim() && !topicImage) || !content.trim()) return alert('Vui lòng cung cấp đủ đề bài (hoặc ảnh) và bài làm!');
     setIsGrading(true);
     setFeedback(null);
     try {
@@ -101,9 +228,10 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
       });
       const data = await res.json();
       if (res.ok) {
+        if (topicImage) data.topicImage = topicImage; // Save image to JSON DB
         setFeedback(data);
         createWritingSample({
-          task, title: topic.slice(0, 50) + '...', topic, content, band: data.overallBand, aiFeedback: data
+          task, title: topic.trim() ? topic.slice(0, 50) + '...' : 'Task 1 (Ảnh)', topic, content, band: data.overallBand, aiFeedback: data, tags: ['ai_graded']
         });
       } else {
         alert(data.error);
@@ -116,8 +244,8 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-6">
-      <div className="flex-1 flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
+      <div className="w-full flex flex-col gap-4">
         <div className="bg-[var(--card)] rounded-2xl p-5 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-3">
@@ -171,7 +299,7 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
           <div className="mt-4 flex justify-end">
             <button
               onClick={handleGrade}
-              disabled={isGrading || !topic.trim() || !content.trim()}
+              disabled={isGrading || (!topic.trim() && !topicImage) || !content.trim()}
               className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-white font-bold rounded-xl hover:bg-[var(--primary-hover)] shadow-md disabled:opacity-50 transition-all"
             >
               {isGrading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
@@ -181,7 +309,7 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
         </div>
       </div>
 
-      <div className="w-full md:w-[45%]">
+      <div className="w-full">
         <FeedbackPanel feedback={feedback} isGrading={isGrading} defaultDeckId={defaultDeckId} type="writing" />
       </div>
     </div>
@@ -258,8 +386,8 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-6">
-      <div className="flex-1 flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
+      <div className="w-full flex flex-col gap-4">
         <div className="bg-[var(--card)] rounded-2xl p-5 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-3">
@@ -317,7 +445,7 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
         </div>
       </div>
 
-      <div className="w-full md:w-[45%]">
+      <div className="w-full">
         <FeedbackPanel feedback={feedback} isGrading={isGrading} defaultDeckId={defaultDeckId} type="speaking" />
       </div>
     </div>
@@ -477,6 +605,26 @@ function FeedbackPanel({ feedback, isGrading, defaultDeckId, type }: { feedback:
             >
               Lưu tất cả
             </button>
+          </div>
+        )}
+
+        {/* Bài mẫu Band 8+ tham khảo */}
+        {feedback.improvedVersion && (
+          <div className="mt-4">
+            <h4 className="font-bold text-indigo-600 mb-3 text-sm uppercase tracking-wide border-b border-indigo-100 pb-2 flex items-center gap-1">
+              <Sparkles size={14}/> Bài Mẫu Tham Khảo Band 8+
+            </h4>
+            <div className="flex flex-col gap-3">
+              <div className="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100 shadow-inner">
+                <p className="text-[15px] text-gray-800 leading-relaxed whitespace-pre-wrap font-medium">
+                  {feedback.improvedVersion.band8Sample}
+                </p>
+              </div>
+              <div className="p-3 bg-white rounded-xl border border-indigo-100 text-sm">
+                <p className="font-bold text-indigo-800 mb-1">💡 Điểm khác biệt mấu chốt:</p>
+                <p className="text-gray-700 leading-relaxed">{feedback.improvedVersion.differences}</p>
+              </div>
+            </div>
           </div>
         )}
 
