@@ -60,14 +60,33 @@ BẠN BẮT BUỘC TRẢ VỀ CHUỖI JSON HỢP LỆ (KHÔNG bọc trong \`\`\`
 }
 `;
 
+    const fallbackModels = [
+      'gemini-3.7-flash',
+      'gemini-3.0-flash',
+      'gemini-1.5-flash-8b',
+      'gemini-1.5-pro',
+      'gemini-pro'
+    ];
+
     let result;
-    try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-3.7-flash' });
-      result = await model.generateContent(prompt);
-    } catch (aiError: any) {
-      console.warn('gemini-3.7-flash đang quá tải hoặc lỗi, chuyển sang gemini-2.5-flash dự phòng...', aiError.message);
-      const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-      result = await fallbackModel.generateContent(prompt);
+    let lastError;
+
+    for (const modelName of fallbackModels) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        result = await model.generateContent(prompt);
+        if (result) {
+          console.log(`Đã dùng thành công model: ${modelName}`);
+          break; // Thoát vòng lặp ngay nếu thành công
+        }
+      } catch (e: any) {
+        lastError = e;
+        console.warn(`Model ${modelName} bị lỗi hoặc quá tải: ${e.message}`);
+      }
+    }
+
+    if (!result) {
+      throw lastError; // Văng lỗi ra nếu không có model nào hoạt động
     }
     const response = await result.response;
     let text = response.text();
