@@ -61,11 +61,10 @@ BẠN BẮT BUỘC TRẢ VỀ CHUỖI JSON HỢP LỆ (KHÔNG bọc trong \`\`\`
 `;
 
     const fallbackModels = [
-      'gemini-3.7-flash',
-      'gemini-3.0-flash',
-      'gemini-1.5-flash-8b',
-      'gemini-1.5-pro',
-      'gemini-pro'
+      'gemini-flash-latest',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-pro-latest'
     ];
 
     let result;
