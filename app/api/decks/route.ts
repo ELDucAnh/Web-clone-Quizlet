@@ -17,7 +17,7 @@ const createDeckSchema = z.object({
     id: z.string().uuid(),
     term: z.string().min(1),
     definition: z.string().min(1),
-  })).min(1),
+  })),
 });
 
 export async function GET() {

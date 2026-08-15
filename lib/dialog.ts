@@ -22,7 +22,7 @@ export const useDialogStore = create<DialogState>((set, get) => ({
   },
   showConfirm: (message: string) => {
     return new Promise((resolve) => {
-      set({ isOpen: true, type: 'confirm', message, resolve });
+      set({ isOpen: true, type: 'confirm', message, resolve: resolve as any });
     });
   },
   close: (value: boolean) => {
