@@ -496,7 +496,6 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           return { speakingTopics: newTopics };
         });
       },
-    }),
 }));
 
 export { getDefaultProgress };
