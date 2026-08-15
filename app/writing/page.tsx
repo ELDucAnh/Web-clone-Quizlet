@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { PenLine, Plus, Trash2, Edit2, X, ChevronDown, ChevronRight, Check, Search, Highlighter, FolderPlus, BookOpen } from 'lucide-react';
+import { PenLine, Plus, Trash2, Edit2, X, ChevronDown, ChevronRight, Check, Search, Highlighter, FolderPlus, BookOpen, Sparkles, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import type { WritingTask, WritingSample } from '@/lib/types';
@@ -115,6 +115,8 @@ function SampleCard({ sample }: { sample: WritingSample }) {
   });
   const [mode, setMode] = useState<'vocab' | 'highlight' | 'erase'>('vocab');
   const [popup, setPopup] = useState<{ x: number; y: number; text: string } | null>(null);
+  const [isGrading, setIsGrading] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState<any>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
   // Sync editData if sample changes (e.g. after save)
@@ -244,6 +246,41 @@ function SampleCard({ sample }: { sample: WritingSample }) {
     updateWritingSample(sample.id, { tags: newTags });
   };
 
+  const handleGradeWithAI = async () => {
+    if (!sample.topic || !sample.content) {
+      alert('Cần có đủ Đề bài (Topic) và Nội dung bài làm để AI chấm điểm!');
+      return;
+    }
+    setIsGrading(true);
+    setAiFeedback(null);
+    setExpanded(true);
+    try {
+      const res = await fetch('/api/ai/writing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskType: sample.task,
+          topic: sample.topic,
+          essay: sample.content.replace(/<[^>]*>?/gm, '').trim()
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAiFeedback(data);
+        if (data.overallBand) {
+          updateWritingSample(sample.id, { band: data.overallBand });
+        }
+      } else {
+        alert(data.error || 'Có lỗi xảy ra khi chấm bài.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Không thể kết nối đến AI.');
+    } finally {
+      setIsGrading(false);
+    }
+  };
+
   return (
     <div className={`bg-[var(--card)] border rounded-2xl overflow-hidden transition-colors ${editing ? 'border-[var(--primary)]' : 'border-[var(--border)]'}`}>
       {/* ── Card header — always clickable to expand ──── */}
@@ -309,6 +346,14 @@ function SampleCard({ sample }: { sample: WritingSample }) {
               className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors py-1 px-2 rounded-lg hover:bg-[var(--primary-light)] ml-auto"
             >
               <Edit2 size={12} /> Sửa
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleGradeWithAI(); }}
+              disabled={isGrading}
+              className="flex items-center gap-1 text-xs text-purple-600 font-semibold hover:text-purple-700 transition-colors py-1 px-2 rounded-lg hover:bg-purple-50 disabled:opacity-50"
+            >
+              {isGrading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} 
+              {isGrading ? 'AI đang chấm...' : 'Chấm bằng AI'}
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); if (confirm('Xóa bài mẫu này?')) deleteWritingSample(sample.id); }}
@@ -437,6 +482,52 @@ function SampleCard({ sample }: { sample: WritingSample }) {
                     onClose={() => { setPopup(null); window.getSelection()?.removeAllRanges(); }}
                     linkedDeckId={linkedDeckId}
                   />
+                </div>
+              )}
+
+              {/* AI Feedback UI */}
+              {aiFeedback && (
+                <div className="mt-6 pt-5 border-t-2 border-dashed border-purple-200">
+                  <div className="flex items-center gap-2 mb-4 text-purple-700 font-bold text-lg">
+                    <Sparkles size={20} /> Kết quả chấm điểm từ AI
+                  </div>
+                  
+                  <div className="flex items-center gap-4 mb-5 p-4 bg-purple-50 rounded-xl border border-purple-100">
+                    <div className="text-center">
+                      <div className="text-3xl font-black text-purple-700">{aiFeedback.overallBand}</div>
+                      <div className="text-xs font-semibold text-purple-500 uppercase tracking-wider">Overall</div>
+                    </div>
+                    <div className="flex-1 grid grid-cols-4 gap-2">
+                      {['TR', 'CC', 'LR', 'GRA'].map(crit => (
+                        <div key={crit} className="bg-white rounded-lg p-2 text-center shadow-sm">
+                          <div className="text-lg font-bold text-[var(--text)]">{aiFeedback.scores?.[crit]}</div>
+                          <div className="text-[10px] font-bold text-[var(--text-muted)]">{crit}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="bg-blue-50/50 p-4 rounded-xl text-sm">
+                      <h4 className="font-bold text-blue-800 mb-2">Nhận xét chung</h4>
+                      <p className="text-[var(--text)] leading-relaxed">{aiFeedback.generalComment}</p>
+                    </div>
+
+                    {aiFeedback.grammarErrors?.length > 0 && (
+                      <div>
+                        <h4 className="font-bold text-red-700 mb-2 flex items-center gap-2 text-sm"><X size={16}/> Lỗi ngữ pháp cần chú ý</h4>
+                        <ul className="space-y-2">
+                          {aiFeedback.grammarErrors.map((err: any, idx: number) => (
+                            <li key={idx} className="bg-red-50 p-3 rounded-lg text-sm border border-red-100">
+                              <p className="line-through text-red-400 mb-1">{err.error}</p>
+                              <p className="font-semibold text-green-600 mb-1">✓ {err.correction}</p>
+                              <p className="text-[var(--text-muted)] text-xs">{err.explanation}</p>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

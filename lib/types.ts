@@ -140,6 +140,7 @@ export interface WritingSample {
   content: string;          // bài mẫu full
   band?: number;            // band score
   tags?: string[];
+  aiFeedback?: any;         // AI feedback object
   createdAt: number;
   updatedAt: number;
 }
@@ -156,12 +157,24 @@ export interface SpeakingTopic {
   updatedAt: number;
 }
 
+export interface SpeakingSubmission {
+  id: string;
+  part: 1 | 2 | 3;
+  topic: string;
+  transcript: string;
+  band?: number;
+  aiFeedback?: any;
+  createdAt: number;
+  updatedAt: number;
+}
+
 // ─── Extended AppState ────────────────────────────────────────────────────
 export interface IELTSState {
   studyHoursGoals: Record<string, StudyHoursGoal>;
   studyHoursLogs: StudyHoursLog[];
   writingSamples: Record<string, WritingSample>;
   speakingTopics: Record<string, SpeakingTopic>;
+  speakingSubmissions: Record<string, SpeakingSubmission>;
 }
 
 export interface IELTSActions {
@@ -178,4 +191,8 @@ export interface IELTSActions {
   createSpeakingTopic: (data: Omit<SpeakingTopic, 'id' | 'createdAt' | 'updatedAt'>) => string;
   updateSpeakingTopic: (id: string, data: Partial<Omit<SpeakingTopic, 'id' | 'createdAt'>>) => void;
   deleteSpeakingTopic: (id: string) => void;
+  // Speaking Submissions
+  createSpeakingSubmission: (data: Omit<SpeakingSubmission, 'id' | 'createdAt' | 'updatedAt'>) => string;
+  updateSpeakingSubmission: (id: string, data: Partial<Omit<SpeakingSubmission, 'id' | 'createdAt'>>) => void;
+  deleteSpeakingSubmission: (id: string) => void;
 }

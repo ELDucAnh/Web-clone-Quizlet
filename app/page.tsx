@@ -5,14 +5,14 @@ import { useSession } from 'next-auth/react';
 import {
   Plus, BookOpen, Folder, TrendingUp, Target,
   CreditCard, Layers, Brain, PenLine,
-  Shuffle, Droplets, ChevronRight, Zap,
+  Shuffle, Droplets, ChevronRight, Zap, Clock,
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { LoadingScreen } from '@/components/LoadingScreen';
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false);
-  const { decks, cardsByDeck, progress, folders, sessions, settings, isHydrated } = useStore();
+  const { decks, cardsByDeck, progress, folders, sessions, settings, isHydrated, writingSamples, speakingSubmissions, studyHoursGoals, studyHoursLogs } = useStore();
   const { data: session, status } = useSession();
 
   useEffect(() => { setMounted(true); }, []);
@@ -36,6 +36,35 @@ export default function HomePage() {
   })();
 
   const dailyGoalPct = Math.min(100, Math.round((todayStudied / (settings.dailyGoal || 20)) * 100));
+
+  // ── Analytics Data Prep ───────────────────────────────────────────
+  const wSamples = Object.values(writingSamples || {}).filter(w => w.band);
+  const avgWriting = wSamples.length > 0 ? (wSamples.reduce((acc, curr) => acc + (curr.band || 0), 0) / wSamples.length).toFixed(1) : 'N/A';
+  
+  const sSubmissions = Object.values(speakingSubmissions || {}).filter(s => s.band);
+  const avgSpeaking = sSubmissions.length > 0 ? (sSubmissions.reduce((acc, curr) => acc + (curr.band || 0), 0) / sSubmissions.length).toFixed(1) : 'N/A';
+
+  // Last 7 days vocab progress
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const last7Days = Array.from({length: 7}).map((_, i) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - (6 - i));
+    return d.getTime();
+  });
+  
+  const vocabChartData = last7Days.map(timestamp => {
+    const endOfDay = timestamp + 86400000;
+    const studiedCount = sessions.filter(s => s.startedAt >= timestamp && s.startedAt < endOfDay).reduce((acc, curr) => acc + (curr.cardsReviewed || 0), 0);
+    const dateLabel = new Date(timestamp).toLocaleDateString('vi-VN', { weekday: 'short' });
+    return { label: dateLabel, value: studiedCount };
+  });
+  const maxVocab = Math.max(...vocabChartData.map(d => d.value), 10);
+
+  // Study hours
+  const totalStudyMinutes = Object.values(studyHoursLogs || {}).reduce((acc, curr) => acc + curr.minutes, 0);
+  const totalTargetHours = Object.values(studyHoursGoals || {}).reduce((acc, curr) => acc + curr.targetHours, 0) || 100;
+  const studyHoursPct = Math.min(100, Math.round((totalStudyMinutes / 60 / totalTargetHours) * 100));
 
   const studyModes = [
     { icon: <Layers size={16} />, label: 'Thẻ ghi nhớ', desc: 'Lật thẻ 3D', href: '/library' },
@@ -145,6 +174,79 @@ export default function HomePage() {
           </div>
         ))}
       </div>
+
+      {/* ── IELTS AI Progress & Analytics ────────────────────────────────── */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Vocab Chart */}
+        <div className="bg-[var(--card)] rounded-2xl p-5 shadow-sm border border-[var(--border)] col-span-1 lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-base font-bold text-[var(--text)] tracking-tight">Từ vựng (7 ngày qua)</h2>
+              <p className="text-xs text-[var(--text-muted)]">Số thẻ đã ôn tập</p>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <TrendingUp size={16} />
+            </div>
+          </div>
+          <div className="h-32 flex items-end justify-between gap-2 mt-4 pt-2 border-t border-dashed border-[var(--border)]">
+            {vocabChartData.map((d, idx) => {
+              const hPct = Math.round((d.value / maxVocab) * 100);
+              return (
+                <div key={idx} className="flex flex-col items-center flex-1 group">
+                  <div className="w-full relative flex items-end justify-center h-24 rounded-t-sm hover:bg-[var(--bg)] transition-colors">
+                    <div 
+                      className="w-full max-w-[24px] bg-[var(--primary)] rounded-t-sm transition-all duration-500 group-hover:bg-[var(--primary-hover)]"
+                      style={{ height: `${hPct}%` }}
+                    />
+                    <div className="opacity-0 group-hover:opacity-100 absolute -top-6 text-[10px] font-bold bg-gray-800 text-white px-2 py-0.5 rounded shadow-sm whitespace-nowrap z-10 transition-opacity">
+                      {d.value} thẻ
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-semibold text-[var(--text-muted)] mt-1 truncate w-full text-center">{d.label}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* IELTS Band & Goals */}
+        <div className="flex flex-col gap-4 col-span-1">
+          <Link href="/ai-training" className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl p-5 text-white shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-20 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
+              <Zap size={64} />
+            </div>
+            <h2 className="text-sm font-bold text-white/90 mb-4">IELTS AI Band Score</h2>
+            <div className="flex justify-between items-end">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-purple-200">Writing</p>
+                <div className="text-3xl font-black">{avgWriting}</div>
+              </div>
+              <div className="h-8 w-[1px] bg-white/20 mx-2"></div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-purple-200">Speaking</p>
+                <div className="text-3xl font-black">{avgSpeaking}</div>
+              </div>
+            </div>
+            <div className="mt-4 pt-3 border-t border-white/20 text-[11px] font-semibold flex items-center justify-between">
+              Vào phòng luyện AI <ChevronRight size={12} />
+            </div>
+          </Link>
+
+          <div className="bg-[var(--card)] rounded-2xl p-4 shadow-sm border border-[var(--border)] flex-1 flex flex-col justify-center">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-bold text-[var(--text)] tracking-tight">Giờ học mục tiêu</h2>
+              <Clock size={14} className="text-orange-500" />
+            </div>
+            <div className="flex items-end gap-1 mb-2">
+              <span className="text-2xl font-black text-[var(--text)]">{(totalStudyMinutes/60).toFixed(1)}</span>
+              <span className="text-xs font-semibold text-[var(--text-muted)] mb-1">/ {totalTargetHours}h</span>
+            </div>
+            <div className="h-2 w-full bg-[var(--bg)] rounded-full overflow-hidden">
+              <div className="h-full bg-orange-500 rounded-full" style={{ width: `${studyHoursPct}%` }} />
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ── Recent Study Sets ───────────────────────────────────────────────── */}
       <section>

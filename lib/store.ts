@@ -46,6 +46,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
       studyHoursLogs: [],
       writingSamples: {},
       speakingTopics: {},
+      speakingSubmissions: {},
 
       // ─── Cloud Actions ───────────────────────────────────────────────
       hydrate: (data: any) => {
@@ -550,6 +551,34 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
         });
         syncToBackend(`/speaking-topics/${id}`, 'DELETE');
       },
-}));
+
+      // ─── Speaking Submission Actions ──────────────────────────────────────────
+      createSpeakingSubmission: (data: Omit<SpeakingSubmission, 'id' | 'createdAt' | 'updatedAt'>) => {
+        const id = uuidv4();
+        const now = Date.now();
+        const submission: SpeakingSubmission = { ...data, id, createdAt: now, updatedAt: now };
+        set((state) => ({ speakingSubmissions: { ...state.speakingSubmissions, [id]: submission } }));
+        syncToBackend('/speaking-submissions', 'POST', submission);
+        return id;
+      },
+
+      updateSpeakingSubmission: (id: string, data: Partial<Omit<SpeakingSubmission, 'id' | 'createdAt'>>) => {
+        set((state) => {
+          if (!state.speakingSubmissions[id]) return state;
+          return { speakingSubmissions: { ...state.speakingSubmissions, [id]: { ...state.speakingSubmissions[id], ...data, updatedAt: Date.now() } } };
+        });
+        syncToBackend(`/speaking-submissions/${id}`, 'PUT', data);
+      },
+
+      deleteSpeakingSubmission: (id: string) => {
+        set((state) => {
+          const newSubmissions = { ...state.speakingSubmissions };
+          delete newSubmissions[id];
+          return { speakingSubmissions: newSubmissions };
+        });
+        syncToBackend(`/speaking-submissions/${id}`, 'DELETE');
+      },
+    })
+);
 
 export { getDefaultProgress };
