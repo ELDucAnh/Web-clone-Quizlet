@@ -119,8 +119,13 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
     <div className="flex flex-col md:flex-row gap-6">
       <div className="flex-1 flex flex-col gap-4">
         <div className="bg-[var(--card)] rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-lg flex items-center gap-2"><PenLine size={18} className="text-[var(--primary)]"/> Nhập bài viết</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-50 text-blue-600 flex items-center justify-center shadow-sm border border-blue-100">
+                <PenLine size={18} />
+              </div>
+              <h3 className="font-extrabold text-lg text-[var(--text)] whitespace-nowrap tracking-tight">Nhập bài viết</h3>
+            </div>
             <select className="q-input w-auto text-sm font-bold bg-[var(--bg)] border-none" value={task} onChange={e => setTask(e.target.value as any)}>
               <option value="task1">IELTS Task 1</option>
               <option value="task2">IELTS Task 2</option>
@@ -153,13 +158,13 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
             </div>
           )}
           <textarea
-            className="q-input resize-y font-mono text-sm leading-relaxed mb-4 w-full bg-[var(--bg)] border-none focus:ring-2 focus:ring-[var(--primary)]"
+            className="q-input resize-y font-sans font-medium text-[15px] leading-relaxed mb-4 w-full bg-[var(--bg)] border border-[var(--border)] focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10 shadow-inner rounded-xl p-4 transition-all"
             rows={3} placeholder="Dán đề bài (Prompt) vào đây..."
             value={topic} onChange={e => setTopic(e.target.value)}
             onPaste={handlePaste}
           />
           <textarea
-            className="q-input resize-y font-mono text-sm leading-relaxed w-full min-h-[300px] bg-[var(--bg)] border-none focus:ring-2 focus:ring-[var(--primary)]"
+            className="q-input resize-y font-sans font-medium text-[15px] leading-relaxed w-full min-h-[300px] bg-[var(--bg)] border border-[var(--border)] focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10 shadow-inner rounded-xl p-4 transition-all"
             placeholder="Viết bài làm của bạn vào đây..."
             value={content} onChange={e => setContent(e.target.value)}
           />
@@ -256,8 +261,13 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
     <div className="flex flex-col md:flex-row gap-6">
       <div className="flex-1 flex flex-col gap-4">
         <div className="bg-[var(--card)] rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-lg flex items-center gap-2"><Mic size={18} className="text-purple-600"/> Phòng thi Nói ảo</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-100 to-fuchsia-50 text-purple-600 flex items-center justify-center shadow-sm border border-purple-100">
+                <Mic size={18} />
+              </div>
+              <h3 className="font-extrabold text-lg text-[var(--text)] whitespace-nowrap tracking-tight">Phòng thi Nói ảo</h3>
+            </div>
             <select className="q-input w-auto text-sm font-bold bg-[var(--bg)] border-none text-purple-700" value={part} onChange={e => setPart(e.target.value as any)}>
               <option value="1">Part 1 (Phỏng vấn)</option>
               <option value="2">Part 2 (Độc thoại)</option>
@@ -266,7 +276,7 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
           </div>
           
           <input
-            className="w-full h-11 px-4 rounded-xl bg-[var(--bg)] border-none text-[var(--text)] text-sm outline-none focus:ring-2 focus:ring-purple-500 mb-4"
+            className="w-full h-12 px-4 rounded-xl bg-[var(--bg)] border border-[var(--border)] font-sans font-medium text-[15px] outline-none focus:border-purple-300 focus:ring-4 focus:ring-purple-500/10 shadow-inner transition-all mb-5"
             placeholder="Chủ đề / Đề bài (ví dụ: Describe a memorable trip...)"
             value={topic} onChange={e => setTopic(e.target.value)}
           />
@@ -285,12 +295,12 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
             </p>
           </div>
 
-          <div className="bg-[var(--bg)] rounded-xl p-4 min-h-[150px]">
-            <p className="text-xs font-bold text-[var(--text-muted)] mb-2 uppercase">Văn bản bóc băng (Live Transcript):</p>
+          <div className="bg-[var(--bg)] rounded-xl p-5 min-h-[150px] shadow-inner border border-[var(--border)]">
+            <p className="text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-wider">Văn bản bóc băng (Live Transcript):</p>
             {transcript ? (
-              <p className="text-[var(--text)] leading-relaxed">{transcript}</p>
+              <p className="text-[var(--text)] text-[15px] font-medium leading-relaxed">{transcript}</p>
             ) : (
-              <p className="text-[var(--text-faint)] italic">Chữ sẽ tự động hiện ở đây khi bạn nói...</p>
+              <p className="text-[var(--text-faint)] italic text-[15px]">Chữ sẽ tự động hiện ở đây khi bạn nói...</p>
             )}
           </div>
 
