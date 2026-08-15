@@ -31,6 +31,7 @@ function HighlightVocabPopup({
   onAdd,
   onHighlight,
   onClose,
+  linkedDeckId,
 }: {
   text: string;
   onAdd: (term: string, def: string, deckId: string) => void;
