@@ -29,12 +29,41 @@ export async function POST(req: Request) {
     // Prompt siêu chi tiết ép Gemini trả về JSON
     const prompt = `
 Bạn là một cựu giám khảo IELTS vô cùng khắt khe và công tâm.
-Nhiệm vụ của bạn là chấm điểm bài viết IELTS ${taskType.toUpperCase()} dưới đây theo ĐÚNG 4 TIÊU CHÍ (Task Response/Task Achievement, Coherence and Cohesion, Lexical Resource, Grammatical Range and Accuracy).
+Nhiệm vụ của bạn là chấm điểm bài viết IELTS ${taskType.toUpperCase()} dưới đây theo ĐÚNG 4 TIÊU CHÍ (Task Response/Task Achievement, Coherence and Cohesion, Lexical Resource, Grammatical Range and Accuracy) VÀ BÁM SÁT OFFICIAL IELTS WRITING BAND DESCRIPTORS (May 2023).
+
+Tuyệt đối KHÔNG ĐƯỢC CHẤM THẤP ĐIỂM XUỐNG MỘT CÁCH VÔ LÝ. Nếu bài làm đạt mức Band 8, 9 theo đúng rubric, bạn PHẢI cho Band 8, 9.
 
 Đề bài: "${topic}"
 
 Bài làm của học viên:
 "${essay}"
+
+=== IELTS WRITING BAND DESCRIPTORS (TÓM TẮT TIÊU CHÍ 9, 8, 7, 6) ===
+Band 9:
+- TR/TA: Trả lời hoàn hảo tất cả yêu cầu, phát triển ý sâu sắc.
+- CC: Mạch lạc hoàn toàn tự nhiên, không gượng ép.
+- LR: Từ vựng linh hoạt, chính xác tuyệt đối, tự nhiên như người bản xứ. Lỗi cực kỳ hiếm.
+- GRA: Cấu trúc đa dạng, linh hoạt hoàn toàn. Lỗi cực kỳ hiếm.
+
+Band 8:
+- TR/TA: Trả lời tốt tất cả yêu cầu. Phát triển ý tốt.
+- CC: Mạch lạc tốt, chia đoạn hợp lý. Thỉnh thoảng có lỗi nhỏ không đáng kể.
+- LR: Dùng từ vựng rộng, linh hoạt. Có dùng idiomatic/uncommon items tốt. Lỗi nhỏ hiếm gặp.
+- GRA: Đa dạng cấu trúc, phần lớn câu không có lỗi.
+
+Band 7:
+- TR/TA: Giải quyết tốt yêu cầu. Có cái nhìn tổng quan rõ ràng.
+- CC: Tổ chức logic, mạch lạc. Có thể dùng quá/thiếu một số từ nối.
+- LR: Đủ từ vựng để diễn đạt linh hoạt. Có dùng idiomatic items. Có vài lỗi nhỏ.
+- GRA: Dùng nhiều cấu trúc phức tạp. Kiểm soát ngữ pháp tốt, thỉnh thoảng có lỗi.
+
+Band 6:
+- TR/TA: Giải quyết được yêu cầu nhưng đôi khi chưa đầy đủ hoặc không rõ ràng.
+- CC: Sắp xếp thông tin tương đối mạch lạc, đôi khi dùng từ nối bị lỗi hoặc lặp.
+- LR: Đủ từ vựng cho bài. Có cố gắng dùng từ vựng phức tạp nhưng bị sai.
+- GRA: Có kết hợp câu đơn và phức nhưng linh hoạt kém. Có lỗi ngữ pháp nhưng không cản trở giao tiếp.
+
+Hãy đối chiếu CỰC KỲ KHÁCH QUAN. Nếu bài có lỗi, hãy chỉ ra. Nếu bài xuất sắc, HÃY CHO ĐIỂM CAO (8.0 - 9.0).
 
 BẠN BẮT BUỘC PHẢI TRẢ VỀ KẾT QUẢ DƯỚI DẠNG CHUỖI JSON HỢP LỆ (KHÔNG bọc trong markdown \`\`\`json). Cấu trúc JSON phải chính xác như sau:
 {
