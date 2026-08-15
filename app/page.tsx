@@ -55,7 +55,7 @@ export default function HomePage() {
   
   const vocabChartData = last7Days.map(timestamp => {
     const endOfDay = timestamp + 86400000;
-    const studiedCount = sessions.filter(s => s.startedAt >= timestamp && s.startedAt < endOfDay).reduce((acc, curr) => acc + (curr.cardsReviewed || 0), 0);
+    const studiedCount = sessions.filter(s => s.startedAt >= timestamp && s.startedAt < endOfDay).reduce((acc, curr) => acc + (curr.correctCount || 0), 0);
     const dateLabel = new Date(timestamp).toLocaleDateString('vi-VN', { weekday: 'short' });
     return { label: dateLabel, value: studiedCount };
   });
