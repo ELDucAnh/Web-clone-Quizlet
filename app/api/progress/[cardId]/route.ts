@@ -10,7 +10,7 @@ export async function PUT(request: Request, { params }: { params: { cardId: stri
 
   try {
     const {
-      learnStage, easeFactor, intervalDays, repetitions,
+      learnStage, easeFactor, interval, repetitions,
       correctStreak, totalAnswers, correctAnswers, nextReview, lastAnswered,
     } = await request.json();
 
@@ -31,9 +31,10 @@ export async function PUT(request: Request, { params }: { params: { cardId: stri
          next_review    = EXCLUDED.next_review,
          last_answered  = EXCLUDED.last_answered
        RETURNING *`,
-      [userId, params.cardId, learnStage, easeFactor, intervalDays,
+      [userId, params.cardId, learnStage, easeFactor, interval,
        repetitions, correctStreak, totalAnswers, correctAnswers,
-       nextReview, lastAnswered]
+       nextReview ? new Date(nextReview) : null, 
+       lastAnswered ? new Date(lastAnswered) : null]
     );
     return NextResponse.json(rows[0]);
   } catch (error) {

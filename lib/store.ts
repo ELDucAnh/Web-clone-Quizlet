@@ -208,6 +208,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           }
           return { progress: newProgress, decks: newDecks };
         });
+        syncToBackend(`/decks/${deckId}/reset`, 'POST');
       },
 
       markDeckCompleted: (deckId: string) => {
@@ -221,6 +222,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
             },
           };
         });
+        syncToBackend(`/decks/${deckId}/complete`, 'POST');
       },
 
       deleteDeck: (deckId: string) => {

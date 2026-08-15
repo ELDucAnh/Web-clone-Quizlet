@@ -13,7 +13,9 @@ export async function POST(request: Request) {
     const { rows } = await db.query(
       `INSERT INTO study_sessions (user_id, deck_id, mode, total_cards, correct_count, score, started_at, completed_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [userId, deckId, mode, totalCards, correctCount, score, startedAt, completedAt]
+      [userId, deckId, mode, totalCards, correctCount, score, 
+       startedAt ? new Date(startedAt) : null, 
+       completedAt ? new Date(completedAt) : null]
     );
     
     // Update deck.last_studied

@@ -10,13 +10,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   try {
     await db.query(
-      `UPDATE card_progress SET learn_stage='unseen', repetitions=0, correct_streak=0,
-       interval_days=0, ease_factor=2.50, next_review=NOW()
-       WHERE deck_id=$1 AND user_id=$2`,
-      [params.id, userId]
-    );
-    await db.query(
-      `UPDATE decks SET last_studied=NULL, completed_at=NULL WHERE id=$1 AND user_id=$2`,
+      `UPDATE decks SET completed_at=NOW() WHERE id=$1 AND user_id=$2`,
       [params.id, userId]
     );
     return NextResponse.json({ ok: true });

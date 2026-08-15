@@ -26,16 +26,13 @@ const handleImagePaste = (e: React.ClipboardEvent, currentText: string, setter: 
 };
 
 // ── Highlight vocab popup ─────────────────────────────────────────────
-function HighlightVocabPopup({
   text,
   onAdd,
-  onHighlight,
   onClose,
   linkedDeckId,
 }: {
   text: string;
   onAdd: (term: string, def: string, deckId: string) => void;
-  onHighlight: () => void;
   onClose: () => void;
   linkedDeckId?: string;
 }) {
@@ -90,63 +87,18 @@ function HighlightVocabPopup({
       )}
       <div className="flex gap-2">
         <button
-          className="btn-primary flex-1 text-sm py-2 disabled:opacity-40"
+          className="btn-primary w-full text-sm py-2 disabled:opacity-40"
           onClick={handleSubmit}
           disabled={!def.trim() || !deckId}
         >
           <Check size={13} /> Lưu từ vựng
-        </button>
-        <button
-          className="bg-yellow-200 text-yellow-800 hover:bg-yellow-300 transition-colors rounded-xl px-3 flex items-center justify-center font-bold"
-          onClick={() => {
-            onHighlight();
-            onClose();
-          }}
-          title="Highlight văn bản này"
-        >
-          <Highlighter size={16} />
         </button>
       </div>
     </div>
   );
 }
 
-// ── Highlight hook ────────────────────────────────────────────────────
-function useHighlight(
-  containerRef: React.RefObject<HTMLElement | null>,
-  onAddVocab: (term: string, def: string, deckId: string) => void
-) {
-  const [popup, setPopup] = useState<{ x: number; y: number; text: string } | null>(null);
-
-  const handleMouseUp = useCallback(() => {
-    const sel = window.getSelection();
-    if (!sel || sel.isCollapsed) return;
-    const text = sel.toString().trim();
-    if (!text || text.length < 2 || text.length > 120) return;
-    const range = sel.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-    setPopup({ x: rect.left + rect.width / 2, y: rect.top - 8, text });
-  }, []);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    el.addEventListener('mouseup', handleMouseUp);
-    return () => el.removeEventListener('mouseup', handleMouseUp);
-  }, [containerRef, handleMouseUp]);
-
-  const closePopup = useCallback(() => {
-    setPopup(null);
-    window.getSelection()?.removeAllRanges();
-  }, []);
-
-  const handleAdd = useCallback((term: string, def: string, deckId: string) => {
-    onAddVocab(term, def, deckId);
-    closePopup();
-  }, [onAddVocab, closePopup]);
-
-  return { popup, closePopup, handleAdd };
-}
+// -- Removed useHighlight hook --
 
 // ── Sample Card ────────────────────────────────────────────────────────
 function SampleCard({ sample }: { sample: WritingSample }) {
@@ -160,6 +112,8 @@ function SampleCard({ sample }: { sample: WritingSample }) {
     band: sample.band?.toString() || '',
     task: sample.task,
   });
+  const [mode, setMode] = useState<'vocab' | 'highlight' | 'erase'>('vocab');
+  const [popup, setPopup] = useState<{ x: number; y: number; text: string } | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
   // Sync editData if sample changes (e.g. after save)
@@ -173,17 +127,61 @@ function SampleCard({ sample }: { sample: WritingSample }) {
     });
   }, [sample.title, sample.topic, sample.content, sample.band, sample.task]);
 
-  const { popup, closePopup, handleAdd } = useHighlight(
-    bodyRef,
-    (term, def, deckId) => addCardToDeck(deckId, term, def)
-  );
+  const handleMouseUp = () => {
+    if (mode === 'erase') return;
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) return;
 
-  const handleHighlight = (textToHighlight: string) => {
-    const escaped = textToHighlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    const newContent = sample.content.replace(textToHighlight, `<mark class="bg-yellow-200 text-yellow-900 rounded px-1">${textToHighlight}</mark>`);
-    if (newContent !== sample.content) {
-      updateWritingSample(sample.id, { content: newContent });
+    if (mode === 'highlight') {
+      const range = sel.getRangeAt(0);
+      try {
+        const mark = document.createElement('mark');
+        mark.className = 'bg-yellow-200 text-yellow-900 rounded px-1';
+        range.surroundContents(mark);
+        sel.removeAllRanges();
+        if (bodyRef.current) {
+          updateWritingSample(sample.id, { content: bodyRef.current.innerHTML });
+        }
+      } catch (e) {
+        console.warn('Cannot highlight across multiple HTML nodes', e);
+        sel.removeAllRanges();
+      }
+      return;
     }
+
+    if (mode === 'vocab') {
+      const text = sel.toString().trim();
+      if (!text || text.length < 2 || text.length > 120) return;
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      setPopup({ x: rect.left + rect.width / 2, y: rect.top - 8, text });
+    }
+  };
+
+  const handleContentClick = (e: React.MouseEvent) => {
+    if (mode === 'erase') {
+      let target = e.target as HTMLElement;
+      while (target && target !== bodyRef.current) {
+        if (target.nodeName === 'MARK') {
+          const parent = target.parentNode;
+          if (parent) {
+            while (target.firstChild) parent.insertBefore(target.firstChild, target);
+            parent.removeChild(target);
+            if (bodyRef.current) {
+              updateWritingSample(sample.id, { content: bodyRef.current.innerHTML });
+            }
+          }
+          break;
+        }
+        target = target.parentNode as HTMLElement;
+      }
+    }
+  };
+
+  const handleAddVocab = (term: string, def: string, deckId: string) => {
+    addCardToDeck(deckId, term, def);
+    setPopup(null);
+    window.getSelection()?.removeAllRanges();
   };
 
   const handleSave = () => {
@@ -247,7 +245,7 @@ function SampleCard({ sample }: { sample: WritingSample }) {
             />
           )}
           <p className="text-xs text-[var(--text-muted)] mt-1">
-            {sample.content.length} ký tự
+            {sample.content.replace(/<[^>]*>?/gm, '').trim().split(/\s+/).filter(w => w.length > 0).length} từ
             {sample.band && (
               <span className="ml-2 font-bold" style={{ color: bandColor(sample.band) }}>
                 Band {sample.band}
@@ -376,24 +374,44 @@ function SampleCard({ sample }: { sample: WritingSample }) {
               </div>
             </div>
           ) : (
-            <div ref={bodyRef}>
-              <p className="text-xs text-[var(--text-muted)] mb-3 italic select-none">
-                💡 Bôi đen từ hoặc cụm từ để thêm vào học phần từ vựng hoặc Highlight
-              </p>
+            <div>
+              <div className="flex items-center gap-2 mb-3 bg-[var(--bg)] p-1.5 rounded-lg w-max border border-[var(--border)]">
+                <button
+                  onClick={() => { setMode('vocab'); setPopup(null); }}
+                  className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-md transition-colors ${mode === 'vocab' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+                >
+                  <BookOpen size={13} /> Tra từ & Thêm thẻ
+                </button>
+                <button
+                  onClick={() => { setMode('highlight'); setPopup(null); }}
+                  className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-md transition-colors ${mode === 'highlight' ? 'bg-yellow-400 text-yellow-900 shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+                >
+                  <Highlighter size={13} /> Bút Highlight
+                </button>
+                <button
+                  onClick={() => { setMode('erase'); setPopup(null); }}
+                  className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-md transition-colors ${mode === 'erase' ? 'bg-red-500 text-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+                >
+                  <Trash2 size={13} /> Tẩy Highlight
+                </button>
+              </div>
+
               <div 
-                className="text-base text-[var(--text)] leading-relaxed whitespace-pre-wrap font-sans"
+                ref={bodyRef}
+                className={`text-base text-[var(--text)] leading-relaxed whitespace-pre-wrap font-sans ${mode === 'erase' ? 'cursor-pointer' : ''}`}
                 dangerouslySetInnerHTML={{ __html: sample.content }}
+                onMouseUp={handleMouseUp}
+                onClick={handleContentClick}
               />
-              {popup && (
+              {popup && mode === 'vocab' && (
                 <div
                   className="fixed z-50"
                   style={{ left: popup.x, top: popup.y, transform: 'translate(-50%, -100%)' }}
                 >
                   <HighlightVocabPopup
                     text={popup.text}
-                    onAdd={handleAdd}
-                    onHighlight={() => handleHighlight(popup.text)}
-                    onClose={closePopup}
+                    onAdd={handleAddVocab}
+                    onClose={() => { setPopup(null); window.getSelection()?.removeAllRanges(); }}
                     linkedDeckId={linkedDeckId}
                   />
                 </div>
