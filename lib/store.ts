@@ -273,6 +273,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
         set((state) => ({
           folders: { ...state.folders, [folderId]: folder },
         }));
+        syncToBackend('/folders', 'POST', { id: folderId, name, description });
         return folderId;
       },
 
@@ -288,6 +289,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
             },
           },
         }));
+        syncToBackend(`/folders/${folderId}`, 'PUT', { name, description });
       },
 
       deleteFolder: (folderId: string) => {

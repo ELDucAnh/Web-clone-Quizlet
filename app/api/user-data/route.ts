@@ -129,7 +129,7 @@ export async function GET() {
       payload.studyHoursLogs = logs.map(l => ({
         id: l.id,
         goalId: l.goal_id,
-        durationMinutes: l.duration_minutes,
+        durationMinutes: l.minutes,
         createdAt: new Date(l.created_at).getTime(),
       }));
 
@@ -139,10 +139,9 @@ export async function GET() {
           id: w.id,
           title: w.title,
           content: w.content,
-          prompt: w.prompt || undefined,
-          wordCount: w.word_count,
-          estimatedBand: w.estimated_band || undefined,
-          feedback: w.feedback || undefined,
+          prompt: w.topic || undefined,
+          wordCount: w.content?.length || 0,
+          estimatedBand: w.band || undefined,
           createdAt: new Date(w.created_at).getTime(),
           updatedAt: new Date(w.updated_at).getTime(),
         };
@@ -152,11 +151,8 @@ export async function GET() {
       speaking.forEach(s => {
         payload.speakingTopics[s.id] = {
           id: s.id,
-          title: s.title,
-          category: s.category || undefined,
-          keywords: s.keywords || [],
-          audioUrl: s.audio_url || undefined,
-          notes: s.notes || undefined,
+          title: s.topic,
+          keywords: s.keywords || [], 
           createdAt: new Date(s.created_at).getTime(),
           updatedAt: new Date(s.updated_at).getTime(),
         };
