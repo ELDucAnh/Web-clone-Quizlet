@@ -1,7 +1,7 @@
 // lib/api.ts
 export async function syncToBackend(endpoint: string, method: 'POST' | 'PUT' | 'DELETE', data?: any) {
   try {
-    const res = await fetch(`/api/proxy${endpoint}`, {
+    const res = await fetch(`/api${endpoint}`, {
       method,
       headers: {
         'Content-Type': 'application/json',
