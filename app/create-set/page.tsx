@@ -16,10 +16,13 @@ interface CardRow {
 
 export default function CreateSetPage() {
   const router = useRouter();
-  const { createDeck, folders } = useStore();
+  const searchParams = useSearchParams();
+  const editId = searchParams?.get('edit');
+  const { createDeck, updateDeck, addCardToDeck, updateCard, deleteCard, folders, decks, cards, cardsByDeck } = useStore();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedFolder, setSelectedFolder] = useState<string>('');
+  const [isEditMode, setIsEditMode] = useState(false);
   const [rows, setRows] = useState<CardRow[]>([
     { id: crypto.randomUUID(), term: '', definition: '' },
     { id: crypto.randomUUID(), term: '', definition: '' },
@@ -31,6 +34,25 @@ export default function CreateSetPage() {
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
   const [isLoadingCSV, setIsLoadingCSV] = useState(false);
   const [flipped, setFlipped] = useState(false);
+
+  // Initialize edit mode
+  useEffect(() => {
+    if (!editId || !decks[editId]) return;
+    setIsEditMode(true);
+    const deck = decks[editId];
+    setName(deck.name);
+    setDescription(deck.description || '');
+    setSelectedFolder(deck.folderId || '');
+    
+    const deckCardIds = cardsByDeck[editId] || [];
+    if (deckCardIds.length > 0) {
+      const existingRows = deckCardIds.map(id => {
+        const c = cards[id];
+        return { id: c.id, term: c.term, definition: c.definition, originalId: c.id };
+      });
+      setRows(existingRows);
+    }
+  }, [editId, decks, cards, cardsByDeck]);
 
   const folderList = Object.values(folders);
 
@@ -83,13 +105,41 @@ export default function CreateSetPage() {
 
   const handleCreate = () => {
     if (!name.trim() || validRows.length === 0) return;
-    const deckId = createDeck(
-      name.trim(),
-      description.trim(),
-      validRows.map((r) => ({ term: r.term.trim(), definition: r.definition.trim() })),
-      selectedFolder || undefined
-    );
-    router.push(`/study/${deckId}`);
+
+    if (isEditMode && editId) {
+      updateDeck(editId, name.trim(), description.trim());
+      // Handle cards
+      const oldCardIds = new Set(cardsByDeck[editId] || []);
+      const newCardIds = new Set();
+      
+      validRows.forEach(r => {
+        if ((r as any).originalId) {
+          // Update existing
+          updateCard(r.id, r.term.trim(), r.definition.trim());
+          newCardIds.add(r.id);
+        } else {
+          // Add new
+          addCardToDeck(editId, r.term.trim(), r.definition.trim());
+        }
+      });
+      
+      // Delete removed
+      oldCardIds.forEach(id => {
+        if (!newCardIds.has(id)) {
+          deleteCard(id);
+        }
+      });
+      
+      router.push(`/study/${editId}`);
+    } else {
+      const deckId = createDeck(
+        name.trim(),
+        description.trim(),
+        validRows.map((r) => ({ term: r.term.trim(), definition: r.definition.trim() })),
+        selectedFolder || undefined
+      );
+      router.push(`/study/${deckId}`);
+    }
   };
 
   const canCreate = name.trim().length > 0 && validRows.length >= 1;
@@ -103,7 +153,7 @@ export default function CreateSetPage() {
             <ArrowLeft size={18} />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-[var(--text)]">Tạo học phần mới</h1>
+            <h1 className="text-xl font-bold text-[var(--text)]">{isEditMode ? 'Chỉnh sửa học phần' : 'Tạo học phần mới'}</h1>
             <p className="text-xs text-[var(--text-muted)]">Nhập từ vựng và định nghĩa</p>
           </div>
         </div>
@@ -113,7 +163,7 @@ export default function CreateSetPage() {
           disabled={!canCreate}
           className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Tạo học phần
+          {isEditMode ? 'Lưu học phần' : 'Tạo học phần'}
         </button>
       </div>
 
@@ -279,7 +329,7 @@ export default function CreateSetPage() {
           disabled={!canCreate}
           className="btn-primary px-8 py-3 text-base shadow-lg shadow-[var(--primary)]/30 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Tạo học phần ({validRows.length} thẻ)
+          {isEditMode ? 'Lưu thay đổi' : `Tạo học phần (${validRows.length} thẻ)`}
         </button>
       </div>
     </div>

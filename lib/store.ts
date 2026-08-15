@@ -384,6 +384,41 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
         });
       },
 
+      updateCard: (cardId: string, term: string, definition: string) => {
+        set((state) => {
+          const card = state.cards[cardId];
+          if (!card) return state;
+          return {
+            cards: {
+              ...state.cards,
+              [cardId]: { ...card, term, definition, updatedAt: Date.now() },
+            },
+          };
+        });
+        syncToBackend(`/cards/${cardId}`, 'PUT', { term, definition });
+      },
+
+      deleteCard: (cardId: string) => {
+        set((state) => {
+          const card = state.cards[cardId];
+          if (!card) return state;
+          const deckId = card.deckId;
+          const newCards = { ...state.cards };
+          delete newCards[cardId];
+          const deckCards = (state.cardsByDeck[deckId] ?? []).filter(id => id !== cardId);
+          const newDecks = { ...state.decks };
+          if (newDecks[deckId]) {
+            newDecks[deckId] = { ...newDecks[deckId], cardCount: deckCards.length };
+          }
+          return {
+            cards: newCards,
+            cardsByDeck: { ...state.cardsByDeck, [deckId]: deckCards },
+            decks: newDecks,
+          };
+        });
+        syncToBackend(`/cards/${cardId}`, 'DELETE');
+      },
+
       addCardToDeck: (deckId: string, term: string, definition: string) => {
         const id = uuidv4();
         const newCard = { id, term, definition, deckId, starred: false, createdAt: Date.now() };
