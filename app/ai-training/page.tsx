@@ -359,9 +359,16 @@ function FeedbackPanel({ feedback, isGrading, defaultDeckId, type }: { feedback:
 
   return (
     <div className="bg-[var(--card)] rounded-2xl shadow-sm border border-transparent overflow-hidden h-full flex flex-col">
-      <div className={`bg-${themeColor}-600 p-6 text-white text-center`}>
-        <div className="text-[10px] font-bold uppercase tracking-widest text-white/70 mb-1">Overall Band Score</div>
-        <div className="text-6xl font-black">{feedback.overallBand}</div>
+      <div className={`bg-gradient-to-br from-${themeColor}-600 to-${themeColor}-800 p-8 flex flex-col items-center justify-center relative overflow-hidden`}>
+        {/* Vòng tròn trang trí background */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full blur-xl transform -translate-x-1/2 translate-y-1/2"></div>
+        
+        <div className="text-xs font-bold uppercase tracking-widest text-white/80 mb-4 z-10">Overall Band Score</div>
+        <div className={`w-36 h-36 rounded-full bg-white flex items-center justify-center shadow-[0_0_40px_rgba(0,0,0,0.2)] border-4 border-white/20 z-10 relative`}>
+          <div className="absolute inset-2 rounded-full border-2 border-dashed border-gray-200 opacity-50"></div>
+          <div className={`text-6xl font-black text-${themeColor}-600 tracking-tighter`}>{feedback.overallBand}</div>
+        </div>
       </div>
       
       <div className="p-5 overflow-y-auto custom-scrollbar flex-1 flex flex-col gap-6">
@@ -369,14 +376,14 @@ function FeedbackPanel({ feedback, isGrading, defaultDeckId, type }: { feedback:
         {/* Điểm thành phần */}
         <div>
           <h4 className="font-bold text-[var(--text)] mb-3 text-sm uppercase tracking-wide border-b pb-2">Điểm 4 Tiêu Chí</h4>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-3">
             {Object.entries(feedback.scores || {}).map(([crit, score]: any) => (
               <div key={crit} className="bg-[var(--bg)] p-3 rounded-xl border border-[var(--border)]">
                 <div className="flex items-center justify-between mb-1">
                   <span className={`font-black text-${themeColor}-600`}>{crit}</span>
                   <span className="font-bold text-lg">{score}</span>
                 </div>
-                <p className="text-[11px] text-[var(--text-muted)] leading-tight">{feedback.feedback[crit]}</p>
+                <p className="text-[14px] text-[var(--text-muted)] leading-relaxed">{feedback.feedback[crit]}</p>
               </div>
             ))}
           </div>
@@ -385,7 +392,7 @@ function FeedbackPanel({ feedback, isGrading, defaultDeckId, type }: { feedback:
         {/* Nhận xét chung */}
         <div>
           <h4 className="font-bold text-[var(--text)] mb-3 text-sm uppercase tracking-wide border-b pb-2">Nhận xét từ Giám khảo</h4>
-          <p className="text-sm text-[var(--text)] leading-relaxed bg-amber-50 text-amber-900 p-4 rounded-xl">
+          <p className="text-[15px] text-[var(--text)] leading-relaxed bg-amber-50 text-amber-900 p-4 rounded-xl shadow-inner border border-amber-100/50 font-medium">
             {feedback.generalComment}
           </p>
         </div>
@@ -457,8 +464,29 @@ function FeedbackPanel({ feedback, isGrading, defaultDeckId, type }: { feedback:
                 <option key={d.id} value={d.id}>{d.name}</option>
               ))}
             </select>
+            <button
+              onClick={() => {
+                let count = 0;
+                feedback.vocabularyUpgrades.forEach((vocab: any) => {
+                  addCardToDeck(selectedDeckId, vocab.upgrade, vocab.explanation);
+                  count++;
+                });
+                alert(`Đã thêm nhanh ${count} từ vựng Band 8 vào bộ học!`);
+              }}
+              className={`px-4 py-1.5 bg-${themeColor}-600 text-white text-xs font-bold rounded-lg hover:bg-${themeColor}-700 transition-colors whitespace-nowrap shadow-sm`}
+            >
+              Lưu tất cả
+            </button>
           </div>
         )}
+
+        {/* Thông báo lưu tự động */}
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl text-center flex items-center justify-center gap-2">
+          <Check size={16} className="text-blue-600" />
+          <p className="text-xs font-bold text-blue-800">
+            Bài làm và Bảng điểm đã được tự động lưu vào Kho bài mẫu!
+          </p>
+        </div>
 
       </div>
     </div>

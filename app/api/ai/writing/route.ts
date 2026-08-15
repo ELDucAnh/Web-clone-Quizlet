@@ -46,26 +46,26 @@ BẠN BẮT BUỘC PHẢI TRẢ VỀ KẾT QUẢ DƯỚI DẠNG CHUỖI JSON H�
     "GRA": 6.5
   },
   "feedback": {
-    "TR": "Giải thích chi tiết tại sao bài viết được điểm này, Bị mất điểm ở đâu (ví dụ: lack of examples, unclear position).",
-    "CC": "Giải thích chi tiết về liên kết câu/đoạn, sử dụng mạo từ nối, chia đoạn hợp lý chưa.",
-    "LR": "Giải thích chi tiết về vốn từ vựng, collocation, và các lỗi dùng từ sai ngữ cảnh.",
-    "GRA": "Giải thích chi tiết về độ đa dạng ngữ pháp và các lỗi sai ngữ pháp cụ thể."
+    "TR": "PHÂN TÍCH RẤT SÂU: Giải thích cặn kẽ tại sao bài viết được điểm này, phân tích từng đoạn văn xem đã trả lời trọn vẹn câu hỏi chưa. Chỉ ra chính xác luận điểm nào hời hợt, luận điểm nào tốt. (ít nhất 4-5 câu)",
+    "CC": "PHÂN TÍCH RẤT SÂU: Đánh giá cực kỳ chi tiết về sự mạch lạc giữa các câu và các đoạn. Chỉ ra những chỗ chuyển ý bị gượng ép, hoặc lặp từ nối quá nhiều. Đưa ra gợi ý cấu trúc mạch lạc hơn. (ít nhất 4-5 câu)",
+    "LR": "PHÂN TÍCH RẤT SÂU: Nhận xét chi tiết về vốn từ vựng, mức độ sử dụng collocation và idiomatic expressions. Chỉ ra đích danh những cụm từ dùng sai ngữ cảnh hoặc không tự nhiên, và khen ngợi những cụm từ xuất sắc. (ít nhất 4-5 câu)",
+    "GRA": "PHÂN TÍCH RẤT SÂU: Phân tích độ phức tạp của cấu trúc câu (câu đơn, câu ghép, câu phức). Chỉ ra những lỗi sai ngữ pháp lặp đi lặp lại hoặc lỗi chia thì, giới từ. Đánh giá về sự đa dạng ngữ pháp. (ít nhất 4-5 câu)"
   },
   "grammarErrors": [
     {
       "error": "Trích dẫn lại chính xác câu/cụm từ bị sai trong bài",
       "correction": "Sửa lại cho đúng",
-      "explanation": "Giải thích luật ngữ pháp (bằng tiếng Việt)"
+      "explanation": "Giải thích cặn kẽ luật ngữ pháp và tại sao lỗi này lại làm giảm điểm (bằng tiếng Việt)"
     }
   ],
   "vocabularyUpgrades": [
     {
       "original": "Từ/cụm từ cơ bản trong bài (vd: very happy)",
-      "upgrade": "Từ/cụm từ Band 8 thay thế (vd: ecstatic, over the moon)",
-      "explanation": "Nghĩa tiếng Việt và ngữ cảnh sử dụng"
+      "upgrade": "Từ/cụm từ Band 8-9 thay thế siêu đỉnh (vd: ecstatic, over the moon)",
+      "explanation": "Nghĩa tiếng Việt, sắc thái nghĩa và ví dụ cách dùng trong câu."
     }
   ],
-  "generalComment": "Nhận xét tổng quan, khen ngợi và 2-3 lời khuyên cốt lõi nhất để tăng 0.5 band."
+  "generalComment": "NHẬN XÉT SIÊU CHI TIẾT (dài khoảng 2-3 đoạn văn): Tổng kết toàn diện về ưu điểm, khuyết điểm cốt lõi. Đưa ra lộ trình hành động (actionable advice) cực kỳ rõ ràng để thí sinh nâng ngay lập tức 0.5 - 1.0 band trong bài viết tới."
 }
 `;
 

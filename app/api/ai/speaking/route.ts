@@ -37,26 +37,26 @@ BẠN BẮT BUỘC TRẢ VỀ CHUỖI JSON HỢP LỆ (KHÔNG bọc trong \`\`\`
     "PR": 6.5
   },
   "feedback": {
-    "FC": "Đánh giá chi tiết Fluency & Coherence. Chỉ ra các đoạn bị ngập ngừng, lặp từ, hoặc thiếu linking words.",
-    "LR": "Đánh giá về Lexical Resource, các từ dùng sai ngữ cảnh.",
-    "GRA": "Đánh giá về cấu trúc câu, lỗi chia thì, chia động từ.",
-    "PR": "Đánh giá Pronunciation dựa trên các lỗi nhận diện của Speech-to-text hoặc các từ đọc sai hiển nhiên."
+    "FC": "PHÂN TÍCH RẤT SÂU: Đánh giá cực kỳ chi tiết về độ trôi chảy (lưu loát, tốc độ nói) và tính mạch lạc (sử dụng từ nối, triển khai ý logic). Chỉ ra những chỗ bị ngập ngừng, ậm ừ quá nhiều. (ít nhất 4-5 câu)",
+    "LR": "PHÂN TÍCH RẤT SÂU: Nhận xét chi tiết về vốn từ vựng, mức độ sử dụng collocation và idiomatic expressions. Chỉ ra đích danh những cụm từ dùng sai ngữ cảnh và khen ngợi những cụm từ xuất sắc. (ít nhất 4-5 câu)",
+    "GRA": "PHÂN TÍCH RẤT SÂU: Phân tích độ phức tạp và đa dạng của cấu trúc câu khi nói. Chỉ ra những lỗi sai ngữ pháp lặp đi lặp lại hoặc lỗi chia thì, chia động từ. (ít nhất 4-5 câu)",
+    "PR": "PHÂN TÍCH RẤT SÂU: Đánh giá cực kỳ chi tiết về phát âm (âm cuối, trọng âm từ, trọng âm câu, ngữ điệu). Chỉ ra chính xác những âm bị phát âm sai gây hiểu lầm. (ít nhất 4-5 câu)"
   },
   "grammarErrors": [
     {
-      "error": "Câu/cụm từ sai ngữ pháp hoặc phát âm sai",
-      "correction": "Cách nói đúng",
-      "explanation": "Giải thích chi tiết (tiếng Việt)"
+      "error": "Trích dẫn lại chính xác câu/cụm từ nói sai",
+      "correction": "Sửa lại cho đúng tự nhiên",
+      "explanation": "Giải thích cặn kẽ lỗi sai và cách khắc phục (bằng tiếng Việt)"
     }
   ],
   "vocabularyUpgrades": [
     {
-      "original": "Từ vựng cơ bản",
-      "upgrade": "Idiom hoặc từ vựng Band 8 thay thế",
-      "explanation": "Nghĩa tiếng Việt và ngữ cảnh sử dụng trong văn nói"
+      "original": "Từ/cụm từ cơ bản trong bài (vd: very happy)",
+      "upgrade": "Từ/cụm từ Band 8-9 thay thế siêu đỉnh (vd: ecstatic, over the moon)",
+      "explanation": "Nghĩa tiếng Việt, sắc thái nghĩa và ví dụ cách dùng khi nói."
     }
   ],
-  "generalComment": "Nhận xét tổng quan và mẹo luyện tập để cải thiện kỹ năng Speaking."
+  "generalComment": "NHẬN XÉT SIÊU CHI TIẾT (dài khoảng 2-3 đoạn văn): Tổng kết toàn diện về ưu điểm, khuyết điểm cốt lõi. Đưa ra lộ trình hành động (actionable advice) cực kỳ rõ ràng để thí sinh nâng ngay lập tức 0.5 - 1.0 band trong bài nói tới."
 }
 `;
 
