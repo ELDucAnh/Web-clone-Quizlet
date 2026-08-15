@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { PenLine, Mic, Sparkles, BookOpen, Check, X, Loader2, Play, Square, AlertCircle, Plus } from 'lucide-react';
+import { PenLine, Mic, Sparkles, BookOpen, Check, X, Loader2, Play, Square, AlertCircle, Plus, Upload } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import Link from 'next/link';
 
@@ -69,6 +69,25 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   const [task, setTask] = useState<'task1' | 'task2'>('task2');
   const [isGrading, setIsGrading] = useState(false);
   const [feedback, setFeedback] = useState<any>(null);
+  const [topicImage, setTopicImage] = useState<string | null>(null);
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (task !== 'task1') return;
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        if (!file) continue;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          setTopicImage(evt.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+        e.preventDefault();
+        break;
+      }
+    }
+  };
 
   const handleGrade = async () => {
     if (!topic.trim() || !content.trim()) return alert('Vui lòng nhập đủ đề bài và bài làm!');
@@ -78,7 +97,7 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
       const res = await fetch('/api/ai/writing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskType: task, topic, essay: content })
+        body: JSON.stringify({ taskType: task, topic, essay: content, topicImage })
       });
       const data = await res.json();
       if (res.ok) {
@@ -107,10 +126,37 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
               <option value="task2">IELTS Task 2</option>
             </select>
           </div>
+          {task === 'task1' && (
+            <div className="mb-4">
+              <p className="text-xs font-bold text-[var(--text-muted)] mb-2 uppercase">Đính kèm biểu đồ (Tùy chọn):</p>
+              {topicImage ? (
+                <div className="relative inline-block border border-[var(--border)] rounded-xl overflow-hidden shadow-sm bg-white">
+                  <img src={topicImage} alt="Topic Chart" className="max-h-48 object-contain p-2" />
+                  <button onClick={() => setTopicImage(null)} className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full hover:bg-red-500 transition-colors">
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[var(--border)] rounded-xl cursor-pointer hover:bg-[var(--bg)] transition-colors">
+                  <Upload size={24} className="text-[var(--text-muted)] mb-1" />
+                  <span className="text-xs text-[var(--text-muted)] font-medium text-center">Bấm tải ảnh lên, hoặc <b>Ctrl+V</b> dán ảnh trực tiếp vào ô Đề bài bên dưới</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (evt) => setTopicImage(evt.target?.result as string);
+                      reader.readAsDataURL(file);
+                    }
+                  }} />
+                </label>
+              )}
+            </div>
+          )}
           <textarea
             className="q-input resize-y font-mono text-sm leading-relaxed mb-4 w-full bg-[var(--bg)] border-none focus:ring-2 focus:ring-[var(--primary)]"
             rows={3} placeholder="Dán đề bài (Prompt) vào đây..."
             value={topic} onChange={e => setTopic(e.target.value)}
+            onPaste={handlePaste}
           />
           <textarea
             className="q-input resize-y font-mono text-sm leading-relaxed w-full min-h-[300px] bg-[var(--bg)] border-none focus:ring-2 focus:ring-[var(--primary)]"

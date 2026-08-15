@@ -15,11 +15,11 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { taskType, topic, essay } = body;
+    const { taskType, topic, essay, topicImage } = body;
 
-    if (!taskType || !topic || !essay) {
+    if (!taskType || (!topic && !topicImage) || !essay) {
       return NextResponse.json(
-        { error: 'Vui lòng cung cấp đủ taskType, topic và essay.' },
+        { error: 'Vui lòng cung cấp đủ đề bài (text hoặc ảnh) và bài làm.' },
         { status: 400 }
       );
     }
@@ -70,22 +70,45 @@ BẠN BẮT BUỘC PHẢI TRẢ VỀ KẾT QUẢ DƯỚI DẠNG CHUỖI JSON H�
 }
 `;
 
+    // Chuẩn bị payload (có thể là multi-modal nếu có ảnh)
+    const parts: any[] = [prompt];
+    
+    if (topicImage && taskType === 'task1') {
+      const matches = topicImage.match(/^data:(image\/\w+);base64,(.*)$/);
+      if (matches && matches.length === 3) {
+        parts.push({
+          inlineData: {
+            data: matches[2],
+            mimeType: matches[1]
+          }
+        });
+      }
+    }
+
     // Gọi Gemini API
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent(parts);
     const response = await result.response;
     let text = response.text();
 
     // Dọn dẹp chuỗi trả về (đôi khi Gemini tự thêm ```json ... ```)
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
-    // Parse JSON
-    const parsedData = JSON.parse(text);
+    let parsedData;
+    try {
+      parsedData = JSON.parse(text);
+    } catch (parseError) {
+      console.error('Lỗi Parse JSON từ Gemini:', text);
+      return NextResponse.json(
+        { error: 'AI trả về định dạng lỗi: ' + text.slice(0, 100) + '...' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(parsedData, { status: 200 });
   } catch (error: any) {
     console.error('Lỗi khi chấm AI Writing:', error);
     return NextResponse.json(
-      { error: 'Có lỗi xảy ra khi kết nối tới AI. Vui lòng thử lại sau.' },
+      { error: 'Lỗi AI: ' + (error.message || String(error)) },
       { status: 500 }
     );
   }
