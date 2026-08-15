@@ -14,7 +14,7 @@ declare global {
 
 export default function AITrainingPage() {
   const { addCardToDeck, createDeck, decks } = useStore();
-  const [activeTab, setActiveTab] = useState<'writing' | 'speaking'>('writing');
+  const [activeTab, setActiveTab] = useState<'writing' | 'speaking' | 'history'>('writing');
   const [mounted, setMounted] = useState(false);
   const deckList = Object.values(decks);
   const defaultDeckId = deckList.length > 0 ? deckList[0].id : '';
