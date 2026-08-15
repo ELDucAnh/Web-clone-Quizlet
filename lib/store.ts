@@ -39,6 +39,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
         dailyGoal: 20,
         audioAutoPlay: false,
       },
+      isHydrated: false,
 
       // ─── IELTS State ─────────────────────────────────────────────────
       studyHoursGoals: {},
@@ -60,6 +61,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           writingSamples: data.writingSamples || {},
           speakingTopics: data.speakingTopics || {},
           settings: data.settings && Object.keys(data.settings).length > 0 ? data.settings : get().settings,
+          isHydrated: true,
           // keep local UI state (searchQuery, sidebarCollapsed)
         });
       },
@@ -75,6 +77,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           studyHoursLogs: [],
           writingSamples: {},
           speakingTopics: {},
+          isHydrated: false,
         });
       },
 

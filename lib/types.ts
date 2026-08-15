@@ -76,6 +76,7 @@ export interface AppState {
     dailyGoal: number;
     audioAutoPlay: boolean;
   };
+  isHydrated: boolean;
 }
 
 export interface Actions {
