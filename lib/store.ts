@@ -435,6 +435,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
         const id = uuidv4();
         const goal: StudyHoursGoal = { id, skill, targetHours: Math.min(1000, targetHours), deadline, createdAt: Date.now() };
         set((state) => ({ studyHoursGoals: { ...state.studyHoursGoals, [id]: goal } }));
+        syncToBackend('/study-goals', 'POST', goal);
         return id;
       },
 
@@ -445,15 +446,18 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           const newLogs = state.studyHoursLogs.filter(l => l.goalId !== goalId);
           return { studyHoursGoals: newGoals, studyHoursLogs: newLogs };
         });
+        syncToBackend(`/study-goals/${goalId}`, 'DELETE');
       },
 
       addStudyHoursLog: (log: Omit<StudyHoursLog, 'id' | 'createdAt'>) => {
         const newLog: StudyHoursLog = { ...log, id: uuidv4(), createdAt: Date.now() };
         set((state) => ({ studyHoursLogs: [...state.studyHoursLogs, newLog] }));
+        syncToBackend('/study-logs', 'POST', newLog);
       },
 
       deleteStudyHoursLog: (logId: string) => {
         set((state) => ({ studyHoursLogs: state.studyHoursLogs.filter(l => l.id !== logId) }));
+        syncToBackend(`/study-logs/${logId}`, 'DELETE');
       },
 
       // ─── Writing Sample Actions ────────────────────────────────────────────────
@@ -462,6 +466,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
         const now = Date.now();
         const sample: WritingSample = { ...data, id, createdAt: now, updatedAt: now };
         set((state) => ({ writingSamples: { ...state.writingSamples, [id]: sample } }));
+        syncToBackend('/writing-samples', 'POST', sample);
         return id;
       },
 
@@ -470,6 +475,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           if (!state.writingSamples[id]) return state;
           return { writingSamples: { ...state.writingSamples, [id]: { ...state.writingSamples[id], ...data, updatedAt: Date.now() } } };
         });
+        syncToBackend(`/writing-samples/${id}`, 'PUT', data);
       },
 
       deleteWritingSample: (id: string) => {
@@ -478,6 +484,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           delete newSamples[id];
           return { writingSamples: newSamples };
         });
+        syncToBackend(`/writing-samples/${id}`, 'DELETE');
       },
 
       // ─── Speaking Topic Actions ────────────────────────────────────────────────
@@ -486,6 +493,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
         const now = Date.now();
         const topic: SpeakingTopic = { ...data, id, createdAt: now, updatedAt: now };
         set((state) => ({ speakingTopics: { ...state.speakingTopics, [id]: topic } }));
+        syncToBackend('/speaking-topics', 'POST', topic);
         return id;
       },
 
@@ -494,6 +502,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           if (!state.speakingTopics[id]) return state;
           return { speakingTopics: { ...state.speakingTopics, [id]: { ...state.speakingTopics[id], ...data, updatedAt: Date.now() } } };
         });
+        syncToBackend(`/speaking-topics/${id}`, 'PUT', data);
       },
 
       deleteSpeakingTopic: (id: string) => {
@@ -502,6 +511,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           delete newTopics[id];
           return { speakingTopics: newTopics };
         });
+        syncToBackend(`/speaking-topics/${id}`, 'DELETE');
       },
 }));
 
