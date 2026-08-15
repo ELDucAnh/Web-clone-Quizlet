@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { db } from "./db";
+import { v4 as uuidv4 } from "uuid";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -21,25 +22,30 @@ export const authOptions: NextAuthOptions = {
         const { rows } = await client.query('SELECT id FROM users WHERE email = $1', [user.email]);
         
         if (rows.length === 0) {
+          const newId = uuidv4();
           // Try to insert with NextAuth standard column "image", fallback to just email/name if error
           try {
             await client.query(
-              'INSERT INTO users (email, name, image) VALUES ($1, $2, $3)',
-              [user.email, user.name, user.image]
+              'INSERT INTO users (id, email, name, image) VALUES ($1, $2, $3, $4)',
+              [newId, user.email, user.name, user.image]
             );
           } catch (insertErr: any) {
-            console.error('Failed to insert user with image column, trying without image or with avatar_url', insertErr);
+            console.error('Failed to insert user with image column:', insertErr?.message);
             try {
                await client.query(
-                 'INSERT INTO users (email, name, avatar_url) VALUES ($1, $2, $3)',
-                 [user.email, user.name, user.image]
+                 'INSERT INTO users (id, email, name, avatar_url) VALUES ($1, $2, $3, $4)',
+                 [newId, user.email, user.name, user.image]
                );
-            } catch (fallbackErr) {
-               console.error('Failed fallback insert user', fallbackErr);
-               await client.query(
-                 'INSERT INTO users (email, name) VALUES ($1, $2)',
-                 [user.email, user.name]
-               );
+            } catch (fallbackErr: any) {
+               console.error('Failed fallback insert user:', fallbackErr?.message);
+               try {
+                 await client.query(
+                   'INSERT INTO users (id, email, name) VALUES ($1, $2, $3)',
+                   [newId, user.email, user.name]
+                 );
+               } catch (finalErr: any) {
+                 console.error('Final fallback insert user failed:', finalErr?.message);
+               }
             }
           }
         }
