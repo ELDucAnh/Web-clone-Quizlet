@@ -119,6 +119,16 @@ export function MainLayout({ children }: MainLayoutProps) {
   const isAuthenticated = status === 'authenticated';
   const isUnauthenticated = status === 'unauthenticated';
 
+  // Full-screen landing page when unauthenticated — no sidebar, no navbar
+  if (isUnauthenticated) {
+    return (
+      <>
+        <LandingPage />
+        {/* No sidebar or topbar */}
+      </>
+    );
+  }
+
   return (
     <div className="app-shell">
       {isAuthenticated && (
@@ -131,14 +141,13 @@ export function MainLayout({ children }: MainLayoutProps) {
 
       <div 
         className={`app-main ${sidebarCollapsed && isAuthenticated ? 'sidebar-collapsed' : ''}`}
-        style={isUnauthenticated ? { marginLeft: 0 } : {}}
       >
         <TopNavbar
           onMobileMenuOpen={() => setMobileMenuOpen(true)}
           onCreateFolder={() => setShowCreateFolder(true)}
         />
         <div className="app-content">
-          {isUnauthenticated ? <LandingPage /> : children}
+          {children}
         </div>
       </div>
 
