@@ -6,6 +6,7 @@ import { TopNavbar } from './TopNavbar';
 import { useStore } from '@/lib/store';
 import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
+import { LandingPage } from './LandingPage';
 
 interface CreateFolderModalProps {
   onClose: () => void;
@@ -115,25 +116,33 @@ export function MainLayout({ children }: MainLayoutProps) {
     }
   }, [status, hydrate, clearData]);
 
+  const isAuthenticated = status === 'authenticated';
+  const isUnauthenticated = status === 'unauthenticated';
+
   return (
     <div className="app-shell">
-      <Sidebar
-        mobileOpen={mobileMenuOpen}
-        onMobileClose={() => setMobileMenuOpen(false)}
-        showCreateFolderModal={() => setShowCreateFolder(true)}
-      />
+      {isAuthenticated && (
+        <Sidebar
+          mobileOpen={mobileMenuOpen}
+          onMobileClose={() => setMobileMenuOpen(false)}
+          showCreateFolderModal={() => setShowCreateFolder(true)}
+        />
+      )}
 
-      <div className={`app-main ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <div 
+        className={`app-main ${sidebarCollapsed && isAuthenticated ? 'sidebar-collapsed' : ''}`}
+        style={isUnauthenticated ? { marginLeft: 0 } : {}}
+      >
         <TopNavbar
           onMobileMenuOpen={() => setMobileMenuOpen(true)}
           onCreateFolder={() => setShowCreateFolder(true)}
         />
         <div className="app-content">
-          {children}
+          {isUnauthenticated ? <LandingPage /> : children}
         </div>
       </div>
 
-      {showCreateFolder && (
+      {showCreateFolder && isAuthenticated && (
         <CreateFolderModal onClose={() => setShowCreateFolder(false)} />
       )}
     </div>

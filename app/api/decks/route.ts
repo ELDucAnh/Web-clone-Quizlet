@@ -5,12 +5,16 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 
 const createDeckSchema = z.object({
-  name: z.string().min(1).max(200),
-  description: z.string().max(500).optional(),
-  folderId: z.string().uuid().optional(),
-  color: z.string().default('#4255FF'),
-  tags: z.array(z.string()).optional(),
+  deck: z.object({
+    id: z.string().uuid(),
+    name: z.string().min(1).max(200),
+    description: z.string().max(500).optional(),
+    folderId: z.string().uuid().optional(),
+    color: z.string().default('#4255FF'),
+    tags: z.array(z.string()).optional(),
+  }),
   cards: z.array(z.object({
+    id: z.string().uuid(),
     term: z.string().min(1),
     definition: z.string().min(1),
   })).min(1),
@@ -51,25 +55,26 @@ export async function POST(request: Request) {
     const parsed = createDeckSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-    const { name, description, folderId, color, tags, cards } = parsed.data;
+    const { deck, cards } = parsed.data;
     const client = await db.connect();
     
     try {
       await client.query('BEGIN');
-      const { rows: [deck] } = await client.query(
-        `INSERT INTO decks (user_id, folder_id, name, description, color, tags)
-         VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-        [userId, folderId || null, name, description || null, color, tags || []]
+      
+      const { rows: [newDeck] } = await client.query(
+        `INSERT INTO decks (id, user_id, folder_id, name, description, color, tags)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+        [deck.id, userId, deck.folderId || null, deck.name, deck.description || null, deck.color, deck.tags || []]
       );
       
       for (let i = 0; i < cards.length; i++) {
         await client.query(
-          `INSERT INTO cards (deck_id, user_id, term, definition, sort_order) VALUES ($1,$2,$3,$4,$5)`,
-          [deck.id, userId, cards[i].term, cards[i].definition, i]
+          `INSERT INTO cards (id, deck_id, user_id, term, definition, sort_order) VALUES ($1,$2,$3,$4,$5,$6)`,
+          [cards[i].id, deck.id, userId, cards[i].term, cards[i].definition, i]
         );
       }
       await client.query('COMMIT');
-      return NextResponse.json(deck, { status: 201 });
+      return NextResponse.json(newDeck, { status: 201 });
     } catch (err) {
       await client.query('ROLLBACK');
       throw err;
