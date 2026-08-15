@@ -129,8 +129,30 @@ function SampleCard({ sample }: { sample: WritingSample }) {
   }, [sample.title, sample.topic, sample.content, sample.band, sample.task]);
 
   const handleMouseUp = () => {
-    if (mode === 'erase') return;
     const sel = window.getSelection();
+    
+    if (mode === 'erase') {
+      if (sel && !sel.isCollapsed) {
+        const marks = bodyRef.current?.querySelectorAll('mark');
+        let changed = false;
+        marks?.forEach(mark => {
+          if (sel.containsNode(mark, true)) {
+            const parent = mark.parentNode;
+            if (parent) {
+              while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+              parent.removeChild(mark);
+              changed = true;
+            }
+          }
+        });
+        if (changed && bodyRef.current) {
+          updateWritingSample(sample.id, { content: bodyRef.current.innerHTML });
+        }
+        sel.removeAllRanges();
+      }
+      return;
+    }
+
     if (!sel || sel.isCollapsed) return;
 
     if (mode === 'highlight') {
