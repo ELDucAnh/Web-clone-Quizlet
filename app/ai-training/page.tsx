@@ -293,12 +293,12 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
         });
         
         // Save Band 8 suggested essay to the repo
-        if (data.band8Sample) {
+        if (data.improvedVersion?.band8Sample) {
           createWritingSample({
             task, 
             title: `[Band 8] ${topic.trim() ? topic.slice(0, 40) + '...' : 'Task 1'}`, 
             topic, 
-            content: data.band8Sample, 
+            content: data.improvedVersion.band8Sample, 
             band: 8.0, 
             tags: [], 
             aiFeedback: { topicImage } 
