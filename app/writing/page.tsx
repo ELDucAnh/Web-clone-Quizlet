@@ -26,6 +26,7 @@ const handleImagePaste = (e: React.ClipboardEvent, currentText: string, setter: 
 };
 
 // ── Highlight vocab popup ─────────────────────────────────────────────
+function HighlightVocabPopup({
   text,
   onAdd,
   onClose,
