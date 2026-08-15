@@ -23,12 +23,21 @@ export async function GET() {
       studyHoursGoals: {},
       studyHoursLogs: [],
       writingSamples: {},
-      speakingTopics: {}
+      speakingTopics: {},
+      settings: {}
     };
 
     const client = await db.connect();
     
     try {
+      // 0. Fetch User Settings
+      const { rows: userRows } = await client.query('SELECT daily_goal, settings FROM users WHERE id = $1', [userId]);
+      if (userRows.length > 0) {
+        payload.settings = {
+          ...userRows[0].settings,
+          dailyGoal: userRows[0].daily_goal
+        };
+      }
       // 1. Fetch Folders
       const { rows: folders } = await client.query('SELECT * FROM folders WHERE user_id = $1', [userId]);
       folders.forEach(f => {

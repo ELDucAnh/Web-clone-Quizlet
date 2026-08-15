@@ -59,6 +59,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           studyHoursLogs: data.studyHoursLogs || [],
           writingSamples: data.writingSamples || {},
           speakingTopics: data.speakingTopics || {},
+          settings: data.settings && Object.keys(data.settings).length > 0 ? data.settings : get().settings,
           // keep local UI state (searchQuery, sidebarCollapsed)
         });
       },
@@ -405,6 +406,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
 
       updateSettings: (settings: Partial<AppState['settings']>) => {
         set((state) => ({ settings: { ...state.settings, ...settings } }));
+        syncToBackend('/settings', 'PUT', { settings: get().settings });
       },
 
       addSession: (session: StudySession) => {
