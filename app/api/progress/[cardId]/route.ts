@@ -41,7 +41,7 @@ export async function PUT(request: Request, { params }: { params: { cardId: stri
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: (error as Error).message || 'Internal Server Error' }, { status: 500 });
   }
 }
 

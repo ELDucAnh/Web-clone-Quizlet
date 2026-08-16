@@ -10,7 +10,11 @@ export async function syncToBackend(endpoint: string, method: 'POST' | 'PUT' | '
     });
     
     if (!res.ok) {
-      console.warn(`[Sync Warning] Failed to sync ${method} ${endpoint}: ${res.status}`);
+      const errText = await res.text();
+      console.warn(`[Sync Warning] Failed to sync ${method} ${endpoint}: ${res.status}`, errText);
+      if (typeof window !== 'undefined') {
+        alert(`DB Error on ${endpoint}: ${errText}`);
+      }
     }
     return res;
   } catch (error) {
