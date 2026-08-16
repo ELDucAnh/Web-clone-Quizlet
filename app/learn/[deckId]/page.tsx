@@ -67,10 +67,15 @@ function LearnContent() {
     setFcFlipped(false);
     const initialStageMap: Record<string, number> = {};
     let initialSteps = 0;
+    let initialMastered = 0;
     if (modeParam === 'learn') {
-      cardsToStudy.forEach(c => {
+      allCards.forEach(c => {
         const stageStr = progress[c.id]?.learnStage;
-        if (stageStr && stageStr !== 'mastered' && stageStr !== 'unseen') {
+        if (stageStr === 'mastered') {
+          initialStageMap[c.id] = LEARN_STAGES.length;
+          initialSteps += LEARN_STAGES.length;
+          initialMastered += 1;
+        } else if (stageStr && stageStr !== 'unseen') {
           const step = LEARN_STAGES.indexOf(stageStr as any);
           if (step !== -1) {
             initialStageMap[c.id] = step;
@@ -81,7 +86,7 @@ function LearnContent() {
     }
 
     setLearnStageMap(initialStageMap);
-    setLearnCorrect(0);
+    setLearnCorrect(initialMastered);
     setCorrectSteps(initialSteps);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deckId, modeParam]);
@@ -157,13 +162,13 @@ function LearnContent() {
 
       setLearnStageMap(prev => {
         const newMap = { ...prev, [card.id]: nextStage };
-        // Count total mastered based on newMap
-        const totalMastered = studyCards.filter(c => (newMap[c.id] ?? 0) >= LEARN_STAGES.length).length;
+        // Count total mastered based on newMap, checking allCards so the progress bar label matches
+        const totalMastered = allCards.filter(c => (newMap[c.id] ?? 0) >= LEARN_STAGES.length).length;
 
-        if (totalMastered >= studyCards.length) {
+        if (totalMastered >= allCards.length) {
           // All done — finish session
           setLearnCorrect(totalMastered);
-          finishSession(totalMastered, studyCards.length);
+          finishSession(totalMastered, allCards.length);
           if (modeParam === 'learn') markDeckCompleted(deckId);
           return newMap;
         }
@@ -309,8 +314,8 @@ function LearnContent() {
           {/* Realtime: correctSteps / (N * 4), label show mastered count */}
           <ProgressBar
             current={correctSteps}
-            total={studyCards.length * LEARN_STAGES.length}
-            label={`Đã thuộc: ${learnCorrect} / ${studyCards.length}`}
+            total={allCards.length * LEARN_STAGES.length}
+            label={`Đã thuộc: ${learnCorrect} / ${allCards.length}`}
           />
           {(() => {
             const stageIdx = Math.min(learnStageMap[currentCard.id] ?? 0, LEARN_STAGES.length - 1);

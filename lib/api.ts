@@ -17,7 +17,10 @@ export async function syncToBackend(endpoint: string, method: 'POST' | 'PUT' | '
       }
     }
     return res;
-  } catch (error) {
+  } catch (error: any) {
     console.error(`[Sync Error] Error syncing ${method} ${endpoint}:`, error);
+    if (typeof window !== 'undefined') {
+      alert(`Network Error on ${endpoint}: ${error.message}`);
+    }
   }
 }
