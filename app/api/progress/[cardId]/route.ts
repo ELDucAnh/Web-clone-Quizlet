@@ -21,8 +21,8 @@ export async function PUT(request: Request, { params }: { params: { cardId: stri
        WHERE user_id = $1 AND card_id = $2`,
       [userId, params.cardId, learnStage, easeFactor, interval,
        repetitions, correctStreak, totalAnswers, correctAnswers,
-       nextReview ? new Date(nextReview) : null, 
-       lastAnswered ? new Date(lastAnswered) : null]
+       nextReview ? new Date(nextReview) : new Date(0), 
+       lastAnswered ? new Date(lastAnswered) : new Date(0)]
     );
 
     if (rowCount === 0) {
@@ -34,8 +34,8 @@ export async function PUT(request: Request, { params }: { params: { cardId: stri
          FROM cards c WHERE c.id = $2`,
         [userId, params.cardId, learnStage, easeFactor, interval,
          repetitions, correctStreak, totalAnswers, correctAnswers,
-         nextReview ? new Date(nextReview) : null, 
-         lastAnswered ? new Date(lastAnswered) : null]
+         nextReview ? new Date(nextReview) : new Date(0), 
+         lastAnswered ? new Date(lastAnswered) : new Date(0)]
       );
     }
     return NextResponse.json({ ok: true });
