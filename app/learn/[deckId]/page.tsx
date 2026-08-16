@@ -12,6 +12,7 @@ import { MatchGame } from '@/components/MatchGame';
 import { GravityGame } from '@/components/GravityGame';
 import { ResultScreen } from '@/components/ResultScreen';
 import { ProgressBar } from '@/components/ProgressBar';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { v4 as uuidv4 } from 'uuid';
 import type { Card } from '@/lib/types';
 
@@ -185,7 +186,7 @@ function LearnContent() {
     }
   };
 
-  if (!mounted) return null;
+  if (!mounted) return <LoadingScreen />;
 
   const modeLabels: Record<StudyMode, string> = {
     flashcard: 'Thẻ ghi nhớ',

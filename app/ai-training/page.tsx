@@ -4,6 +4,7 @@ import { PenLine, Mic, Sparkles, BookOpen, Check, X, Loader2, Play, Square, Aler
 import { useStore } from '@/lib/store';
 import { appAlert, appConfirm } from '@/lib/dialog';
 import Link from 'next/link';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 // SpeechRecognition type definitions
 declare global {
@@ -22,7 +23,7 @@ export default function AITrainingPage() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  if (!mounted) return null;
+  if (!mounted) return <LoadingScreen />;
 
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full animate-fade-in pb-12">

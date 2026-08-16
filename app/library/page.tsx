@@ -11,6 +11,7 @@ type Tab = 'sets' | 'folders' | 'starred';
 type SortBy = 'recent' | 'alpha' | 'studied';
 
 import { DeckCard } from '@/components/DeckCard';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 function DeckMenu({ deck, onDelete, onReset }: { deck: Deck; onDelete: () => void; onReset: () => void }) {
   const [open, setOpen] = useState(false);
@@ -86,7 +87,7 @@ function LibraryContent() {
     }
   };
 
-  if (!mounted) return null;
+  if (!mounted) return <LoadingScreen />;
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">

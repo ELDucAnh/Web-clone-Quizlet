@@ -8,6 +8,7 @@ import {
   BarChart2, Layers, Zap, Cloud, CloudOff, LogOut, LogIn
 } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 // ─── Reusable Toggle Component ──────────────────────────────────────────────
 function ToggleRow({
@@ -64,7 +65,7 @@ export default function SettingsPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
-  if (!mounted) return null;
+  if (!mounted) return <LoadingScreen />;
 
 
 

@@ -4,6 +4,7 @@ import { Mic, Plus, Trash2, Edit2, X, Check, Search, ChevronDown, ChevronRight }
 import { useStore } from '@/lib/store';
 import type { SpeakingTopic } from '@/lib/types';
 import { appConfirm } from '@/lib/dialog';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 // ── Highlight vocab popup ─────────────────────────────────────────────
 function HighlightVocabPopup({
@@ -475,7 +476,7 @@ export default function SpeakingPage() {
   const [search, setSearch] = useState('');
 
   useEffect(() => { setMounted(true); }, []);
-  if (!mounted) return null;
+  if (!mounted) return <LoadingScreen />;
 
   const all = Object.values(speakingTopics).sort((a, b) => b.updatedAt - a.updatedAt);
   const filtered = all.filter(t => {

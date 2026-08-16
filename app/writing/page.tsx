@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import type { WritingTask, WritingSample } from '@/lib/types';
 import { appAlert, appConfirm } from '@/lib/dialog';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 // ── Image Paste Helper ────────────────────────────────────────────────
 const handleImagePaste = (e: React.ClipboardEvent, currentText: string, setter: (val: string) => void) => {
@@ -647,7 +648,7 @@ export default function WritingPage() {
   const [search, setSearch] = useState('');
 
   useEffect(() => { setMounted(true); }, []);
-  if (!mounted) return null;
+  if (!mounted) return <LoadingScreen />;
 
   const all = Object.values(writingSamples).filter(s => !s.tags?.includes('ai_graded')).sort((a, b) => b.updatedAt - a.updatedAt);
   const task1Count = all.filter(s => s.task === 'task1').length;

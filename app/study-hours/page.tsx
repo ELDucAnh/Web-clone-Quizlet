@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Clock, Plus, Trash2, Target, ChevronDown, ChevronRight, Pencil, Check, X } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { appConfirm } from '@/lib/dialog';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import type { IELTSSkill, StudyHoursGoal } from '@/lib/types';
 
 const SKILLS: IELTSSkill[] = ['Listening', 'Reading', 'Writing', 'Speaking', 'Vocabulary', 'Grammar'];
@@ -258,7 +259,7 @@ export default function StudyHoursPage() {
   const [newDeadline, setNewDeadline] = useState('');
 
   useEffect(() => { setMounted(true); }, []);
-  if (!mounted) return null;
+  if (!mounted) return <LoadingScreen />;
 
   const goals = Object.values(studyHoursGoals).sort((a, b) => a.createdAt - b.createdAt);
 

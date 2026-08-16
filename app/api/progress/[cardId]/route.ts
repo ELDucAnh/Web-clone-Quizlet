@@ -14,29 +14,31 @@ export async function PUT(request: Request, { params }: { params: { cardId: stri
       correctStreak, totalAnswers, correctAnswers, nextReview, lastAnswered,
     } = await request.json();
 
-    const { rows } = await db.query(
-      `INSERT INTO card_progress
-         (user_id, card_id, deck_id, learn_stage, ease_factor, interval_days,
-          repetitions, correct_streak, total_answers, correct_answers, next_review, last_answered)
-       SELECT $1, c.id, c.deck_id, $3, $4, $5, $6, $7, $8, $9, $10, $11
-       FROM cards c WHERE c.id = $2
-       ON CONFLICT (user_id, card_id) DO UPDATE SET
-         learn_stage    = EXCLUDED.learn_stage,
-         ease_factor    = EXCLUDED.ease_factor,
-         interval_days  = EXCLUDED.interval_days,
-         repetitions    = EXCLUDED.repetitions,
-         correct_streak = EXCLUDED.correct_streak,
-         total_answers  = EXCLUDED.total_answers,
-         correct_answers = EXCLUDED.correct_answers,
-         next_review    = EXCLUDED.next_review,
-         last_answered  = EXCLUDED.last_answered
-       RETURNING *`,
+    let { rowCount } = await db.query(
+      `UPDATE card_progress SET
+         learn_stage = $3, ease_factor = $4, interval_days = $5, repetitions = $6,
+         correct_streak = $7, total_answers = $8, correct_answers = $9, next_review = $10, last_answered = $11
+       WHERE user_id = $1 AND card_id = $2`,
       [userId, params.cardId, learnStage, easeFactor, interval,
        repetitions, correctStreak, totalAnswers, correctAnswers,
        nextReview ? new Date(nextReview) : null, 
        lastAnswered ? new Date(lastAnswered) : null]
     );
-    return NextResponse.json(rows[0]);
+
+    if (rowCount === 0) {
+      await db.query(
+        `INSERT INTO card_progress
+           (user_id, card_id, deck_id, learn_stage, ease_factor, interval_days,
+            repetitions, correct_streak, total_answers, correct_answers, next_review, last_answered)
+         SELECT $1, c.id, c.deck_id, $3, $4, $5, $6, $7, $8, $9, $10, $11
+         FROM cards c WHERE c.id = $2`,
+        [userId, params.cardId, learnStage, easeFactor, interval,
+         repetitions, correctStreak, totalAnswers, correctAnswers,
+         nextReview ? new Date(nextReview) : null, 
+         lastAnswered ? new Date(lastAnswered) : null]
+      );
+    }
+    return NextResponse.json({ ok: true });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
