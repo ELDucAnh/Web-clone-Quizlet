@@ -27,7 +27,12 @@ export function MultipleChoice({
 
   const speak = (text: string) => {
     if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
       const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = 'en-US';
+      const voices = window.speechSynthesis.getVoices();
+      const enVoice = voices.find(v => v.lang.startsWith('en'));
+      if (enVoice) utt.voice = enVoice;
       window.speechSynthesis.speak(utt);
     }
   };
