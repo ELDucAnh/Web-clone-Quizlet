@@ -251,7 +251,7 @@ function GoalCard({ goal }: { goal: StudyHoursGoal }) {
 }
 
 export default function StudyHoursPage() {
-  const { studyHoursGoals, studyHoursLogs, createStudyHoursGoal } = useStore();
+  const { studyHoursGoals, studyHoursLogs, createStudyHoursGoal, isHydrated } = useStore();
   const [mounted, setMounted] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [newSkill, setNewSkill] = useState<IELTSSkill>('Listening');
@@ -259,7 +259,7 @@ export default function StudyHoursPage() {
   const [newDeadline, setNewDeadline] = useState('');
 
   useEffect(() => { setMounted(true); }, []);
-  if (!mounted) return <LoadingScreen />;
+  if (!mounted || !isHydrated) return <LoadingScreen />;
 
   const goals = Object.values(studyHoursGoals).sort((a, b) => a.createdAt - b.createdAt);
 

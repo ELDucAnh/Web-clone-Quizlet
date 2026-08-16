@@ -26,7 +26,7 @@ function LearnContent() {
   const deckId = params.deckId as string;
   const modeParam = (searchParams.get('mode') || 'flashcard') as StudyMode;
 
-  const { decks, cards, cardsByDeck, settings, progress, updateProgress, addSession, toggleStarCard, markDeckCompleted } = useStore();
+  const { decks, cards, cardsByDeck, settings, progress, updateProgress, addSession, toggleStarCard, markDeckCompleted, isHydrated } = useStore();
 
   const deck = decks[deckId];
   const rawIds = cardsByDeck[deckId] ?? [];
@@ -186,7 +186,7 @@ function LearnContent() {
     }
   };
 
-  if (!mounted) return <LoadingScreen />;
+  if (!mounted || !isHydrated) return <LoadingScreen />;
 
   const modeLabels: Record<StudyMode, string> = {
     flashcard: 'Thẻ ghi nhớ',

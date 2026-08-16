@@ -10,6 +10,15 @@ export async function POST(request: Request) {
 
   try {
     const sample = await request.json();
+
+    // Auto-fix schema issues just in case they are missing
+    try {
+      await db.query(`ALTER TABLE speaking_submissions ADD COLUMN IF NOT EXISTS ai_feedback jsonb`);
+      await db.query(`ALTER TABLE speaking_submissions ALTER COLUMN band TYPE numeric USING band::numeric`);
+    } catch (e) {
+      console.warn('[Speaking API] Schema auto-fix warning:', e);
+    }
+
     await db.query(
       `INSERT INTO speaking_submissions (id, user_id, part, topic, transcript, band, ai_feedback) 
        VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb) 

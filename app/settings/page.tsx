@@ -58,14 +58,14 @@ export default function SettingsPage() {
   const {
     settings, updateSettings, decks, sessions,
     folders, cards, cardsByDeck, progress,
-    studyHoursGoals, studyHoursLogs, writingSamples, speakingTopics,
+    studyHoursGoals, studyHoursLogs, writingSamples, speakingTopics, isHydrated
   } = useStore();
   const { data: session, status } = useSession();
 
   useEffect(() => {
     setMounted(true);
   }, []);
-  if (!mounted) return <LoadingScreen />;
+  if (!mounted || !isHydrated) return <LoadingScreen />;
 
 
 

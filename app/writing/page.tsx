@@ -641,14 +641,14 @@ function CreateForm({ onClose }: { onClose: () => void }) {
 
 // ── Main Page ──────────────────────────────────────────────────────────
 export default function WritingPage() {
-  const { writingSamples } = useStore();
+  const { writingSamples, isHydrated } = useStore();
   const [mounted, setMounted] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [filter, setFilter] = useState<'all' | 'task1' | 'task2'>('all');
   const [search, setSearch] = useState('');
 
   useEffect(() => { setMounted(true); }, []);
-  if (!mounted) return <LoadingScreen />;
+  if (!mounted || !isHydrated) return <LoadingScreen />;
 
   const all = Object.values(writingSamples).filter(s => !s.tags?.includes('ai_graded')).sort((a, b) => b.updatedAt - a.updatedAt);
   const task1Count = all.filter(s => s.task === 'task1').length;

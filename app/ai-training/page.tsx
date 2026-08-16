@@ -15,7 +15,7 @@ declare global {
 }
 
 export default function AITrainingPage() {
-  const { addCardToDeck, createDeck, decks } = useStore();
+  const { addCardToDeck, createDeck, decks, isHydrated } = useStore();
   const [activeTab, setActiveTab] = useState<'writing' | 'speaking' | 'history'>('writing');
   const [mounted, setMounted] = useState(false);
   const deckList = Object.values(decks);
@@ -23,7 +23,7 @@ export default function AITrainingPage() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  if (!mounted) return <LoadingScreen />;
+  if (!mounted || !isHydrated) return <LoadingScreen />;
 
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full animate-fade-in pb-12">

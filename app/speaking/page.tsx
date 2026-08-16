@@ -469,14 +469,14 @@ function CreateForm({ onClose }: { onClose: () => void }) {
 
 // ── Main Page ──────────────────────────────────────────────────────────
 export default function SpeakingPage() {
-  const { speakingTopics } = useStore();
+  const { speakingTopics, isHydrated } = useStore();
   const [mounted, setMounted] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [filterPart, setFilterPart] = useState<'all' | 1 | 2 | 3>('all');
   const [search, setSearch] = useState('');
 
   useEffect(() => { setMounted(true); }, []);
-  if (!mounted) return <LoadingScreen />;
+  if (!mounted || !isHydrated) return <LoadingScreen />;
 
   const all = Object.values(speakingTopics).sort((a, b) => b.updatedAt - a.updatedAt);
   const filtered = all.filter(t => {

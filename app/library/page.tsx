@@ -49,7 +49,7 @@ function LibraryContent() {
   const [sortBy, setSortBy] = useState<SortBy>('recent');
   const [search, setSearch] = useState('');
 
-  const { decks, folders, cards, cardsByDeck, progress, deleteDeck, resetDeckProgress, deleteFolder } = useStore();
+  const { decks, folders, cards, cardsByDeck, progress, deleteDeck, resetDeckProgress, deleteFolder, isHydrated } = useStore();
 
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => { if (tabParam) setActiveTab(tabParam); }, [tabParam]);
@@ -87,7 +87,7 @@ function LibraryContent() {
     }
   };
 
-  if (!mounted) return <LoadingScreen />;
+  if (!mounted || !isHydrated) return <LoadingScreen />;
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">

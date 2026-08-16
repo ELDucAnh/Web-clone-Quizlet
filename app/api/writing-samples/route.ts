@@ -10,6 +10,16 @@ export async function POST(request: Request) {
 
   try {
     const sample = await request.json();
+    
+    // Auto-fix schema issues just in case they are missing
+    try {
+      await db.query(`ALTER TABLE writing_samples ADD COLUMN IF NOT EXISTS tags text[]`);
+      await db.query(`ALTER TABLE writing_samples ADD COLUMN IF NOT EXISTS ai_feedback jsonb`);
+      await db.query(`ALTER TABLE writing_samples ALTER COLUMN band TYPE numeric USING band::numeric`);
+    } catch (e) {
+      console.warn('[Writing API] Schema auto-fix warning:', e);
+    }
+
     await db.query(
       `INSERT INTO writing_samples (id, user_id, task, title, topic, content, band, tags, ai_feedback) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::text[], $9::jsonb) 
