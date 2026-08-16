@@ -247,6 +247,31 @@ function AIHistoryRoom() {
   );
 }
 
+// ─── Utility: Nén ảnh để tránh lỗi Payload Too Large khi lưu DB ────────────────
+const compressImage = (file: File, callback: (base64: string) => void) => {
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let { width, height } = img;
+      const MAX_SIZE = 1200;
+      if (width > height) {
+        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+      } else {
+        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+      callback(canvas.toDataURL('image/jpeg', 0.6));
+    };
+    img.src = evt.target?.result as string;
+  };
+  reader.readAsDataURL(file);
+};
+
 // ─── AI Writing Room ────────────────────────────────────────────────────────────
 function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   const { createWritingSample } = useStore();
@@ -264,12 +289,9 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf('image') !== -1) {
         const file = items[i].getAsFile();
-        if (!file) continue;
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          setTopicImage(evt.target?.result as string);
-        };
-        reader.readAsDataURL(file);
+        if (file) {
+          compressImage(file, setTopicImage);
+        }
         e.preventDefault();
         break;
       }
@@ -293,7 +315,7 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
         if (topicImage) data.topicImage = topicImage; // Save image to JSON DB
         setFeedback(data);
         createWritingSample({
-          task, title: topic.trim() ? topic.slice(0, 50) + '...' : 'Task 1 (Ảnh)', topic, content, band: data.overallBand, aiFeedback: data, tags: ['ai_graded']
+          task, title: topic.trim() ? topic.slice(0, 30) + '...' : 'Task 1 (Ảnh)', topic, content, band: data.overallBand, aiFeedback: data, tags: ['ai_graded']
         });
         
         // Save Band 8 suggested essay to the repo
@@ -301,7 +323,7 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
         if (band8Text) {
           createWritingSample({
             task, 
-            title: `[Band 8] ${topic.trim() ? topic.slice(0, 40) + '...' : 'Task 1'}`, 
+            title: `[Band 8] ${topic.trim() ? topic.slice(0, 30) + '...' : 'Task 1'}`, 
             topic, 
             content: band8Text, 
             band: 8.0, 
@@ -351,11 +373,7 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
                   <span className="text-xs text-[var(--text-muted)] font-medium text-center">Bấm tải ảnh lên, hoặc <b>Ctrl+V</b> dán ảnh trực tiếp vào bất cứ đâu</span>
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (evt) => setTopicImage(evt.target?.result as string);
-                      reader.readAsDataURL(file);
-                    }
+                    if (file) compressImage(file, setTopicImage);
                   }} />
                 </label>
               )}
