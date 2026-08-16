@@ -5,7 +5,7 @@ import { Bell, BookOpen, Clock, CheckCircle2 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 
 function NotificationsContent() {
-  const { decks, cardsByDeck, progress } = useStore();
+  const { decks, cardsByDeck, progress, studyHoursGoals, studyHoursLogs } = useStore();
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState(Date.now());
 
@@ -61,6 +61,11 @@ function NotificationsContent() {
 
   dueNotifications.sort((a, b) => a.dateDue - b.dateDue);
 
+  const skillStats: Record<string, number> = {};
+  studyHoursLogs.forEach(l => { skillStats[l.skill] = (skillStats[l.skill] || 0) + l.minutes; });
+  const activeGoals = Object.values(studyHoursGoals).filter(g => !g.deadline || g.deadline >= now);
+  const unmetGoals = activeGoals.filter(g => (skillStats[g.skill] || 0) < g.targetMinutes);
+
   return (
     <div className="flex flex-col gap-6 animate-fade-in max-w-3xl mx-auto w-full">
       {/* ── Header ─────────────────────────────────────────── */}
@@ -73,6 +78,23 @@ function NotificationsContent() {
 
       {/* ── Notification List ─────────────────────────────── */}
       <div className="flex flex-col gap-3">
+        {unmetGoals.length > 0 && (
+          <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center gap-4 animate-slide-up">
+            <div className="w-11 h-11 bg-orange-500/20 text-orange-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Clock size={22} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-orange-700 text-[0.9375rem] mb-1">Mục tiêu giờ học chưa hoàn thành</h3>
+              <p className="text-orange-600/80 text-sm">
+                Bạn còn {unmetGoals.length} mục tiêu kỹ năng chưa đạt đủ số phút. Cố gắng lên nhé!
+              </p>
+            </div>
+            <Link href="/study-hours" className="btn-primary bg-orange-500 hover:bg-orange-600 text-white py-2 px-5 flex-shrink-0 sm:w-auto w-full justify-center">
+              Xem mục tiêu
+            </Link>
+          </div>
+        )}
+
         {dueNotifications.length === 0 ? (
           <div className="empty-state">
             <div className="w-16 h-16 rounded-2xl bg-[var(--success-light)] text-[var(--success)] flex items-center justify-center mx-auto mb-2">

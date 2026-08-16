@@ -9,11 +9,11 @@ export async function POST(request: Request) {
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const { deckId, term, definition } = await request.json();
+    const { id, deckId, term, definition } = await request.json();
     const { rows } = await db.query(
-      `INSERT INTO cards (deck_id, user_id, term, definition)
-       VALUES ($1,$2,$3,$4) RETURNING *`,
-      [deckId, userId, term, definition]
+      `INSERT INTO cards (id, deck_id, user_id, term, definition)
+       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+      [id, deckId, userId, term, definition]
     );
     return NextResponse.json(rows[0], { status: 201 });
   } catch (error) {

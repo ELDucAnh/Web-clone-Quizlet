@@ -30,9 +30,25 @@ export default function HomePage() {
   const todayStudied = (() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return sessions
-      .filter((s) => s.startedAt >= today.getTime())
-      .reduce((sum, s) => sum + s.correctCount, 0);
+    const todayTime = today.getTime();
+    
+    const pastDecks = new Set(
+      sessions.filter(s => s.startedAt < todayTime).map(s => s.deckId)
+    );
+
+    const seenToday = new Set<string>();
+    let total = 0;
+    
+    sessions
+      .filter(s => s.startedAt >= todayTime)
+      .sort((a, b) => a.startedAt - b.startedAt)
+      .forEach(s => {
+        if (!pastDecks.has(s.deckId) && !seenToday.has(s.deckId)) {
+          seenToday.add(s.deckId);
+          total += s.correctCount;
+        }
+      });
+    return total;
   })();
 
   const dailyGoalPct = Math.min(100, Math.round((todayStudied / (settings.dailyGoal || 20)) * 100));

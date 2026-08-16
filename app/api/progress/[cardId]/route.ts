@@ -14,6 +14,21 @@ export async function PUT(request: Request, { params }: { params: { cardId: stri
       correctStreak, totalAnswers, correctAnswers, nextReview, lastAnswered,
     } = await request.json();
 
+    // Auto-fix schema issues just in case they are missing
+    try {
+      await db.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS learn_stage text`);
+      await db.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS ease_factor numeric`);
+      await db.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS interval_days integer`);
+      await db.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS repetitions integer`);
+      await db.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS correct_streak integer`);
+      await db.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS total_answers integer`);
+      await db.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS correct_answers integer`);
+      await db.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS next_review timestamp`);
+      await db.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS last_answered timestamp`);
+    } catch (e) {
+      console.warn('[Progress API] Schema auto-fix warning:', e);
+    }
+
     let { rowCount } = await db.query(
       `UPDATE card_progress SET
          learn_stage = $3, ease_factor = $4, interval_days = $5, repetitions = $6,

@@ -434,6 +434,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
             decks: { ...state.decks, [deckId]: { ...deck, cardCount: ids.length + 1 } },
           };
         });
+        syncToBackend('/cards', 'POST', newCard);
       },
 
       // ─── Layout Actions ───────────────────────────────────────────────
