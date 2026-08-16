@@ -15,11 +15,9 @@ import type { Card } from '@/lib/types';
 
 // ── TTS Helper ───────────────────────────────────────────────────────
 function speak(text: string) {
-  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    const utt = new SpeechSynthesisUtterance(text);
-    window.speechSynthesis.speak(utt);
-  }
+  const url = `/api/tts?text=${encodeURIComponent(text)}`;
+  const audio = new Audio(url);
+  audio.play().catch(e => console.error("Audio play failed:", e));
 }
 
 // ── Flashcard Preview ────────────────────────────────────────────────
