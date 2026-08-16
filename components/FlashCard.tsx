@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, RotateCcw, Volume2 } from 'lucide-react';
 import type { Card } from '@/lib/types';
 
@@ -16,13 +16,20 @@ export function FlashCard({ card, flipped, onFlip, showSide = 'term' }: FlashCar
   const frontLabel = showSide === 'term' ? 'Từ' : 'Nghĩa';
   const backLabel = showSide === 'term' ? 'Nghĩa' : 'Từ';
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+    }
+  }, []);
+
   const speak = (text: string) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utt = new SpeechSynthesisUtterance(text);
       utt.lang = 'en-US';
       const voices = window.speechSynthesis.getVoices();
-      const enVoice = voices.find(v => v.name.includes('Google US English') || v.lang === 'en-US' || v.lang === 'en_US') || voices.find(v => v.lang.startsWith('en'));
+      const enVoice = voices.find(v => v.name.includes('Zira') || v.name.includes('David') || v.name.includes('Google US English')) 
+        || voices.find(v => v.lang === 'en-US' || v.lang === 'en-GB' || v.lang.startsWith('en'));
       if (enVoice) utt.voice = enVoice;
       window.speechSynthesis.speak(utt);
     }
