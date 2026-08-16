@@ -70,10 +70,12 @@ function LearnContent() {
     if (modeParam === 'learn') {
       cardsToStudy.forEach(c => {
         const stageStr = progress[c.id]?.learnStage;
-        if (stageStr?.startsWith('step_')) {
-          const step = parseInt(stageStr.split('_')[1] || '0', 10);
-          initialStageMap[c.id] = step;
-          initialSteps += step;
+        if (stageStr && stageStr !== 'mastered' && stageStr !== 'unseen') {
+          const step = LEARN_STAGES.indexOf(stageStr as any);
+          if (step !== -1) {
+            initialStageMap[c.id] = step;
+            initialSteps += step;
+          }
         }
       });
     }
@@ -146,7 +148,7 @@ function LearnContent() {
         });
       } else {
         updateProgress(card.id, {
-          learnStage: `step_${nextStage}`,
+          learnStage: LEARN_STAGES[nextStage] || 'unseen',
           lastAnswered: Date.now(),
         });
       }
@@ -181,7 +183,7 @@ function LearnContent() {
       // Wrong answer — step back but not below 0
       const newStage = Math.max(0, stageIdx - 1);
       updateProgress(card.id, {
-        learnStage: `step_${newStage}`,
+        learnStage: LEARN_STAGES[newStage] || 'unseen',
         lastAnswered: Date.now(),
       });
       setCorrectSteps(s => Math.max(0, s - (stageIdx - newStage)));
