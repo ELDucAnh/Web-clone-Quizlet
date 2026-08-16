@@ -22,11 +22,11 @@ export async function POST(req: Request) {
     }
 
     const prompt = `
-Trích xuất những từ vựng đắt giá (trình độ B2-C2, idioms, collocations, phrasal verbs...) từ văn bản tiếng Anh sau đây.
-Yêu cầu trả về tối đa 20 thẻ (cards). Đối với mỗi thẻ:
-- "term": từ vựng/cụm từ tiếng Anh nguyên gốc.
-- "definition": Giải nghĩa tiếng Việt ngắn gọn, kèm phiên âm IPA và 1 câu ví dụ ngắn bằng tiếng Anh. Ví dụ: "(v) /əˈtʃiːv/ đạt được. Ex: She achieved her goals."
-- Không lấy các từ vựng quá cơ bản (A1, A2).
+Bạn là một chuyên gia ngôn ngữ tiếng Anh. Hãy rà soát toàn bộ đoạn văn bản tiếng Anh dưới đây và trích xuất TOÀN BỘ những từ vựng khó, học thuật, idioms, collocations, phrasal verbs (trình độ B2, C1, C2). 
+KHÔNG GIỚI HẠN số lượng từ, hãy quét thật kỹ và tìm ra nhiều từ khó nhất có thể.
+Đối với mỗi từ, hãy trả về định dạng thẻ ghi nhớ (flashcard) vô cùng ngắn gọn:
+- "term": từ vựng tiếng Anh nguyên bản.
+- "definition": CHỈ trả về nghĩa tiếng Việt ngắn gọn, súc tích (1-2 từ). TUYỆT ĐỐI KHÔNG giải thích dài dòng, KHÔNG ghi chú từ loại, KHÔNG phiên âm, KHÔNG ví dụ. Ví dụ: "hoàn thành", "cung cấp", "chấp nhận".
 
 Văn bản:
 """

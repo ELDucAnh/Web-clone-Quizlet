@@ -31,7 +31,7 @@ export function MultipleChoice({
       const utt = new SpeechSynthesisUtterance(text);
       utt.lang = 'en-US';
       const voices = window.speechSynthesis.getVoices();
-      const enVoice = voices.find(v => v.lang.startsWith('en'));
+      const enVoice = voices.find(v => v.name.includes('Google US English') || v.lang === 'en-US' || v.lang === 'en_US') || voices.find(v => v.lang.startsWith('en'));
       if (enVoice) utt.voice = enVoice;
       window.speechSynthesis.speak(utt);
     }
