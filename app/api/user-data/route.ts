@@ -93,6 +93,19 @@ export async function GET() {
       });
 
       // 4. Fetch Progress
+      try {
+        await client.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS learn_stage text`);
+        await client.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS ease_factor numeric`);
+        await client.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS interval_days integer`);
+        await client.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS repetitions integer`);
+        await client.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS correct_streak integer`);
+        await client.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS total_answers integer`);
+        await client.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS correct_answers integer`);
+        await client.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS next_review timestamp`);
+        await client.query(`ALTER TABLE card_progress ADD COLUMN IF NOT EXISTS last_answered timestamp`);
+      } catch (e) {
+        console.warn('[User Data] Schema auto-fix warning:', e);
+      }
       const { rows: progress } = await client.query('SELECT * FROM card_progress WHERE user_id = $1', [userId]);
       progress.forEach(p => {
         payload.progress[p.card_id] = {
