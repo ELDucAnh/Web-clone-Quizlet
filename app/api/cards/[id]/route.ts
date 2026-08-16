@@ -17,9 +17,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     );
     if (!rows.length) return NextResponse.json({ error: 'Card not found' }, { status: 404 });
     return NextResponse.json(rows[0]);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || String(error) }, { status: 500 });
   }
 }
 
