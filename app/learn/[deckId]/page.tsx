@@ -65,9 +65,22 @@ function LearnContent() {
     setCorrectCount(0);
     setDone(false);
     setFcFlipped(false);
-    setLearnStageMap({});
+    const initialStageMap: Record<string, number> = {};
+    let initialSteps = 0;
+    if (modeParam === 'learn') {
+      cardsToStudy.forEach(c => {
+        const stageStr = progress[c.id]?.learnStage;
+        if (stageStr?.startsWith('step_')) {
+          const step = parseInt(stageStr.split('_')[1] || '0', 10);
+          initialStageMap[c.id] = step;
+          initialSteps += step;
+        }
+      });
+    }
+
+    setLearnStageMap(initialStageMap);
     setLearnCorrect(0);
-    setCorrectSteps(0);
+    setCorrectSteps(initialSteps);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deckId, modeParam]);
 
@@ -131,6 +144,11 @@ function LearnContent() {
           repetitions: (progress[card.id]?.repetitions ?? 0) + 1,
           lastAnswered: Date.now(),
         });
+      } else {
+        updateProgress(card.id, {
+          learnStage: `step_${nextStage}`,
+          lastAnswered: Date.now(),
+        });
       }
 
       setCorrectSteps(s => s + 1);
@@ -161,8 +179,14 @@ function LearnContent() {
       });
     } else {
       // Wrong answer — step back but not below 0
+      const newStage = Math.max(0, stageIdx - 1);
+      updateProgress(card.id, {
+        learnStage: `step_${newStage}`,
+        lastAnswered: Date.now(),
+      });
+      setCorrectSteps(s => Math.max(0, s - (stageIdx - newStage)));
       setLearnStageMap(prev => {
-        const newMap = { ...prev, [card.id]: Math.max(0, stageIdx - 1) };
+        const newMap = { ...prev, [card.id]: newStage };
         let nextIdx = (currentIndex + 1) % studyCards.length;
         let loopCount = 0;
         while ((newMap[studyCards[nextIdx].id] ?? 0) >= LEARN_STAGES.length && loopCount < studyCards.length) {
