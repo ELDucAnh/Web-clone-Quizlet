@@ -64,7 +64,7 @@ function NotificationsContent() {
   const skillStats: Record<string, number> = {};
   studyHoursLogs.forEach(l => { skillStats[l.skill] = (skillStats[l.skill] || 0) + l.minutes; });
   const activeGoals = Object.values(studyHoursGoals).filter(g => !g.deadline || g.deadline >= now);
-  const unmetGoals = activeGoals.filter(g => (skillStats[g.skill] || 0) < g.targetMinutes);
+  const unmetGoals = activeGoals.filter(g => (skillStats[g.skill] || 0) < g.targetHours * 60);
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in max-w-3xl mx-auto w-full">
