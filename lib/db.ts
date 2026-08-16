@@ -12,7 +12,7 @@ if (process.env.NODE_ENV === 'production') {
   db = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
-    max: 20,
+    max: 5,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000,
   });
@@ -23,7 +23,7 @@ if (process.env.NODE_ENV === 'production') {
       ssl: process.env.DATABASE_URL?.includes('supabase') 
         ? { rejectUnauthorized: false } 
         : undefined,
-      max: 20,
+      max: 5,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,
     });
