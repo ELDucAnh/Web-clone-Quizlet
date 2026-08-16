@@ -32,6 +32,13 @@ export async function GET() {
     
     try {
       // 0. Fetch User Settings
+      try {
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_goal integer`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS settings jsonb DEFAULT '{}'::jsonb`);
+      } catch (e) {
+        console.warn('[User Data] users schema auto-fix warning:', e);
+      }
+      
       const { rows: userRows } = await client.query('SELECT daily_goal, settings FROM users WHERE id = $1', [userId]);
       if (userRows.length > 0) {
         payload.settings = {
@@ -137,8 +144,9 @@ export async function GET() {
       }));
 
       // IELTS specific
-      const { rows: goals } = await client.query('SELECT * FROM study_hours_goals WHERE user_id = $1', [userId]);
-      goals.forEach(g => {
+      try {
+        const { rows: goals } = await client.query('SELECT * FROM study_hours_goals WHERE user_id = $1', [userId]);
+        goals.forEach(g => {
         payload.studyHoursGoals[g.id] = {
           id: g.id,
           skill: g.skill,
@@ -202,14 +210,17 @@ export async function GET() {
           updatedAt: new Date(s.updated_at).getTime(),
         };
       });
+      } catch (e) {
+        console.warn('[User Data] IELTS tables might be missing:', e);
+      }
       
     } finally {
       client.release();
     }
 
     return NextResponse.json(payload);
-  } catch (error) {
-    console.error('[UserData] Fetch Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[User Data API Error]', error);
+    return NextResponse.json({ error: error?.message || String(error) }, { status: 500 });
   }
 }
