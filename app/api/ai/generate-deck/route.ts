@@ -34,16 +34,40 @@ ${text}
 """
     `;
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      generationConfig: {
-        responseMimeType: "application/json"
-      }
-    });
+    const fallbackModels = [
+      'gemini-flash-latest',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-pro-latest'
+    ];
 
-    const result = await model.generateContent(prompt);
+    let result;
+    let lastError;
+
+    for (const modelName of fallbackModels) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        });
+        result = await model.generateContent(prompt);
+        if (result) break;
+      } catch (e: any) {
+        lastError = e;
+        console.warn(`Model ${modelName} failed: ${e.message}`);
+      }
+    }
+
+    if (!result) {
+      throw lastError || new Error('All models failed');
+    }
+
     const response = await result.response;
-    const data = JSON.parse(response.text());
+    const rawText = response.text();
+    const cleanText = rawText.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
+    const data = JSON.parse(cleanText);
 
     return NextResponse.json(data);
   } catch (error: any) {
