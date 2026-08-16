@@ -85,11 +85,46 @@ function LearnContent() {
       });
     }
 
-    setLearnStageMap(initialStageMap);
-    setLearnCorrect(initialMastered);
-    setCorrectSteps(initialSteps);
+    let restored = false;
+    if (modeParam === 'learn') {
+      try {
+        const savedStr = localStorage.getItem(`vocab_learn_${deckId}`);
+        if (savedStr) {
+          const saved = JSON.parse(savedStr);
+          if (saved && typeof saved === 'object') {
+            setLearnStageMap(saved.learnStageMap || initialStageMap);
+            setLearnCorrect(saved.learnCorrect || initialMastered);
+            setCorrectSteps(saved.correctSteps || initialSteps);
+            setCurrentIndex(saved.currentIndex || 0);
+            restored = true;
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (!restored) {
+      setLearnStageMap(initialStageMap);
+      setLearnCorrect(initialMastered);
+      setCorrectSteps(initialSteps);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deckId, modeParam]);
+
+  useEffect(() => {
+    if (modeParam !== 'learn' || allCards.length === 0 || !mounted) return;
+    if (done) {
+      try { localStorage.removeItem(`vocab_learn_${deckId}`); } catch(e) {}
+    } else {
+      try {
+        localStorage.setItem(`vocab_learn_${deckId}`, JSON.stringify({
+          learnStageMap,
+          learnCorrect,
+          correctSteps,
+          currentIndex
+        }));
+      } catch(e) {}
+    }
+  }, [learnStageMap, learnCorrect, correctSteps, currentIndex, deckId, modeParam, allCards.length, done, mounted]);
 
   useEffect(() => {
     if (!settings.showTimer) return;
@@ -126,6 +161,7 @@ function LearnContent() {
     setLearnStageMap({});
     setLearnCorrect(0);
     setCorrectSteps(0);
+    try { localStorage.removeItem(`vocab_learn_${deckId}`); } catch(e) {}
     startTime.current = Date.now();
     const unmastered = allCards.filter(c => progress[c.id]?.learnStage !== 'mastered');
     const cardsToStudy = (modeParam === 'learn' && unmastered.length > 0) ? unmastered : allCards;

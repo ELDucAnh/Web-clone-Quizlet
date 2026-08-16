@@ -140,6 +140,13 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             collapsed={collapsed}
           />
           <NavItem
+            href="/ai-generator"
+            icon={<Sparkles size={18} className="text-purple-500" />}
+            label="AI Tạo Học Phần"
+            active={!!pathname?.startsWith('/ai-generator')}
+            collapsed={collapsed}
+          />
+          <NavItem
             href="/ai-training"
             icon={<Sparkles size={18} className="text-purple-500" />}
             label="Phòng thi AI"

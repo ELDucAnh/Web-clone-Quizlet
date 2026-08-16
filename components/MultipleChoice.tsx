@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import { Check, X } from 'lucide-react';
+import { Check, X, Volume2 } from 'lucide-react';
 import { shuffleArray } from '@/lib/shuffle';
 import { generateDistractors } from '@/lib/algorithms';
 import type { Card } from '@/lib/types';
@@ -24,6 +24,13 @@ export function MultipleChoice({
   const [answered, setAnswered] = useState(false);
 
   const correctAnswer = card[answerField];
+
+  const speak = (text: string) => {
+    if ('speechSynthesis' in window) {
+      const utt = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(utt);
+    }
+  };
 
   // Generate options once per card (memoized)
   const options = useMemo(() => {
@@ -78,10 +85,17 @@ export function MultipleChoice({
   return (
     <div className="flex flex-col gap-4 animate-fade-in">
       {/* Question */}
-      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-8 sm:p-10 text-center card-shadow">
-        <p className="text-sm font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-4">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-8 sm:p-10 text-center card-shadow relative">
+        <span className="absolute top-4 left-5 text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-4">
           {questionField === 'term' ? 'Từ' : 'Nghĩa'} — Chọn đáp án đúng
-        </p>
+        </span>
+        <button
+          className="absolute top-3 right-4 text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors p-2"
+          onClick={(e) => { e.stopPropagation(); speak(card[questionField]); }}
+          aria-label="Đọc to"
+        >
+          <Volume2 size={18} />
+        </button>
         <p
           className="font-bold text-[var(--text)] leading-relaxed"
           dir="auto"

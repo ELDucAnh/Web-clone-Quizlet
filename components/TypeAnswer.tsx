@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { Check, X, HelpCircle } from 'lucide-react';
+import { Check, X, HelpCircle, Volume2 } from 'lucide-react';
 import { checkTypeAnswer } from '@/lib/algorithms';
 import type { Card } from '@/lib/types';
 
@@ -28,6 +28,13 @@ export function TypeAnswer({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const correctAnswer = card[answerField];
+
+  const speak = (text: string) => {
+    if ('speechSynthesis' in window) {
+      const utt = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(utt);
+    }
+  };
 
   // Reset and focus on card change
   useEffect(() => {
@@ -113,10 +120,17 @@ export function TypeAnswer({
   return (
     <div className="flex flex-col gap-4 animate-fade-in">
       {/* Question */}
-      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-8 sm:p-10 text-center card-shadow">
-        <p className="text-sm font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-4">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-8 sm:p-10 text-center card-shadow relative">
+        <span className="absolute top-4 left-5 text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-4">
           {questionField === 'term' ? 'Từ' : 'Nghĩa'} — Gõ đáp án
-        </p>
+        </span>
+        <button
+          className="absolute top-3 right-4 text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors p-2"
+          onClick={(e) => { e.stopPropagation(); speak(card[questionField]); }}
+          aria-label="Đọc to"
+        >
+          <Volume2 size={18} />
+        </button>
         <p
           className="font-bold text-[var(--text)] leading-relaxed"
           dir="auto"

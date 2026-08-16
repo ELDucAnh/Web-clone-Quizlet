@@ -29,7 +29,12 @@ function NotificationsContent() {
   const dueNotifications: { deckId: string; deckName: string; intervalLabel: string; overdue: boolean; dateDue: number }[] = [];
 
   deckList.forEach(deck => {
-    if (!deck.completedAt) return;
+    if (!deck.completedAt || deck.cardCount === 0) return;
+    
+    const cardIds = cardsByDeck[deck.id] ?? [];
+    const masteredCount = cardIds.filter(id => progress[id]?.learnStage === 'mastered').length;
+    if (masteredCount < deck.cardCount) return;
+
     const completedAt = deck.completedAt;
 
     let highestIntervalDue = -1;
