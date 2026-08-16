@@ -30,25 +30,9 @@ export function TypeAnswer({
   const correctAnswer = card[answerField];
 
   const speak = (text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utt = new SpeechSynthesisUtterance(text);
-      utt.lang = 'en-US';
-
-      const playVoice = () => {
-        const voices = window.speechSynthesis.getVoices();
-        const enVoice = voices.find(v => v.name.includes('Zira') || v.name.includes('David') || v.name.includes('Google US English')) 
-          || voices.find(v => v.lang.startsWith('en'));
-        if (enVoice) utt.voice = enVoice;
-        window.speechSynthesis.speak(utt);
-      };
-
-      if (window.speechSynthesis.getVoices().length === 0) {
-        window.speechSynthesis.onvoiceschanged = playVoice;
-      } else {
-        playVoice();
-      }
-    }
+    const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=en-US&client=gtx`;
+    const audio = new Audio(url);
+    audio.play().catch(e => console.error("Audio play failed:", e));
   };
 
   // Reset and focus on card change

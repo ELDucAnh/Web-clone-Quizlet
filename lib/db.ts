@@ -13,7 +13,7 @@ if (process.env.NODE_ENV === 'production') {
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
     max: 5,
-    idleTimeoutMillis: 30000,
+    idleTimeoutMillis: 1,
     connectionTimeoutMillis: 5000,
   });
 } else {
@@ -24,7 +24,7 @@ if (process.env.NODE_ENV === 'production') {
         ? { rejectUnauthorized: false } 
         : undefined,
       max: 5,
-      idleTimeoutMillis: 30000,
+      idleTimeoutMillis: 1,
       connectionTimeoutMillis: 5000,
     });
   }
