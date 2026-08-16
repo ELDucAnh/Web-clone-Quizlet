@@ -11,7 +11,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   try {
     const { term, definition, starred } = await request.json();
     const { rows } = await db.query(
-      `UPDATE cards SET term=COALESCE($1,term), definition=COALESCE($2,definition), starred=COALESCE($3,starred)
+      `UPDATE cards SET term=COALESCE($1::text,term), definition=COALESCE($2::text,definition), starred=COALESCE($3::boolean,starred)
        WHERE id=$4 AND user_id=$5 RETURNING *`,
       [term ?? null, definition ?? null, starred ?? null, params.id, userId]
     );
