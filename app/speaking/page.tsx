@@ -479,7 +479,7 @@ export default function SpeakingPage() {
   const { speakingTopics, isHydrated } = useStore();
   const [mounted, setMounted] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
-  const [filterPart, setFilterPart] = useState<any>('all');
+  const [filterPart, setFilterPart] = useState<'all' | 1 | 2 | 3 | 'Full Test'>('all');
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<'topics' | 'history'>('topics');
   const [showTopicModal, setShowTopicModal] = useState(false);
@@ -641,7 +641,6 @@ export default function SpeakingPage() {
       )}
 
       {activeTab === 'history' && (
-        <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-3">
           {Object.values(useStore.getState().speakingSubmissions || {}).length === 0 ? (
             <div className="text-center py-12 text-[var(--text-muted)] border border-[var(--border)] border-dashed rounded-2xl">
