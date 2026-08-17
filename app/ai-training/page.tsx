@@ -435,7 +435,6 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   const [feedback, setFeedback] = useState<any>(null);
 
   const recognitionRef = useRef<any>(null);
-  const isRecordingRef = useRef<boolean>(false);
   const timerRef = useRef<any>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const errorCountRef = useRef<number>(0);
