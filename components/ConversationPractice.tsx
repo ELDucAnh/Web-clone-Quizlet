@@ -18,10 +18,13 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
   const [conversation, setConversation] = useState<Message[]>([]);
   const [currentMsgIdx, setCurrentMsgIdx] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
-  const isRecordingRef = useRef(false);
   const [transcript, setTranscript] = useState('');
   const [errorWords, setErrorWords] = useState<string[]>([]);
+
   const recognitionRef = useRef<any>(null);
+  const isRecordingRef = useRef<boolean>(false);
+  const errorCountRef = useRef<number>(0);
+  const lastErrorTimeRef = useRef<number>(0);
 
   useEffect(() => {
     // Generate conversation
@@ -76,13 +79,23 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
-        if (event.error !== 'no-speech') {
+        if (event.error === 'not-allowed') {
           isRecordingRef.current = false;
           setIsRecording(false);
-          if (event.error === 'not-allowed') {
-            alert('Trình duyệt đã chặn Micro. Vui lòng cấp quyền trong cài đặt trình duyệt!');
+          alert('Trình duyệt đã chặn Micro. Vui lòng cấp quyền trong cài đặt trình duyệt!');
+        } else if (event.error !== 'no-speech') {
+          const now = Date.now();
+          if (now - lastErrorTimeRef.current > 3000) {
+            errorCountRef.current = 1;
           } else {
-            alert(`Lỗi Micro (${event.error}). Khuyên dùng trình duyệt Google Chrome và kiểm tra lại Micro!`);
+            errorCountRef.current += 1;
+          }
+          lastErrorTimeRef.current = now;
+
+          if (errorCountRef.current > 3) {
+            isRecordingRef.current = false;
+            setIsRecording(false);
+            alert(`Lỗi Micro liên tục (${event.error}). Vui lòng kiểm tra lại đường truyền mạng hoặc đổi trình duyệt!`);
           }
         }
       };
