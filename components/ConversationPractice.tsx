@@ -43,7 +43,9 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
     });
   }, [cards]);
 
-  useEffect(() => {
+  const initSpeechRecognition = () => {
+    if (recognitionRef.current) return recognitionRef.current;
+
     if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
@@ -91,8 +93,10 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
       };
 
       recognitionRef.current = recognition;
+      return recognition;
     }
-  }, []);
+    return null;
+  };
 
   const toggleRecording = () => {
     if (isRecording) {
@@ -101,10 +105,15 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
       setIsRecording(false);
       checkPronunciation();
     } else {
+      const recognition = initSpeechRecognition();
+      if (!recognition) {
+        alert("Trình duyệt của bạn không hỗ trợ thu âm.");
+        return;
+      }
       isRecordingRef.current = true;
       setTranscript('');
       setErrorWords([]);
-      recognitionRef.current?.start();
+      recognition.start();
       setIsRecording(true);
     }
   };

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, ArrowLeft, Loader2, Send, Check } from 'lucide-react';
+import { Mic, MicOff, ArrowLeft, Loader2, Send, Check, Play, Square, StopCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
@@ -13,13 +13,14 @@ interface Message {
 export default function MockTestPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const mode = searchParams.get('mode') || 'Full Test';
-  const topicId = searchParams.get('topicId') || '';
-  const customTopic = searchParams.get('customTopic') || '';
+  const initialMode = searchParams.get('mode') || 'Full Test';
+  const initialTopic = searchParams.get('customTopic') || '';
 
-  const { speakingTopics, createSpeakingSubmission } = useStore();
-  const topicObj = speakingTopics[topicId];
-  const topicStr = customTopic || (topicObj ? topicObj.topic : 'General IELTS Speaking');
+  const { createSpeakingSubmission } = useStore();
+
+  const [mode, setMode] = useState(initialMode);
+  const [topicStr, setTopicStr] = useState(initialTopic);
+  const [hasStarted, setHasStarted] = useState(false);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -28,24 +29,30 @@ export default function MockTestPage() {
   const [isExaminerTyping, setIsExaminerTyping] = useState(false);
   const [isTestOver, setIsTestOver] = useState(false);
   const [grading, setGrading] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
 
   const recognitionRef = useRef<any>(null);
+  const timerRef = useRef<any>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Scroll to bottom
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, transcript]);
 
+  // Timer for UI
   useEffect(() => {
-    // Initial start
-    if (messages.length === 0) {
-      handleExaminerTurn([]);
+    if (isRecording) {
+      timerRef.current = setInterval(() => setRecordingTime(prev => prev + 1), 1000);
+    } else {
+      clearInterval(timerRef.current);
+      setRecordingTime(0);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => clearInterval(timerRef.current);
+  }, [isRecording]);
 
-  useEffect(() => {
+  const initSpeechRecognition = () => {
+    if (recognitionRef.current) return recognitionRef.current;
+
     if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
@@ -69,7 +76,6 @@ export default function MockTestPage() {
             return cleanPrev + (cleanPrev ? ' ' : '') + finalTrans;
           });
         } else if (interimTrans) {
-          // Just to show something is happening
           setTranscript(prev => {
             const cleanPrev = prev.replace(/\[\.\.\.\]$/, '').trim();
             return cleanPrev + (cleanPrev ? ' ' : '') + '[...]';
@@ -94,14 +100,14 @@ export default function MockTestPage() {
       };
 
       recognitionRef.current = recognition;
+      return recognition;
     }
-  }, []);
+    return null;
+  };
 
   const speak = (text: string) => {
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'en-US';
-    // When examiner finishes speaking, you can auto-start recording if needed, 
-    // but better let user manually click to avoid accidental noise.
     window.speechSynthesis.speak(utter);
   };
 
@@ -111,7 +117,7 @@ export default function MockTestPage() {
       const res = await fetch('/api/ai/speaking-examiner', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ history: currentHistory, mode, topic: topicStr })
+        body: JSON.stringify({ history: currentHistory, mode, topic: topicStr || 'General IELTS Speaking' })
       });
       const data = await res.json();
       
@@ -131,31 +137,60 @@ export default function MockTestPage() {
     }
   };
 
+  const startTest = () => {
+    setHasStarted(true);
+    handleExaminerTurn([]);
+  };
+
   const toggleRecording = () => {
     if (isRecording) {
+      // STOP recording and SEND
       isRecordingRef.current = false;
       recognitionRef.current?.stop();
       setIsRecording(false);
+
+      if (transcript.trim()) {
+        const cleanTrans = transcript.replace(/\[\.\.\.\]$/, '').trim();
+        const newMsg: Message = { role: 'user', text: cleanTrans };
+        const newHistory = [...messages, newMsg];
+        setMessages(newHistory);
+        setTranscript('');
+        handleExaminerTurn(newHistory);
+      }
     } else {
+      // START recording
+      const recognition = initSpeechRecognition();
+      if (!recognition) {
+        alert("Trình duyệt không hỗ trợ ghi âm.");
+        return;
+      }
       isRecordingRef.current = true;
       setTranscript('');
-      recognitionRef.current?.start();
+      try {
+        recognition.start();
+      } catch(e) {}
       setIsRecording(true);
+      // Stop examiner from speaking if user interrupts
+      window.speechSynthesis.cancel();
     }
   };
 
-  const submitTurn = () => {
-    if (!transcript.trim()) return;
-    const newMsg: Message = { role: 'user', text: transcript.trim() };
-    const newHistory = [...messages, newMsg];
-    setMessages(newHistory);
+  const abortTest = () => {
+    window.speechSynthesis.cancel();
+    if (recognitionRef.current) {
+      isRecordingRef.current = false;
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    }
+    setHasStarted(false);
+    setMessages([]);
     setTranscript('');
-    handleExaminerTurn(newHistory);
+    setIsTestOver(false);
   };
 
   const finishAndGrade = async () => {
     setGrading(true);
-    const fullTranscript = messages.map(m => m.role === 'examiner' ? `Examiner: ${m.text}` : `Candidate: ${m.text}`).join('\n\n');
+    const fullTranscript = messages.map(m => m.role === 'examiner' ? \`Examiner: \${m.text}\` : \`Candidate: \${m.text}\`).join('\\n\\n');
     
     try {
       const res = await fetch('/api/ai/speaking', {
@@ -170,16 +205,19 @@ export default function MockTestPage() {
       const data = await res.json();
       
       if (data.overallBand) {
-        // Save submission
+        let partNum = 1;
+        if (mode.includes('2')) partNum = 2;
+        if (mode.includes('3')) partNum = 3;
+
         const subId = createSpeakingSubmission({
-          part: mode.includes('1') ? 1 : mode.includes('2') ? 2 : mode.includes('3') ? 3 : 1, // Defaulting to 1 for Full Test or parsing from mode string if needed
-          topic: topicStr,
+          part: partNum as 1|2|3,
+          topic: topicStr || 'General IELTS Speaking',
           transcript: fullTranscript,
           band: data.overallBand,
           aiFeedback: data,
         });
         
-        router.push(`/speaking/report/${subId}`);
+        router.push(\`/speaking/report/\${subId}\`);
       }
     } catch (err) {
       console.error(err);
@@ -189,88 +227,148 @@ export default function MockTestPage() {
     }
   };
 
+  useEffect(() => {
+    if (isTestOver && !grading && messages.length > 0) {
+      finishAndGrade();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTestOver]);
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return \`\${m}:\${s}\`;
+  };
+
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] max-w-4xl mx-auto w-full bg-[var(--bg)]">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4 bg-[var(--card)] border-b border-[var(--border)]">
-        <Link href="/speaking" className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[var(--bg)] text-[var(--text-muted)] transition-colors">
-          <ArrowLeft size={18} />
-        </Link>
-        <div>
-          <h1 className="font-bold text-[var(--text)]">Mock Test: {mode}</h1>
-          <p className="text-xs text-[var(--text-muted)]">{topicStr}</p>
+    <div className="flex flex-col min-h-screen bg-[var(--bg)] p-4 md:p-8 animate-fade-in">
+      <div className="max-w-4xl mx-auto w-full flex flex-col gap-6">
+        
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <Link href="/speaking" className="w-10 h-10 bg-[var(--card)] flex items-center justify-center rounded-xl border border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)] transition-colors shadow-sm">
+            <ArrowLeft size={20} />
+          </Link>
+          <h1 className="text-2xl font-black text-[var(--text)] flex items-center gap-2">
+            <Mic className="text-purple-500" /> Phòng thi Nói ảo
+          </h1>
         </div>
-        {isTestOver && (
-          <button onClick={finishAndGrade} disabled={grading} className="btn-primary ml-auto flex items-center gap-2">
-            {grading ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />} 
-            Chấm điểm
-          </button>
-        )}
-      </div>
 
-      {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-        {messages.map((m, i) => (
-          <div key={i} className={`flex w-full ${m.role === 'examiner' ? 'justify-start' : 'justify-end'}`}>
-            <div className={`max-w-[80%] rounded-2xl p-4 ${m.role === 'examiner' ? 'bg-[var(--card)] border border-[var(--border)] text-[var(--text)]' : 'bg-[var(--primary)] text-white'}`}>
-              <p className="text-sm font-semibold mb-1 opacity-70 uppercase tracking-wider">{m.role === 'examiner' ? 'Giám khảo' : 'Bạn'}</p>
-              <p className="leading-relaxed">{m.text}</p>
-            </div>
-          </div>
-        ))}
-        {isExaminerTyping && (
-           <div className="flex w-full justify-start">
-             <div className="max-w-[80%] rounded-2xl p-4 bg-[var(--card)] border border-[var(--border)] text-[var(--text-muted)] flex items-center gap-2">
-               <Loader2 size={16} className="animate-spin" /> Giám khảo đang suy nghĩ...
-             </div>
-           </div>
-        )}
-        {transcript && !isRecording && (
-          <div className="flex w-full justify-end">
-             <div className="max-w-[80%] rounded-2xl p-4 bg-[var(--primary)] text-white opacity-80">
-               <p className="text-sm font-semibold mb-1 opacity-70 uppercase tracking-wider">Nháp</p>
-               <p className="leading-relaxed">{transcript.replace(/\[\.\.\.\]$/, '')}</p>
-             </div>
-           </div>
-        )}
-        <div ref={chatEndRef} />
-      </div>
-
-      {/* Controls */}
-      <div className="p-4 bg-[var(--card)] border-t border-[var(--border)]">
-        {!isTestOver ? (
-          <div className="flex flex-col items-center gap-4 max-w-lg mx-auto">
-            {isRecording && (
-              <div className="w-full bg-[var(--bg)] p-3 rounded-xl min-h-[60px] text-[var(--text)] text-sm">
-                <span className="animate-pulse inline-block w-2 h-2 rounded-full bg-red-500 mr-2"></span>
-                {transcript || 'Đang nghe...'}
-              </div>
-            )}
-            
-            <div className="flex items-center gap-3 w-full justify-center">
-              <button 
-                onClick={toggleRecording}
-                disabled={isExaminerTyping}
-                className={`w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg transition-all ${isRecording ? 'bg-red-500 animate-pulse scale-110' : 'bg-[var(--primary)] hover:scale-105 disabled:opacity-50 disabled:hover:scale-100'}`}
+        {/* Configuration Box */}
+        {!hasStarted && (
+          <div className="bg-[var(--card)] p-6 rounded-3xl border border-[var(--border)] shadow-sm flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <select 
+                className="q-input flex-shrink-0 sm:w-64"
+                value={mode}
+                onChange={e => setMode(e.target.value)}
               >
-                {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
-              </button>
+                <option value="Part 1">Part 1 (Phỏng vấn)</option>
+                <option value="Part 2">Part 2 (Độc thoại)</option>
+                <option value="Part 3">Part 3 (Thảo luận)</option>
+                <option value="Full Test">Full Test</option>
+              </select>
+              <input 
+                type="text" 
+                className="q-input flex-1"
+                placeholder="Chủ đề / Đề bài (ví dụ: Describe a person...)"
+                value={topicStr}
+                onChange={e => setTopicStr(e.target.value)}
+              />
+            </div>
+            <button onClick={startTest} className="btn-primary w-full py-4 text-lg mt-2">
+              Bắt đầu bài thi <Play size={20} className="inline ml-1" fill="currentColor" />
+            </button>
+          </div>
+        )}
+
+        {/* Active Test Area */}
+        {hasStarted && (
+          <>
+            <div className="bg-[var(--card)] p-4 md:p-6 rounded-3xl border border-[var(--border)] shadow-sm flex flex-col items-center justify-center min-h-[250px] relative">
               
-              {!isRecording && transcript && (
-                <button onClick={submitTurn} className="h-16 px-6 rounded-full bg-emerald-500 text-white font-bold shadow-lg hover:scale-105 transition-all flex items-center gap-2">
-                  Gửi <Send size={18} />
-                </button>
+              {!isTestOver ? (
+                <div className="flex flex-col items-center gap-6 w-full py-8">
+                  <button 
+                    onClick={toggleRecording}
+                    disabled={isExaminerTyping}
+                    className={\`w-24 h-24 rounded-full flex items-center justify-center text-white shadow-2xl transition-all duration-300 \${
+                      isRecording 
+                        ? 'bg-red-500 hover:bg-red-600 scale-110 shadow-red-500/50' 
+                        : 'bg-gradient-to-br from-purple-500 to-indigo-600 hover:scale-105 shadow-purple-500/30'
+                    } disabled:opacity-50 disabled:hover:scale-100\`}
+                  >
+                    {isRecording ? <StopCircle size={40} fill="currentColor" /> : <Mic size={40} />}
+                  </button>
+                  
+                  <div className="text-center">
+                    {isRecording ? (
+                      <p className="text-red-500 font-bold text-lg animate-pulse">
+                        Đang ghi âm ({formatTime(recordingTime)})... Bấm để Gửi
+                      </p>
+                    ) : isExaminerTyping ? (
+                      <p className="text-[var(--text-muted)] font-medium text-lg flex items-center gap-2 justify-center">
+                        <Loader2 size={20} className="animate-spin" /> Giám khảo đang suy nghĩ...
+                      </p>
+                    ) : (
+                      <p className="text-[var(--text)] font-medium text-lg">
+                        Nhấn vào Micro để trả lời
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 flex flex-col items-center gap-4">
+                  <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 rounded-full flex items-center justify-center">
+                    <Loader2 size={40} className="animate-spin" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-[var(--text)]">Bài thi kết thúc</h3>
+                  <p className="text-[var(--text-muted)]">Hệ thống đang tự động chấm điểm và đánh giá câu trả lời của bạn...</p>
+                </div>
               )}
             </div>
-            <p className="text-xs text-[var(--text-muted)]">
-              {isRecording ? 'Nhấn để dừng ghi âm' : 'Nhấn nút Micro để trả lời Giám khảo'}
-            </p>
-          </div>
-        ) : (
-          <div className="text-center py-4">
-            <h3 className="font-bold text-[var(--text)] mb-2">Bài thi kết thúc</h3>
-            <p className="text-sm text-[var(--text-muted)] mb-4">Bạn đã hoàn thành bài thi. Nhấn nút &quot;Chấm điểm&quot; ở góc phải phía trên để xem kết quả.</p>
-          </div>
+
+            {/* Live Transcript Box */}
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-3xl overflow-hidden shadow-sm flex flex-col h-[300px]">
+              <div className="bg-[var(--bg)] px-4 py-3 border-b border-[var(--border)]">
+                <h3 className="text-xs font-bold text-[var(--text-muted)] tracking-wider uppercase">Văn bản bóc băng (Live Transcript)</h3>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-[var(--bg)]/50">
+                {messages.length === 0 && !transcript && (
+                  <p className="text-[var(--text-muted)] text-sm italic opacity-70">Chữ sẽ tự động hiện ở đây khi bạn hoặc giám khảo nói...</p>
+                )}
+                
+                {messages.map((m, i) => (
+                  <div key={i} className={\`flex w-full \${m.role === 'examiner' ? 'justify-start' : 'justify-end'}\`}>
+                    <div className={\`max-w-[85%] rounded-2xl p-4 \${m.role === 'examiner' ? 'bg-[var(--card)] border border-[var(--border)] text-[var(--text)]' : 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-md'}\`}>
+                      <p className="text-xs font-bold mb-1 opacity-70 uppercase tracking-wider">{m.role === 'examiner' ? 'Giám khảo' : 'Bạn'}</p>
+                      <p className="leading-relaxed text-sm whitespace-pre-wrap">{m.text}</p>
+                    </div>
+                  </div>
+                ))}
+                
+                {transcript && (
+                  <div className="flex w-full justify-end">
+                     <div className="max-w-[85%] rounded-2xl p-4 bg-gradient-to-br from-purple-500/80 to-indigo-600/80 text-white shadow-md">
+                       <p className="text-xs font-bold mb-1 opacity-70 uppercase tracking-wider">Đang nháp...</p>
+                       <p className="leading-relaxed text-sm whitespace-pre-wrap">{transcript.replace(/\\[\\.\\.\\.\\]$/, '')}</p>
+                     </div>
+                   </div>
+                )}
+                <div ref={chatEndRef} />
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center mt-2">
+              <button onClick={abortTest} className="px-4 py-2 text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors">
+                Kết thúc (Không lưu)
+              </button>
+              <button onClick={finishAndGrade} disabled={grading || messages.length === 0} className="btn-primary py-3 px-6 text-base font-bold shadow-xl shadow-purple-500/20 flex items-center gap-2 disabled:opacity-50">
+                {grading ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
+                Nộp bài & Chấm điểm
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>
