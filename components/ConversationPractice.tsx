@@ -162,22 +162,33 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
 
   const currentMsg = conversation[currentMsgIdx];
   const words = currentMsg.text.split(' ');
+  const spokenTextLower = transcript.toLowerCase().replace(/[^\w\s]/gi, '');
+  const spokenWordsArray = spokenTextLower.split(/\s+/).filter(Boolean);
 
   return (
-    <div className="flex flex-col gap-6 bg-[var(--card)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+    <div className="flex flex-col gap-6 bg-[var(--card)] p-6 rounded-2xl border border-[var(--border)] shadow-sm animate-fade-in">
       <ProgressBar current={currentMsgIdx} total={conversation.length} label={`Câu ${currentMsgIdx + 1}/${conversation.length}`} />
       
       <div className="flex items-start gap-4 mt-4">
-        <div className="w-10 h-10 rounded-full bg-[var(--primary-light)] text-[var(--primary)] font-bold flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-bold flex items-center justify-center flex-shrink-0 shadow-md">
           {currentMsg.speaker}
         </div>
         <div className="flex-1">
           <p className="text-xl font-medium text-[var(--text)] leading-relaxed">
             {words.map((w, i) => {
               const cleanWord = w.toLowerCase().replace(/[^\w]/g, '');
+              const isSpoken = spokenWordsArray.includes(cleanWord);
               const isError = errorWords.includes(cleanWord);
+              
+              let colorClass = "";
+              if (isSpoken) {
+                colorClass = "text-emerald-500 font-bold drop-shadow-sm transition-colors";
+              } else if (!isRecording && transcript && !isSpoken) {
+                colorClass = "text-red-500 font-bold underline decoration-red-200 decoration-2 underline-offset-4 transition-colors";
+              }
+
               return (
-                <span key={i} className={isError ? "text-red-500 font-bold underline decoration-red-200 decoration-2 underline-offset-4" : ""}>
+                <span key={i} className={colorClass}>
                   {w}{' '}
                 </span>
               );

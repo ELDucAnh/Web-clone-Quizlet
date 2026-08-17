@@ -88,7 +88,7 @@ function AIHistoryRoom() {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [writeFilter, setWriteFilter] = useState<'all' | 'task1' | 'task2'>('all');
   const [writeSearch, setWriteSearch] = useState('');
-  const [speakFilter, setSpeakFilter] = useState<'all' | 1 | 2 | 3>('all');
+  const [speakFilter, setSpeakFilter] = useState<any>('all');
   const [speakSearch, setSpeakSearch] = useState('');
 
   const gradedWritings = Object.values(writingSamples || {})
@@ -125,7 +125,7 @@ function AIHistoryRoom() {
         </div>
         <div className="flex flex-col gap-6">
           <div className="w-full bg-[var(--card)] rounded-2xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold mb-4">{isWriting ? selectedItem.title : `Speaking Part ${selectedItem.part}: ${selectedItem.topic || 'No topic'}`}</h2>
+            <h2 className="text-xl font-bold mb-4">{isWriting ? selectedItem.title : `Speaking ${selectedItem.part === 'Full Test' ? 'Full Test' : 'Part ' + selectedItem.part}: ${selectedItem.topic || 'No topic'}`}</h2>
             
             {isWriting && selectedItem.aiFeedback?.topicImage && (
               <div className="mb-4">
@@ -211,9 +211,9 @@ function AIHistoryRoom() {
 
         <div className="flex flex-col gap-3 mb-4">
           <div className="flex gap-2">
-            {(['all', 1, 2, 3] as const).map(f => (
+            {(['all', 1, 2, 3, 'Full Test'] as const).map(f => (
               <button key={f} onClick={() => setSpeakFilter(f)} className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${speakFilter === f ? 'bg-purple-600 text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
-                {f === 'all' ? 'Tất cả' : `Part ${f}`}
+                {f === 'all' ? 'Tất cả' : f === 'Full Test' ? 'Full Test' : `Part ${f}`}
               </button>
             ))}
           </div>
@@ -235,7 +235,7 @@ function AIHistoryRoom() {
                 )}
                 </div>
                 <div className="flex gap-2 text-xs text-gray-500">
-                  <span className="uppercase font-bold text-gray-400">Part {item.part}</span>
+                  <span className="uppercase font-bold text-gray-400">{item.part === 'Full Test' ? 'Full Test' : 'Part ' + item.part}</span>
                   <span>•</span>
                   <span>{new Date(item.createdAt).toLocaleDateString('vi-VN')}</span>
                 </div>
@@ -420,150 +420,362 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
 // ─── AI Speaking Room ───────────────────────────────────────────────────────────
 function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   const { createSpeakingSubmission } = useStore();
-  const [topic, setTopic] = useState('');
-  const [part, setPart] = useState<'1' | '2' | '3'>('2');
+  const [mode, setMode] = useState('Full Test');
+  const [topicStr, setTopicStr] = useState('');
+  const [hasStarted, setHasStarted] = useState(false);
+
+  const [messages, setMessages] = useState<any[]>([]);
   const [isRecording, setIsRecording] = useState(false);
+  const isRecordingRef = useRef(false);
   const [transcript, setTranscript] = useState('');
-  const [isGrading, setIsGrading] = useState(false);
+  const [isExaminerTyping, setIsExaminerTyping] = useState(false);
+  const [isTestOver, setIsTestOver] = useState(false);
+  const [grading, setGrading] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
   const [feedback, setFeedback] = useState<any>(null);
-  const [timer, setTimer] = useState(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
   const recognitionRef = useRef<any>(null);
+  const timerRef = useRef<any>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, []);
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, transcript]);
 
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
+    if (isRecording) {
+      timerRef.current = setInterval(() => setRecordingTime(prev => prev + 1), 1000);
+    } else {
+      clearInterval(timerRef.current);
+      setRecordingTime(0);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [isRecording]);
+
+  const initSpeechRecognition = () => {
+    if (recognitionRef.current) return recognitionRef.current;
+
+    if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
 
       recognition.onresult = (event: any) => {
-        let current = '';
-        for (let i = 0; i < event.results.length; i++) {
-          current += event.results[i][0].transcript;
+        let finalTrans = '';
+        let interimTrans = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTrans += event.results[i][0].transcript;
+          } else {
+            interimTrans += event.results[i][0].transcript;
+          }
         }
-        setTranscript(current);
+        if (finalTrans) {
+          setTranscript(prev => {
+            const cleanPrev = prev.replace(/\[\.\.\.\]$/, '').trim();
+            return cleanPrev + (cleanPrev ? ' ' : '') + finalTrans;
+          });
+        } else if (interimTrans) {
+          setTranscript(prev => {
+            const cleanPrev = prev.replace(/\[\.\.\.\]$/, '').trim();
+            return cleanPrev + (cleanPrev ? ' ' : '') + '[...]';
+          });
+        }
       };
-      recognition.onerror = (e: any) => console.error('Speech error:', e.error);
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        if (event.error !== 'no-speech') {
+          isRecordingRef.current = false;
+          setIsRecording(false);
+        }
+      };
+
+      recognition.onend = () => {
+        if (isRecordingRef.current) {
+          try {
+            recognition.start();
+          } catch (e) {}
+        }
+      };
+
       recognitionRef.current = recognition;
+      return recognition;
     }
-  }, []);
+    return null;
+  };
+
+  const speak = (text: string) => {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-US';
+    window.speechSynthesis.speak(utter);
+  };
+
+  const handleExaminerTurn = async (currentHistory: any[]) => {
+    setIsExaminerTyping(true);
+    try {
+      const res = await fetch('/api/ai/speaking-examiner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ history: currentHistory, mode, topic: topicStr || 'General IELTS Speaking' })
+      });
+      const data = await res.json();
+      
+      if (data.response) {
+        const examinerText = data.response.trim();
+        setMessages(prev => [...prev, { role: 'examiner', text: examinerText }]);
+        speak(examinerText);
+
+        if (examinerText.toLowerCase().includes("that is the end of the speaking test")) {
+          setIsTestOver(true);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsExaminerTyping(false);
+    }
+  };
+
+  const startTest = () => {
+    setHasStarted(true);
+    setFeedback(null);
+    handleExaminerTurn([]);
+  };
 
   const toggleRecording = () => {
-    if (!recognitionRef.current) return appAlert('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói (Hãy dùng Chrome).');
     if (isRecording) {
-      recognitionRef.current.stop();
+      isRecordingRef.current = false;
+      recognitionRef.current?.stop();
       setIsRecording(false);
-      if (timerRef.current) clearInterval(timerRef.current);
+
+      if (transcript.trim()) {
+        const cleanTrans = transcript.replace(/\[\.\.\.\]$/, '').trim();
+        const newMsg = { role: 'user', text: cleanTrans };
+        const newHistory = [...messages, newMsg];
+        setMessages(newHistory);
+        setTranscript('');
+        handleExaminerTurn(newHistory);
+      }
     } else {
+      const recognition = initSpeechRecognition();
+      if (!recognition) {
+        alert("Trình duyệt không hỗ trợ ghi âm.");
+        return;
+      }
+      isRecordingRef.current = true;
       setTranscript('');
-      setTimer(0);
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = setInterval(() => setTimer(t => t + 1), 1000);
-      recognitionRef.current.start();
+      try {
+        recognition.start();
+      } catch(e) {}
       setIsRecording(true);
+      window.speechSynthesis.cancel();
     }
   };
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const s = (seconds % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
+  const abortTest = () => {
+    window.speechSynthesis.cancel();
+    if (recognitionRef.current) {
+      isRecordingRef.current = false;
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    }
+    setHasStarted(false);
+    setMessages([]);
+    setTranscript('');
+    setIsTestOver(false);
   };
 
-  const handleGrade = async () => {
-    if (!transcript.trim()) return appAlert('Chưa có nội dung nói!');
-    setIsGrading(true);
-    setFeedback(null);
+  const finishAndGrade = async () => {
+    setGrading(true);
+    const fullTranscript = messages.map(m => m.role === 'examiner' ? `Examiner: ${m.text}` : `Candidate: ${m.text}`).join('\n\n');
+    
     try {
       const res = await fetch('/api/ai/speaking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ part: parseInt(part), topic, transcript })
+        body: JSON.stringify({
+          part: mode,
+          topic: topicStr,
+          transcript: fullTranscript
+        })
       });
       const data = await res.json();
-      if (res.ok) {
-        setFeedback(data);
+      
+      if (data.overallBand) {
+        let partNum: any = 1;
+        if (mode.includes('2')) partNum = 2;
+        else if (mode.includes('3')) partNum = 3;
+        else if (mode === 'Full Test') partNum = 'Full Test';
+
         createSpeakingSubmission({
-          part: parseInt(part) as any, topic, transcript, band: data.overallBand, aiFeedback: data
+          part: partNum,
+          topic: topicStr || 'General IELTS Speaking',
+          transcript: fullTranscript,
+          band: data.overallBand,
+          aiFeedback: data,
         });
-      } else {
-        appAlert(data.error);
+
+        const band8Text = data.improvedVersion?.band8Sample || (typeof data.improvedVersion === 'string' ? data.improvedVersion : null);
+        if (band8Text) {
+          createSpeakingSubmission({
+            part: partNum,
+            topic: `[Band 8] ${topicStr || 'Speaking Mock Test'}`,
+            transcript: band8Text,
+            band: 8.0,
+            aiFeedback: { },
+          });
+        }
+        
+        setFeedback(data);
+        setHasStarted(false);
+        setMessages([]);
+        setIsTestOver(false);
       }
-    } catch (e) {
-      appAlert('Lỗi kết nối tới AI!');
+    } catch (err) {
+      console.error(err);
+      alert('Có lỗi xảy ra khi chấm bài');
     } finally {
-      setIsGrading(false);
+      setGrading(false);
     }
   };
 
+  useEffect(() => {
+    if (isTestOver && !grading && messages.length > 0) {
+      finishAndGrade();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTestOver]);
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 animate-fade-in">
       <div className="w-full flex flex-col gap-4">
-        <div className="bg-[var(--card)] rounded-2xl p-5 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-            <div className="flex items-center gap-3">
+        {!hasStarted ? (
+          <div className="bg-[var(--card)] p-6 rounded-3xl border border-[var(--border)] shadow-sm flex flex-col gap-4">
+             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-100 to-fuchsia-50 text-purple-600 flex items-center justify-center shadow-sm border border-purple-100">
                 <Mic size={18} />
               </div>
               <h3 className="font-extrabold text-lg text-[var(--text)] whitespace-nowrap tracking-tight">Phòng thi Nói ảo</h3>
             </div>
-            <select className="q-input w-auto text-sm font-bold bg-[var(--bg)] border-none text-purple-700" value={part} onChange={e => setPart(e.target.value as any)}>
-              <option value="1">Part 1 (Phỏng vấn)</option>
-              <option value="2">Part 2 (Độc thoại)</option>
-              <option value="3">Part 3 (Thảo luận)</option>
-            </select>
-          </div>
-          
-          <input
-            className="w-full h-12 px-4 rounded-xl bg-[var(--bg)] border border-[var(--border)] font-sans font-medium text-[15px] outline-none focus:border-purple-300 focus:ring-4 focus:ring-purple-500/10 shadow-inner transition-all mb-5"
-            placeholder="Chủ đề / Đề bài (ví dụ: Describe a memorable trip...)"
-            value={topic} onChange={e => setTopic(e.target.value)}
-          />
-
-          <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-purple-200 rounded-2xl bg-purple-50/50 mb-4">
-            <button
-              onClick={toggleRecording}
-              className={`w-20 h-20 rounded-full flex items-center justify-center text-white shadow-xl transition-all transform hover:scale-105 ${
-                isRecording ? 'bg-red-500 animate-pulse' : 'bg-purple-600'
-              }`}
-            >
-              {isRecording ? <Square size={28} className="fill-current"/> : <Mic size={32} />}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <select 
+                className="q-input flex-shrink-0 sm:w-64 bg-purple-50 text-purple-900 border-purple-200 focus:ring-purple-500/20"
+                value={mode}
+                onChange={e => setMode(e.target.value)}
+              >
+                <option value="Part 1">Part 1 (Phỏng vấn)</option>
+                <option value="Part 2">Part 2 (Độc thoại)</option>
+                <option value="Part 3">Part 3 (Thảo luận)</option>
+                <option value="Full Test">Full Test</option>
+              </select>
+              <input 
+                type="text" 
+                className="q-input flex-1"
+                placeholder="Chủ đề / Đề bài (ví dụ: Describe a person...)"
+                value={topicStr}
+                onChange={e => setTopicStr(e.target.value)}
+              />
+            </div>
+            <button onClick={startTest} className="w-full py-4 text-lg mt-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-2xl shadow-lg transition-all transform hover:scale-[1.01] flex justify-center items-center gap-2">
+              Bắt đầu bài thi <Play size={20} fill="currentColor" />
             </button>
-            <p className="mt-4 font-semibold text-purple-900">
-              {isRecording ? `Đang ghi âm (${formatTime(timer)})... Bấm để Dừng` : timer > 0 ? `Thời gian: ${formatTime(timer)} - Bấm để ghi lại` : 'Bấm để Bắt đầu nói'}
-            </p>
           </div>
-
-          <div className="bg-[var(--bg)] rounded-xl p-5 min-h-[150px] shadow-inner border border-[var(--border)]">
-            <p className="text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-wider">Văn bản bóc băng (Live Transcript):</p>
-            {transcript ? (
-              <p className="text-[var(--text)] text-[15px] font-medium leading-relaxed">{transcript}</p>
+        ) : (
+          <div className="bg-[var(--card)] p-4 md:p-6 rounded-3xl border border-[var(--border)] shadow-sm flex flex-col items-center justify-center min-h-[250px] relative">
+            {!isTestOver ? (
+              <div className="flex flex-col items-center gap-6 w-full py-8">
+                <button 
+                  onClick={toggleRecording}
+                  disabled={isExaminerTyping}
+                  className={`w-24 h-24 rounded-full flex items-center justify-center text-white shadow-2xl transition-all duration-300 ${
+                    isRecording 
+                      ? 'bg-red-500 hover:bg-red-600 scale-110 shadow-red-500/50' 
+                      : 'bg-gradient-to-br from-purple-500 to-indigo-600 hover:scale-105 shadow-purple-500/30'
+                  } disabled:opacity-50 disabled:hover:scale-100`}
+                >
+                  {isRecording ? <Square size={36} fill="currentColor" /> : <Mic size={40} />}
+                </button>
+                
+                <div className="text-center">
+                  {isRecording ? (
+                    <p className="text-red-500 font-bold text-lg animate-pulse">
+                      Đang ghi âm ({formatTime(recordingTime)})... Bấm để Gửi
+                    </p>
+                  ) : isExaminerTyping ? (
+                    <p className="text-[var(--text-muted)] font-medium text-lg flex items-center gap-2 justify-center">
+                      <Loader2 size={20} className="animate-spin" /> Giám khảo đang suy nghĩ...
+                    </p>
+                  ) : (
+                    <p className="text-[var(--text)] font-medium text-lg">
+                      Nhấn vào Micro để trả lời
+                    </p>
+                  )}
+                </div>
+              </div>
             ) : (
-              <p className="text-[var(--text-faint)] italic text-[15px]">Chữ sẽ tự động hiện ở đây khi bạn nói...</p>
+              <div className="text-center py-12 flex flex-col items-center gap-4">
+                <div className="w-20 h-20 bg-purple-100 dark:bg-purple-900/30 text-purple-600 rounded-full flex items-center justify-center">
+                  <Loader2 size={40} className="animate-spin" />
+                </div>
+                <h3 className="text-2xl font-bold text-[var(--text)]">Bài thi kết thúc</h3>
+                <p className="text-[var(--text-muted)]">Hệ thống đang tự động chấm điểm...</p>
+              </div>
             )}
-          </div>
 
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={handleGrade}
-              disabled={isGrading || !transcript.trim() || isRecording}
-              className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 shadow-md disabled:opacity-50 transition-all"
-            >
-              {isGrading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
-              {isGrading ? 'AI đang phân tích...' : 'Nộp bài & Chấm điểm'}
-            </button>
+            <div className="w-full bg-[var(--bg)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-inner flex flex-col h-[300px] mt-6">
+              <div className="bg-white/50 px-4 py-3 border-b border-[var(--border)]">
+                <h3 className="text-xs font-bold text-[var(--text-muted)] tracking-wider uppercase">Văn bản bóc băng (Live Transcript)</h3>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+                {messages.length === 0 && !transcript && (
+                  <p className="text-[var(--text-muted)] text-sm italic opacity-70">Chữ sẽ tự động hiện ở đây khi bạn hoặc giám khảo nói...</p>
+                )}
+                
+                {messages.map((m, i) => (
+                  <div key={i} className={`flex w-full ${m.role === 'examiner' ? 'justify-start' : 'justify-end'}`}>
+                    <div className={`max-w-[85%] rounded-2xl p-4 ${m.role === 'examiner' ? 'bg-white border border-[var(--border)] text-[var(--text)] shadow-sm' : 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-md'}`}>
+                      <p className="text-xs font-bold mb-1 opacity-70 uppercase tracking-wider">{m.role === 'examiner' ? 'Giám khảo' : 'Bạn'}</p>
+                      <p className="leading-relaxed text-sm whitespace-pre-wrap">{m.text}</p>
+                    </div>
+                  </div>
+                ))}
+                
+                {transcript && (
+                  <div className="flex w-full justify-end">
+                     <div className="max-w-[85%] rounded-2xl p-4 bg-gradient-to-br from-purple-500/80 to-indigo-600/80 text-white shadow-md">
+                       <p className="text-xs font-bold mb-1 opacity-70 uppercase tracking-wider">Đang nháp...</p>
+                       <p className="leading-relaxed text-sm whitespace-pre-wrap">{transcript.replace(/\[\.\.\.\]$/, '')}</p>
+                     </div>
+                   </div>
+                )}
+                <div ref={chatEndRef} />
+              </div>
+            </div>
+
+            <div className="w-full flex justify-between items-center mt-6">
+              <button onClick={abortTest} className="px-4 py-2 text-red-500 font-bold hover:bg-red-50 rounded-xl transition-colors">
+                Kết thúc (Không lưu)
+              </button>
+              <button onClick={finishAndGrade} disabled={grading || messages.length === 0} className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-lg transition-all disabled:opacity-50 flex items-center gap-2">
+                {grading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+                Nộp bài & Chấm điểm
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="w-full">
-        <FeedbackPanel feedback={feedback} isGrading={isGrading} defaultDeckId={defaultDeckId} type="speaking" />
+        <FeedbackPanel feedback={feedback} isGrading={grading} defaultDeckId={defaultDeckId} type="speaking" />
       </div>
     </div>
   );

@@ -479,7 +479,7 @@ export default function SpeakingPage() {
   const { speakingTopics, isHydrated } = useStore();
   const [mounted, setMounted] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
-  const [filterPart, setFilterPart] = useState<'all' | 1 | 2 | 3>('all');
+  const [filterPart, setFilterPart] = useState<any>('all');
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<'topics' | 'history'>('topics');
   const [showTopicModal, setShowTopicModal] = useState(false);
@@ -510,9 +510,6 @@ export default function SpeakingPage() {
         </div>
         {!showCreate && activeTab === 'topics' && (
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button onClick={() => setShowTopicModal(true)} className="h-9 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-purple-500 to-indigo-600 text-white flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm">
-              <Play size={16} fill="currentColor" /> Thi Mock Test
-            </button>
             <button onClick={() => setShowCreate(true)} className="btn-primary">
               <Plus size={16} /> Thêm chủ đề
             </button>
@@ -605,13 +602,13 @@ export default function SpeakingPage() {
           />
         </div>
         <div className="tab-pills !mb-0 !border-b-0 gap-1 flex-shrink-0">
-          {(['all', 1, 2, 3] as const).map(p => (
+          {(['all', 1, 2, 3, 'Full Test'] as const).map(p => (
             <button
               key={p}
               onClick={() => setFilterPart(p)}
               className={`tab-pill ${filterPart === p ? 'active' : ''}`}
             >
-              {p === 'all' ? `Tất cả (${all.length})` : `Part ${p} (${all.filter(t => t.part === p).length})`}
+              {p === 'all' ? `Tất cả (${all.length})` : p === 'Full Test' ? `Full Test (${all.filter(t => t.part === p).length})` : `Part ${p} (${all.filter(t => t.part === p).length})`}
             </button>
           ))}
         </div>
@@ -645,9 +642,10 @@ export default function SpeakingPage() {
 
       {activeTab === 'history' && (
         <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3">
           {Object.values(useStore.getState().speakingSubmissions || {}).length === 0 ? (
             <div className="text-center py-12 text-[var(--text-muted)] border border-[var(--border)] border-dashed rounded-2xl">
-              Chưa có bài thi nào. Hãy bấm &quot;Thi Mock Test&quot; để bắt đầu!
+              Chưa có bài thi nào. Hãy vào AI Training Room để bắt đầu!
             </div>
           ) : (
             Object.values(useStore.getState().speakingSubmissions || {}).sort((a, b) => b.createdAt - a.createdAt).map(sub => (
