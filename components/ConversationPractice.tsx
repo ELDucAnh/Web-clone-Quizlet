@@ -76,10 +76,14 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
-        if (event.error === 'not-allowed') {
+        if (event.error !== 'no-speech') {
           isRecordingRef.current = false;
           setIsRecording(false);
-          alert('Trình duyệt đã chặn Micro. Vui lòng cấp quyền trong cài đặt trình duyệt!');
+          if (event.error === 'not-allowed') {
+            alert('Trình duyệt đã chặn Micro. Vui lòng cấp quyền trong cài đặt trình duyệt!');
+          } else {
+            alert(`Lỗi Micro (${event.error}). Khuyên dùng trình duyệt Google Chrome và kiểm tra lại Micro!`);
+          }
         }
       };
 
