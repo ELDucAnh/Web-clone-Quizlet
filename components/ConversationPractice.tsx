@@ -18,6 +18,7 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
   const [conversation, setConversation] = useState<Message[]>([]);
   const [currentMsgIdx, setCurrentMsgIdx] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
+  const isRecordingRef = useRef(false);
   const [transcript, setTranscript] = useState('');
   const [errorWords, setErrorWords] = useState<string[]>([]);
   const recognitionRef = useRef<any>(null);
@@ -52,19 +53,41 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
 
       recognition.onresult = (event: any) => {
         let finalTrans = '';
+        let interimTrans = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
             finalTrans += event.results[i][0].transcript;
+          } else {
+            interimTrans += event.results[i][0].transcript;
           }
         }
         if (finalTrans) {
-          setTranscript(prev => prev + ' ' + finalTrans);
+          setTranscript(prev => {
+            const cleanPrev = prev.replace(/\[\.\.\.\]$/, '').trim();
+            return cleanPrev + (cleanPrev ? ' ' : '') + finalTrans;
+          });
+        } else if (interimTrans) {
+          setTranscript(prev => {
+            const cleanPrev = prev.replace(/\[\.\.\.\]$/, '').trim();
+            return cleanPrev + (cleanPrev ? ' ' : '') + '[...]';
+          });
         }
       };
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
-        setIsRecording(false);
+        if (event.error !== 'no-speech') {
+          isRecordingRef.current = false;
+          setIsRecording(false);
+        }
+      };
+
+      recognition.onend = () => {
+        if (isRecordingRef.current) {
+          try {
+            recognition.start();
+          } catch (e) {}
+        }
       };
 
       recognitionRef.current = recognition;
@@ -73,10 +96,12 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
 
   const toggleRecording = () => {
     if (isRecording) {
+      isRecordingRef.current = false;
       recognitionRef.current?.stop();
       setIsRecording(false);
       checkPronunciation();
     } else {
+      isRecordingRef.current = true;
       setTranscript('');
       setErrorWords([]);
       recognitionRef.current?.start();
@@ -167,10 +192,17 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
           {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
         </button>
 
+        {isRecording && transcript && (
+          <div className="w-full bg-[var(--bg)] p-4 rounded-xl text-center">
+            <p className="text-sm text-[var(--text-muted)] mb-1">Bạn đang đọc:</p>
+            <p className="text-[var(--text)] font-medium">&quot;{transcript.replace(/\[\.\.\.\]$/, '')}&quot;</p>
+          </div>
+        )}
+
         {transcript && !isRecording && (
           <div className="w-full bg-[var(--bg)] p-4 rounded-xl text-center">
             <p className="text-sm text-[var(--text-muted)] mb-1">Bạn đã đọc:</p>
-            <p className="text-[var(--text)] font-medium">&quot;{transcript}&quot;</p>
+            <p className="text-[var(--text)] font-medium">&quot;{transcript.replace(/\[\.\.\.\]$/, '')}&quot;</p>
             {errorWords.length > 0 ? (
               <p className="text-red-500 text-sm mt-2 font-bold"><X size={14} className="inline mr-1"/> Phát âm sai hoặc thiếu từ bị bôi đỏ</p>
             ) : (

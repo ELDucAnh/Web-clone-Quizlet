@@ -481,6 +481,9 @@ export default function SpeakingPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [filterPart, setFilterPart] = useState<'all' | 1 | 2 | 3>('all');
   const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<'topics' | 'history'>('topics');
+  const [showTopicModal, setShowTopicModal] = useState(false);
+  const [customTopic, setCustomTopic] = useState('');
 
   useEffect(() => { setMounted(true); }, []);
   if (!mounted || !isHydrated) return <LoadingScreen />;
@@ -502,14 +505,14 @@ export default function SpeakingPage() {
             <Mic size={24} className="text-[var(--primary)]" /> Chủ đề Speaking
           </h1>
           <p className="text-[var(--text-muted)] text-sm mt-1">
-            Kho chủ đề Part 1, 2, 3 kèm câu hỏi, bài mẫu và từ khóa. Bôi đen từ để thêm vào học phần.
+            Thi thử IELTS Speaking Voice-to-Voice với AI Giám khảo.
           </p>
         </div>
-        {!showCreate && (
+        {!showCreate && activeTab === 'topics' && (
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Link href="/speaking/mock-test?mode=Full Test" className="h-9 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-purple-500 to-indigo-600 text-white flex items-center gap-2 hover:opacity-90 transition-opacity">
-              <Play size={16} fill="currentColor" /> Thi Full Test
-            </Link>
+            <button onClick={() => setShowTopicModal(true)} className="h-9 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-purple-500 to-indigo-600 text-white flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm">
+              <Play size={16} fill="currentColor" /> Thi Mock Test
+            </button>
             <button onClick={() => setShowCreate(true)} className="btn-primary">
               <Plus size={16} /> Thêm chủ đề
             </button>
@@ -517,7 +520,55 @@ export default function SpeakingPage() {
         )}
       </div>
 
-      {/* ── Create form ──────────────────────────────── */}
+      {/* ── Custom Topic Modal ───────────────────────── */}
+      {showTopicModal && (
+        <>
+          <div className="fixed inset-0 bg-[var(--bg)]/80 backdrop-blur-sm z-40" onClick={() => setShowTopicModal(false)} />
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[var(--card)] w-full max-w-sm rounded-2xl border border-[var(--border)] shadow-2xl z-50 p-6 flex flex-col gap-4 animate-scale-in">
+            <h3 className="text-xl font-bold text-[var(--text)]">Bắt đầu thi thử</h3>
+            <p className="text-sm text-[var(--text-muted)]">Nhập chủ đề bạn muốn thi (ví dụ: Environment, Technology, Education...) hoặc để trống để AI tự chọn chủ đề ngẫu nhiên.</p>
+            <input
+              type="text"
+              autoFocus
+              placeholder="Chủ đề thi..."
+              className="q-input mt-2"
+              value={customTopic}
+              onChange={e => setCustomTopic(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  window.location.href = `/speaking/mock-test?mode=Full Test&customTopic=${encodeURIComponent(customTopic)}`;
+                }
+              }}
+            />
+            <div className="flex gap-2 justify-end mt-2">
+              <button onClick={() => setShowTopicModal(false)} className="btn-ghost">Hủy</button>
+              <Link href={`/speaking/mock-test?mode=Full Test&customTopic=${encodeURIComponent(customTopic)}`} className="btn-primary">
+                Bắt đầu thi <Play size={14} fill="currentColor" />
+              </Link>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Tabs ─────────────────────────────────────── */}
+      <div className="flex border-b border-[var(--border)]">
+        <button
+          className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'topics' ? 'border-[var(--primary)] text-[var(--primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+          onClick={() => setActiveTab('topics')}
+        >
+          Kho chủ đề ({all.length})
+        </button>
+        <button
+          className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'history' ? 'border-[var(--primary)] text-[var(--primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+          onClick={() => setActiveTab('history')}
+        >
+          Lịch sử thi ({Object.keys(useStore.getState().speakingSubmissions || {}).length})
+        </button>
+      </div>
+
+      {activeTab === 'topics' && (
+        <>
+          {/* ── Create form ──────────────────────────────── */}
       {showCreate && <CreateForm onClose={() => setShowCreate(false)} />}
 
       {/* ── Stats ────────────────────────────────────── */}
@@ -587,6 +638,37 @@ export default function SpeakingPage() {
       ) : (
         <div className="flex flex-col gap-3">
           {filtered.map(t => <TopicCard key={t.id} topic={t} />)}
+        </div>
+      )}
+      </>
+      )}
+
+      {activeTab === 'history' && (
+        <div className="flex flex-col gap-3">
+          {Object.values(useStore.getState().speakingSubmissions || {}).length === 0 ? (
+            <div className="text-center py-12 text-[var(--text-muted)] border border-[var(--border)] border-dashed rounded-2xl">
+              Chưa có bài thi nào. Hãy bấm &quot;Thi Mock Test&quot; để bắt đầu!
+            </div>
+          ) : (
+            Object.values(useStore.getState().speakingSubmissions || {}).sort((a, b) => b.createdAt - a.createdAt).map(sub => (
+              <Link href={`/speaking/report/${sub.id}`} key={sub.id} className="bg-[var(--card)] p-4 rounded-xl border border-[var(--border)] hover:border-[var(--primary)] transition-colors flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-[var(--text)]">{sub.topic || 'General Topic'}</h4>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">{new Date(sub.createdAt).toLocaleString('vi-VN')} · Part {sub.part}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {sub.band ? (
+                    <div className="px-3 py-1 bg-[var(--primary-light)] text-[var(--primary)] rounded-lg font-bold text-sm">
+                      Band {sub.band}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-[var(--text-muted)] italic">Đang chấm...</div>
+                  )}
+                  <ChevronRight size={16} className="text-[var(--text-muted)]" />
+                </div>
+              </Link>
+            ))
+          )}
         </div>
       )}
     </div>

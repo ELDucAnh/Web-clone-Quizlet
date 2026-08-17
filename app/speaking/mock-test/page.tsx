@@ -15,13 +15,15 @@ export default function MockTestPage() {
   const router = useRouter();
   const mode = searchParams.get('mode') || 'Full Test';
   const topicId = searchParams.get('topicId') || '';
+  const customTopic = searchParams.get('customTopic') || '';
 
   const { speakingTopics, createSpeakingSubmission } = useStore();
   const topicObj = speakingTopics[topicId];
-  const topicStr = topicObj ? topicObj.topic : 'General IELTS Speaking';
+  const topicStr = customTopic || (topicObj ? topicObj.topic : 'General IELTS Speaking');
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [isRecording, setIsRecording] = useState(false);
+  const isRecordingRef = useRef(false);
   const [transcript, setTranscript] = useState('');
   const [isExaminerTyping, setIsExaminerTyping] = useState(false);
   const [isTestOver, setIsTestOver] = useState(false);
@@ -53,19 +55,42 @@ export default function MockTestPage() {
 
       recognition.onresult = (event: any) => {
         let finalTrans = '';
+        let interimTrans = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
             finalTrans += event.results[i][0].transcript;
+          } else {
+            interimTrans += event.results[i][0].transcript;
           }
         }
         if (finalTrans) {
-          setTranscript(prev => prev + ' ' + finalTrans);
+          setTranscript(prev => {
+            const cleanPrev = prev.replace(/\[\.\.\.\]$/, '').trim();
+            return cleanPrev + (cleanPrev ? ' ' : '') + finalTrans;
+          });
+        } else if (interimTrans) {
+          // Just to show something is happening
+          setTranscript(prev => {
+            const cleanPrev = prev.replace(/\[\.\.\.\]$/, '').trim();
+            return cleanPrev + (cleanPrev ? ' ' : '') + '[...]';
+          });
         }
       };
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
-        setIsRecording(false);
+        if (event.error !== 'no-speech') {
+          isRecordingRef.current = false;
+          setIsRecording(false);
+        }
+      };
+
+      recognition.onend = () => {
+        if (isRecordingRef.current) {
+          try {
+            recognition.start();
+          } catch (e) {}
+        }
       };
 
       recognitionRef.current = recognition;
@@ -108,9 +133,11 @@ export default function MockTestPage() {
 
   const toggleRecording = () => {
     if (isRecording) {
+      isRecordingRef.current = false;
       recognitionRef.current?.stop();
       setIsRecording(false);
     } else {
+      isRecordingRef.current = true;
       setTranscript('');
       recognitionRef.current?.start();
       setIsRecording(true);
@@ -202,7 +229,7 @@ export default function MockTestPage() {
           <div className="flex w-full justify-end">
              <div className="max-w-[80%] rounded-2xl p-4 bg-[var(--primary)] text-white opacity-80">
                <p className="text-sm font-semibold mb-1 opacity-70 uppercase tracking-wider">Nháp</p>
-               <p className="leading-relaxed">{transcript}</p>
+               <p className="leading-relaxed">{transcript.replace(/\[\.\.\.\]$/, '')}</p>
              </div>
            </div>
         )}

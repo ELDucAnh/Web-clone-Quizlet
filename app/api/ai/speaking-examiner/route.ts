@@ -31,7 +31,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing conversation history' }, { status: 400 });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const fallbackModels = [
+      'gemini-flash-latest',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-pro-latest'
+    ];
+
     const prompt = SYSTEM_PROMPT.replace('{MODE}', mode || 'Full Test').replace('{TOPIC}', topic || 'Random');
 
     const formattedHistory = history.map((msg: any) => ({
@@ -39,20 +45,36 @@ export async function POST(req: NextRequest) {
       parts: [{ text: msg.text }]
     }));
 
-    const chat = model.startChat({
-      history: [
-        { role: 'user', parts: [{ text: prompt }] },
-        { role: 'model', parts: [{ text: "Understood. I am ready to start the IELTS Speaking test." }] },
-        ...formattedHistory.slice(0, -1) // All except the latest user message
-      ],
-    });
-
     let latestMessage = "Hello, examiner.";
     if (formattedHistory.length > 0) {
       latestMessage = history[history.length - 1].text;
     }
 
-    const result = await chat.sendMessage(latestMessage);
+    let result;
+    let lastError;
+
+    for (const modelName of fallbackModels) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const chat = model.startChat({
+          history: [
+            { role: 'user', parts: [{ text: prompt }] },
+            { role: 'model', parts: [{ text: "Understood. I am ready to start the IELTS Speaking test." }] },
+            ...formattedHistory.slice(0, -1) // All except the latest user message
+          ],
+        });
+        result = await chat.sendMessage(latestMessage);
+        if (result) break;
+      } catch (e: any) {
+        lastError = e;
+        console.warn(`Model ${modelName} failed: ${e.message}`);
+      }
+    }
+
+    if (!result) {
+      throw lastError || new Error('All models failed');
+    }
+
     const responseText = result.response.text();
 
     return NextResponse.json({ response: responseText });
