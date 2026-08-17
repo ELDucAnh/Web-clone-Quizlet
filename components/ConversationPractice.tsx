@@ -44,8 +44,6 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
   }, [cards]);
 
   const initSpeechRecognition = () => {
-    if (recognitionRef.current) return recognitionRef.current;
-
     if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
@@ -78,9 +76,10 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
-        if (event.error !== 'no-speech') {
+        if (event.error === 'not-allowed') {
           isRecordingRef.current = false;
           setIsRecording(false);
+          alert('Trình duyệt đã chặn Micro. Vui lòng cấp quyền trong cài đặt trình duyệt!');
         }
       };
 
@@ -88,7 +87,9 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
         if (isRecordingRef.current) {
           try {
             recognition.start();
-          } catch (e) {}
+          } catch (e) {
+            console.error('Failed to restart recognition', e);
+          }
         }
       };
 
@@ -99,12 +100,17 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
   };
 
   const toggleRecording = () => {
+    window.speechSynthesis.cancel();
     if (isRecording) {
       isRecordingRef.current = false;
       recognitionRef.current?.stop();
       setIsRecording(false);
       checkPronunciation();
     } else {
+      // Recreate instance every time to avoid stale state bugs in Chrome/Edge
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch(e) {}
+      }
       const recognition = initSpeechRecognition();
       if (!recognition) {
         alert("Trình duyệt của bạn không hỗ trợ thu âm.");
@@ -112,8 +118,11 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
       }
       isRecordingRef.current = true;
       setTranscript('');
-      setErrorWords([]);
-      recognition.start();
+      try {
+        recognition.start();
+      } catch(e) {
+        console.error('Start error', e);
+      }
       setIsRecording(true);
     }
   };

@@ -453,8 +453,6 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   }, [isRecording]);
 
   const initSpeechRecognition = () => {
-    if (recognitionRef.current) return recognitionRef.current;
-
     if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
@@ -487,9 +485,10 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
-        if (event.error !== 'no-speech') {
+        if (event.error === 'not-allowed') {
           isRecordingRef.current = false;
           setIsRecording(false);
+          alert('Trình duyệt đã chặn Micro. Vui lòng cấp quyền trong cài đặt trình duyệt!');
         }
       };
 
@@ -497,7 +496,9 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
         if (isRecordingRef.current) {
           try {
             recognition.start();
-          } catch (e) {}
+          } catch (e) {
+            console.error('Failed to restart recognition', e);
+          }
         }
       };
 
@@ -546,6 +547,7 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
   };
 
   const toggleRecording = () => {
+    window.speechSynthesis.cancel();
     if (isRecording) {
       isRecordingRef.current = false;
       recognitionRef.current?.stop();
@@ -560,6 +562,9 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
         handleExaminerTurn(newHistory);
       }
     } else {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch(e) {}
+      }
       const recognition = initSpeechRecognition();
       if (!recognition) {
         alert("Trình duyệt không hỗ trợ ghi âm.");
@@ -569,9 +574,10 @@ function AISpeakingRoom({ defaultDeckId }: { defaultDeckId: string }) {
       setTranscript('');
       try {
         recognition.start();
-      } catch(e) {}
+      } catch(e) {
+        console.error('Start error', e);
+      }
       setIsRecording(true);
-      window.speechSynthesis.cancel();
     }
   };
 

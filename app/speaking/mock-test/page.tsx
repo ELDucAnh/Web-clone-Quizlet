@@ -51,8 +51,6 @@ export default function MockTestPage() {
   }, [isRecording]);
 
   const initSpeechRecognition = () => {
-    if (recognitionRef.current) return recognitionRef.current;
-
     if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
@@ -85,9 +83,10 @@ export default function MockTestPage() {
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
-        if (event.error !== 'no-speech') {
+        if (event.error === 'not-allowed') {
           isRecordingRef.current = false;
           setIsRecording(false);
+          alert('Trình duyệt đã chặn Micro. Vui lòng cấp quyền trong cài đặt trình duyệt!');
         }
       };
 
@@ -95,7 +94,9 @@ export default function MockTestPage() {
         if (isRecordingRef.current) {
           try {
             recognition.start();
-          } catch (e) {}
+          } catch (e) {
+            console.error('Failed to restart recognition', e);
+          }
         }
       };
 
@@ -143,8 +144,8 @@ export default function MockTestPage() {
   };
 
   const toggleRecording = () => {
+    window.speechSynthesis.cancel();
     if (isRecording) {
-      // STOP recording and SEND
       isRecordingRef.current = false;
       recognitionRef.current?.stop();
       setIsRecording(false);
@@ -158,7 +159,9 @@ export default function MockTestPage() {
         handleExaminerTurn(newHistory);
       }
     } else {
-      // START recording
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch(e) {}
+      }
       const recognition = initSpeechRecognition();
       if (!recognition) {
         alert("Trình duyệt không hỗ trợ ghi âm.");
@@ -168,10 +171,10 @@ export default function MockTestPage() {
       setTranscript('');
       try {
         recognition.start();
-      } catch(e) {}
+      } catch(e) {
+        console.error('Start error', e);
+      }
       setIsRecording(true);
-      // Stop examiner from speaking if user interrupts
-      window.speechSynthesis.cancel();
     }
   };
 
@@ -205,17 +208,29 @@ export default function MockTestPage() {
       const data = await res.json();
       
       if (data.overallBand) {
-        let partNum = 1;
+        let partNum: any = 1;
         if (mode.includes('2')) partNum = 2;
-        if (mode.includes('3')) partNum = 3;
+        else if (mode.includes('3')) partNum = 3;
+        else if (mode === 'Full Test') partNum = 'Full Test';
 
         const subId = createSpeakingSubmission({
-          part: partNum as 1|2|3,
+          part: partNum,
           topic: topicStr || 'General IELTS Speaking',
           transcript: fullTranscript,
           band: data.overallBand,
           aiFeedback: data,
         });
+
+        const band8Text = data.improvedVersion?.band8Sample || (typeof data.improvedVersion === 'string' ? data.improvedVersion : null);
+        if (band8Text) {
+          createSpeakingSubmission({
+            part: partNum,
+            topic: `[Band 8] ${topicStr || 'Speaking Mock Test'}`,
+            transcript: band8Text,
+            band: 8.0,
+            aiFeedback: { },
+          });
+        }
         
         router.push(`/speaking/report/${subId}`);
       }
