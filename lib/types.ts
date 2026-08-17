@@ -51,7 +51,7 @@ export interface CardProgress {
 export interface StudySession {
   id: string;
   deckId: string;
-  mode: 'flashcard' | 'learn' | 'match' | 'gravity' | 'review' | 'test';
+  mode: 'flashcard' | 'learn' | 'match' | 'gravity' | 'review' | 'test' | 'conversation';
   startedAt: number;
   completedAt?: number;
   score?: number;
