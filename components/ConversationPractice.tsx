@@ -170,7 +170,7 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
         {transcript && !isRecording && (
           <div className="w-full bg-[var(--bg)] p-4 rounded-xl text-center">
             <p className="text-sm text-[var(--text-muted)] mb-1">Bạn đã đọc:</p>
-            <p className="text-[var(--text)] font-medium">"{transcript}"</p>
+            <p className="text-[var(--text)] font-medium">&quot;{transcript}&quot;</p>
             {errorWords.length > 0 ? (
               <p className="text-red-500 text-sm mt-2 font-bold"><X size={14} className="inline mr-1"/> Phát âm sai hoặc thiếu từ bị bôi đỏ</p>
             ) : (

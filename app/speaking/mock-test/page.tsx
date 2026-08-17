@@ -40,6 +40,7 @@ export default function MockTestPage() {
     if (messages.length === 0) {
       handleExaminerTurn([]);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -242,7 +243,7 @@ export default function MockTestPage() {
         ) : (
           <div className="text-center py-4">
             <h3 className="font-bold text-[var(--text)] mb-2">Bài thi kết thúc</h3>
-            <p className="text-sm text-[var(--text-muted)] mb-4">Bạn đã hoàn thành bài thi. Nhấn nút "Chấm điểm" ở góc phải phía trên để xem kết quả.</p>
+            <p className="text-sm text-[var(--text-muted)] mb-4">Bạn đã hoàn thành bài thi. Nhấn nút &quot;Chấm điểm&quot; ở góc phải phía trên để xem kết quả.</p>
           </div>
         )}
       </div>

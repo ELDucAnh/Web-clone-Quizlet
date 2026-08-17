@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -152,7 +152,7 @@ export default function SetDetailPage() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  const rawIds = cardsByDeck[deckId] ?? [];
+  const rawIds = useMemo(() => cardsByDeck[deckId] ?? [], [cardsByDeck, deckId]);
 
   useEffect(() => {
     setOrderedIds(rawIds);

@@ -7,6 +7,7 @@ import { useStore } from '@/lib/store';
 import { shuffleArray } from '@/lib/shuffle';
 import { FlashCard, FlashCardNav } from '@/components/FlashCard';
 import { MultipleChoice } from '@/components/MultipleChoice';
+import { TypeAnswer } from '@/components/TypeAnswer';
 import { MatchGame } from '@/components/MatchGame';
 import { GravityGame } from '@/components/GravityGame';
 import { ConversationPractice } from '@/components/ConversationPractice';
