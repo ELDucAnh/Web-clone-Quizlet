@@ -160,7 +160,7 @@ export interface SpeakingTopic {
 
 export interface SpeakingSubmission {
   id: string;
-  part: 1 | 2 | 3;
+  part: 1 | 2 | 3 | 'Full Test';
   topic: string;
   transcript: string;
   band?: number;
