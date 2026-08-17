@@ -190,7 +190,7 @@ export default function MockTestPage() {
 
   const finishAndGrade = async () => {
     setGrading(true);
-    const fullTranscript = messages.map(m => m.role === 'examiner' ? \`Examiner: \${m.text}\` : \`Candidate: \${m.text}\`).join('\\n\\n');
+    const fullTranscript = messages.map(m => m.role === 'examiner' ? `Examiner: ${m.text}` : `Candidate: ${m.text}`).join('\n\n');
     
     try {
       const res = await fetch('/api/ai/speaking', {
@@ -217,7 +217,7 @@ export default function MockTestPage() {
           aiFeedback: data,
         });
         
-        router.push(\`/speaking/report/\${subId}\`);
+        router.push(`/speaking/report/${subId}`);
       }
     } catch (err) {
       console.error(err);
@@ -237,7 +237,7 @@ export default function MockTestPage() {
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
     const s = (secs % 60).toString().padStart(2, '0');
-    return \`\${m}:\${s}\`;
+    return `${m}:${s}`;
   };
 
   return (
@@ -292,11 +292,11 @@ export default function MockTestPage() {
                   <button 
                     onClick={toggleRecording}
                     disabled={isExaminerTyping}
-                    className={\`w-24 h-24 rounded-full flex items-center justify-center text-white shadow-2xl transition-all duration-300 \${
+                    className={`w-24 h-24 rounded-full flex items-center justify-center text-white shadow-2xl transition-all duration-300 ${
                       isRecording 
                         ? 'bg-red-500 hover:bg-red-600 scale-110 shadow-red-500/50' 
                         : 'bg-gradient-to-br from-purple-500 to-indigo-600 hover:scale-105 shadow-purple-500/30'
-                    } disabled:opacity-50 disabled:hover:scale-100\`}
+                    } disabled:opacity-50 disabled:hover:scale-100`}
                   >
                     {isRecording ? <StopCircle size={40} fill="currentColor" /> : <Mic size={40} />}
                   </button>
@@ -339,8 +339,8 @@ export default function MockTestPage() {
                 )}
                 
                 {messages.map((m, i) => (
-                  <div key={i} className={\`flex w-full \${m.role === 'examiner' ? 'justify-start' : 'justify-end'}\`}>
-                    <div className={\`max-w-[85%] rounded-2xl p-4 \${m.role === 'examiner' ? 'bg-[var(--card)] border border-[var(--border)] text-[var(--text)]' : 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-md'}\`}>
+                  <div key={i} className={`flex w-full ${m.role === 'examiner' ? 'justify-start' : 'justify-end'}`}>
+                    <div className={`max-w-[85%] rounded-2xl p-4 ${m.role === 'examiner' ? 'bg-[var(--card)] border border-[var(--border)] text-[var(--text)]' : 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-md'}`}>
                       <p className="text-xs font-bold mb-1 opacity-70 uppercase tracking-wider">{m.role === 'examiner' ? 'Giám khảo' : 'Bạn'}</p>
                       <p className="leading-relaxed text-sm whitespace-pre-wrap">{m.text}</p>
                     </div>
@@ -351,7 +351,7 @@ export default function MockTestPage() {
                   <div className="flex w-full justify-end">
                      <div className="max-w-[85%] rounded-2xl p-4 bg-gradient-to-br from-purple-500/80 to-indigo-600/80 text-white shadow-md">
                        <p className="text-xs font-bold mb-1 opacity-70 uppercase tracking-wider">Đang nháp...</p>
-                       <p className="leading-relaxed text-sm whitespace-pre-wrap">{transcript.replace(/\\[\\.\\.\\.\\]$/, '')}</p>
+                       <p className="leading-relaxed text-sm whitespace-pre-wrap">{transcript.replace(/\[\.\.\.\]$/, '')}</p>
                      </div>
                    </div>
                 )}
