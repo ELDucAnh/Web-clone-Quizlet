@@ -145,12 +145,11 @@ export default function MockTestPage() {
       if (data.overallBand) {
         // Save submission
         const subId = createSpeakingSubmission({
-          topicId: topicId || 'mock',
-          audioUrl: '',
+          part: mode.includes('1') ? 1 : mode.includes('2') ? 2 : mode.includes('3') ? 3 : 1, // Defaulting to 1 for Full Test or parsing from mode string if needed
+          topic: topicStr,
           transcript: fullTranscript,
-          duration: 0,
           band: data.overallBand,
-          feedback: data,
+          aiFeedback: data,
         });
         
         router.push(`/speaking/report/${subId}`);
