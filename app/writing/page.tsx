@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { PenLine, Plus, Trash2, Edit2, X, ChevronDown, ChevronRight, Check, Search, Highlighter, FolderPlus, BookOpen, Sparkles, Loader2 } from 'lucide-react';
+import { PenLine, Plus, Trash2, Edit2, X, ChevronDown, ChevronRight, Check, Search, Highlighter, FolderPlus, BookOpen, Sparkles, Loader2, Folder, MoreVertical, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import type { WritingTask, WritingSample } from '@/lib/types';
@@ -104,10 +104,11 @@ function HighlightVocabPopup({
 // -- Removed useHighlight hook --
 
 // ── Sample Card ────────────────────────────────────────────────────────
-function SampleCard({ sample }: { sample: WritingSample }) {
-  const { deleteWritingSample, updateWritingSample, addCardToDeck, createDeck } = useStore();
+function SampleCard({ sample, currentFolderId }: { sample: WritingSample; currentFolderId?: string }) {
+  const { deleteWritingSample, updateWritingSample, addCardToDeck, createDeck, writingFolders, moveWritingSampleToFolder } = useStore();
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [showFolderMenu, setShowFolderMenu] = useState(false);
   const [editData, setEditData] = useState({
     title: sample.title,
     topic: sample.topic,
@@ -346,6 +347,43 @@ function SampleCard({ sample }: { sample: WritingSample }) {
               </button>
             )}
             
+            {/* Move to folder */}
+            <div className="relative">
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowFolderMenu(!showFolderMenu); }}
+                className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors py-1 px-2 rounded-lg hover:bg-[var(--primary-light)]"
+              >
+                <FolderOpen size={12} /> {sample.folderId ? 'Đổi thư mục' : 'Thêm vào thư mục'}
+              </button>
+              {showFolderMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setShowFolderMenu(false); }} />
+                  <div className="absolute right-0 top-8 z-20 w-48 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-xl py-1 overflow-hidden" onClick={e => e.stopPropagation()}>
+                    <div className="px-3 py-1.5 text-xs font-bold text-[var(--text-muted)] bg-[var(--bg)] border-b border-[var(--border)]">
+                      Chọn thư mục
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                      <button
+                        onClick={() => { moveWritingSampleToFolder(sample.id, undefined); setShowFolderMenu(false); }}
+                        className={`w-full text-left px-3 py-2 text-xs hover:bg-[var(--bg)] ${!sample.folderId ? 'font-bold text-[var(--primary)]' : ''}`}
+                      >
+                        [Không có thư mục]
+                      </button>
+                      {Object.values(writingFolders).map(f => (
+                        <button
+                          key={f.id}
+                          onClick={() => { moveWritingSampleToFolder(sample.id, f.id); setShowFolderMenu(false); }}
+                          className={`w-full text-left px-3 py-2 text-xs hover:bg-[var(--bg)] truncate ${sample.folderId === f.id ? 'font-bold text-[var(--primary)]' : ''}`}
+                        >
+                          <Folder size={12} className="inline mr-1" /> {f.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
             <button
               onClick={(e) => { e.stopPropagation(); setEditing(true); setExpanded(true); }}
               className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors py-1 px-2 rounded-lg hover:bg-[var(--primary-light)] ml-auto"
@@ -641,29 +679,103 @@ function CreateForm({ onClose }: { onClose: () => void }) {
 
 // ── Main Page ──────────────────────────────────────────────────────────
 export default function WritingPage() {
-  const { writingSamples, isHydrated } = useStore();
+  const { writingSamples, isHydrated, writingFolders, createWritingFolder, deleteWritingFolder } = useStore();
   const [mounted, setMounted] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [filter, setFilter] = useState<'all' | 'task1' | 'task2'>('all');
   const [search, setSearch] = useState('');
+  const [activeFolder, setActiveFolder] = useState<string | 'all'>('all');
 
   useEffect(() => { setMounted(true); }, []);
   if (!mounted || !isHydrated) return <LoadingScreen />;
 
   const all = Object.values(writingSamples).filter(s => !s.tags?.includes('ai_graded')).sort((a, b) => b.updatedAt - a.updatedAt);
-  const task1Count = all.filter(s => s.task === 'task1').length;
-  const task2Count = all.filter(s => s.task === 'task2').length;
+  
+  const filteredByFolder = all.filter(s => {
+    if (activeFolder === 'all') return true;
+    if (activeFolder === 'unassigned') return !s.folderId;
+    return s.folderId === activeFolder;
+  });
 
-  const filtered = all.filter(s => {
+  const task1Count = filteredByFolder.filter(s => s.task === 'task1').length;
+  const task2Count = filteredByFolder.filter(s => s.task === 'task2').length;
+
+  const filtered = filteredByFolder.filter(s => {
     if (filter !== 'all' && s.task !== filter) return false;
     const q = search.toLowerCase();
     if (q && !s.title.toLowerCase().includes(q) && !s.topic.toLowerCase().includes(q) && !s.content.toLowerCase().includes(q)) return false;
     return true;
   });
 
+  const foldersList = Object.values(writingFolders).sort((a, b) => b.updatedAt - a.updatedAt);
+
+  const handleCreateFolder = async () => {
+    const name = prompt('Nhập tên thư mục mới:');
+    if (name?.trim()) {
+      createWritingFolder(name.trim());
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-6 animate-fade-in max-w-4xl mx-auto w-full">
-      {/* ── Header ───────────────────────────────────────── */}
+    <div className="flex flex-col lg:flex-row gap-6 animate-fade-in w-full max-w-6xl mx-auto">
+      {/* ── Sidebar: Folders ────────────────────────────────────────── */}
+      <div className="w-full lg:w-64 flex-shrink-0 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-[var(--text)] flex items-center gap-2">
+            <Folder size={18} className="text-[var(--primary)]" /> Thư mục
+          </h2>
+          <button onClick={handleCreateFolder} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-[var(--bg)] text-[var(--primary)]">
+            <Plus size={16} />
+          </button>
+        </div>
+        <div className="flex flex-col gap-1">
+          <button
+            onClick={() => setActiveFolder('all')}
+            className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-between ${activeFolder === 'all' ? 'bg-[var(--primary-light)] text-[var(--primary)]' : 'hover:bg-[var(--bg)] text-[var(--text)]'}`}
+          >
+            <span>Tất cả bài viết</span>
+            <span className="text-xs bg-black/5 px-2 py-0.5 rounded-md">{all.length}</span>
+          </button>
+          
+          {foldersList.map(f => {
+            const count = all.filter(s => s.folderId === f.id).length;
+            return (
+              <div key={f.id} className="group flex items-center">
+                <button
+                  onClick={() => setActiveFolder(f.id)}
+                  className={`flex-1 text-left px-3 py-2.5 rounded-l-xl text-sm font-semibold transition-colors flex items-center justify-between truncate ${activeFolder === f.id ? 'bg-[var(--primary-light)] text-[var(--primary)]' : 'hover:bg-[var(--bg)] text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+                >
+                  <span className="truncate pr-2">{f.name}</span>
+                  <span className="text-xs bg-black/5 px-2 py-0.5 rounded-md flex-shrink-0">{count}</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    if (await appConfirm(`Xóa thư mục "${f.name}"? Các bài viết bên trong sẽ KHÔNG bị xóa.`)) {
+                      deleteWritingFolder(f.id);
+                      if (activeFolder === f.id) setActiveFolder('all');
+                    }
+                  }}
+                  className={`w-10 h-[40px] flex items-center justify-center rounded-r-xl transition-colors ${activeFolder === f.id ? 'bg-[var(--primary-light)] text-red-500' : 'hover:bg-red-50 hover:text-red-500 text-transparent'}`}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            );
+          })}
+          
+          <button
+            onClick={() => setActiveFolder('unassigned')}
+            className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-between mt-2 border border-dashed border-[var(--border)] ${activeFolder === 'unassigned' ? 'bg-[var(--bg)] text-[var(--primary)] border-[var(--primary)]' : 'hover:bg-[var(--bg)] text-[var(--text-muted)]'}`}
+          >
+            <span>Chưa phân loại</span>
+            <span className="text-xs bg-black/5 px-2 py-0.5 rounded-md">{all.filter(s => !s.folderId).length}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── Main Content ────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col gap-6">
+        {/* ── Header ───────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--text)] flex items-center gap-2">
@@ -728,9 +840,10 @@ export default function WritingPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {filtered.map(s => <SampleCard key={s.id} sample={s} />)}
+          {filtered.map(s => <SampleCard key={s.id} sample={s} currentFolderId={activeFolder === 'unassigned' || activeFolder === 'all' ? undefined : activeFolder} />)}
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -7,16 +7,16 @@ import { useStore } from '@/lib/store';
 import { shuffleArray } from '@/lib/shuffle';
 import { FlashCard, FlashCardNav } from '@/components/FlashCard';
 import { MultipleChoice } from '@/components/MultipleChoice';
-import { TypeAnswer } from '@/components/TypeAnswer';
 import { MatchGame } from '@/components/MatchGame';
 import { GravityGame } from '@/components/GravityGame';
+import { ConversationPractice } from '@/components/ConversationPractice';
 import { ResultScreen } from '@/components/ResultScreen';
 import { ProgressBar } from '@/components/ProgressBar';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { v4 as uuidv4 } from 'uuid';
 import type { Card } from '@/lib/types';
 
-type StudyMode = 'flashcard' | 'learn' | 'match' | 'gravity' | 'test';
+type StudyMode = 'flashcard' | 'learn' | 'match' | 'gravity' | 'test' | 'conversation';
 type LearnStage = 'mcq1' | 'type1' | 'mcq2' | 'type2';
 const LEARN_STAGES: LearnStage[] = ['mcq1', 'type1', 'mcq2', 'type2'];
 
@@ -261,6 +261,7 @@ function LearnContent() {
     match: 'Ghép thẻ',
     gravity: 'Gravity',
     test: 'Kiểm tra',
+    conversation: 'Luyện hội thoại'
   };
 
   if (!deck) {
@@ -411,6 +412,14 @@ function LearnContent() {
       {/* ── Gravity Mode ───────────────────────────────── */}
       {!done && modeParam === 'gravity' && (
         <GravityGame
+          cards={allCards}
+          onComplete={(correct, total) => finishSession(correct, total)}
+        />
+      )}
+
+      {/* ── Conversation Mode ──────────────────────────── */}
+      {!done && modeParam === 'conversation' && (
+        <ConversationPractice
           cards={allCards}
           onComplete={(correct, total) => finishSession(correct, total)}
         />

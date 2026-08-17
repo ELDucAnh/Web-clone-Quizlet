@@ -141,6 +141,7 @@ export interface WritingSample {
   band?: number;            // band score
   tags?: string[];
   aiFeedback?: any;         // AI feedback object
+  folderId?: string;        // ID của Writing Folder chứa bài mẫu
   createdAt: number;
   updatedAt: number;
 }
@@ -172,6 +173,7 @@ export interface SpeakingSubmission {
 export interface IELTSState {
   studyHoursGoals: Record<string, StudyHoursGoal>;
   studyHoursLogs: StudyHoursLog[];
+  writingFolders: Record<string, Folder>; // Dùng chung interface Folder của vocab
   writingSamples: Record<string, WritingSample>;
   speakingTopics: Record<string, SpeakingTopic>;
   speakingSubmissions: Record<string, SpeakingSubmission>;
@@ -184,9 +186,13 @@ export interface IELTSActions {
   addStudyHoursLog: (log: Omit<StudyHoursLog, 'id' | 'createdAt'>) => void;
   deleteStudyHoursLog: (logId: string) => void;
   // Writing
+  createWritingFolder: (name: string, description?: string) => string;
+  updateWritingFolder: (folderId: string, name: string, description?: string) => void;
+  deleteWritingFolder: (folderId: string) => void;
   createWritingSample: (data: Omit<WritingSample, 'id' | 'createdAt' | 'updatedAt'>) => string;
   updateWritingSample: (id: string, data: Partial<Omit<WritingSample, 'id' | 'createdAt'>>) => void;
   deleteWritingSample: (id: string) => void;
+  moveWritingSampleToFolder: (sampleId: string, folderId?: string) => void;
   // Speaking
   createSpeakingTopic: (data: Omit<SpeakingTopic, 'id' | 'createdAt' | 'updatedAt'>) => string;
   updateSpeakingTopic: (id: string, data: Partial<Omit<SpeakingTopic, 'id' | 'createdAt'>>) => void;

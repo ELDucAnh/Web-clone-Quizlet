@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Mic, Plus, Trash2, Edit2, X, Check, Search, ChevronDown, ChevronRight } from 'lucide-react';
-import { useStore } from '@/lib/store';
+import { Mic, Plus, Trash2, Edit2, X, Check, Search, ChevronDown, ChevronRight, Play } from 'lucide-react';
+import Link from 'next/link';
 import type { SpeakingTopic } from '@/lib/types';
 import { appConfirm } from '@/lib/dialog';
 import { LoadingScreen } from '@/components/LoadingScreen';
@@ -202,6 +202,12 @@ function TopicCard({ topic }: { topic: SpeakingTopic }) {
       <div className="px-4 pb-3 flex items-center gap-2 justify-end -mt-2">
         {!editing ? (
           <>
+            <Link
+              href={`/speaking/mock-test?mode=Part ${topic.part}&topicId=${topic.id}`}
+              className="flex items-center gap-1 text-xs text-[var(--primary)] font-bold hover:text-[var(--primary-hover)] transition-colors py-1 px-3 rounded-lg bg-[var(--primary-light)] mr-auto"
+            >
+              <Play size={12} fill="currentColor" /> Thi thử với AI
+            </Link>
             <button
               onClick={() => { setEditing(true); setExpanded(true); }}
               className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors py-1 px-2 rounded-lg hover:bg-[var(--primary-light)]"
@@ -499,9 +505,14 @@ export default function SpeakingPage() {
           </p>
         </div>
         {!showCreate && (
-          <button onClick={() => setShowCreate(true)} className="btn-primary flex-shrink-0">
-            <Plus size={16} /> Thêm chủ đề
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link href="/speaking/mock-test?mode=Full Test" className="h-9 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-purple-500 to-indigo-600 text-white flex items-center gap-2 hover:opacity-90 transition-opacity">
+              <Play size={16} fill="currentColor" /> Thi Full Test
+            </Link>
+            <button onClick={() => setShowCreate(true)} className="btn-primary">
+              <Plus size={16} /> Thêm chủ đề
+            </button>
+          </div>
         )}
       </div>
 

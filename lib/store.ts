@@ -44,6 +44,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
       // ─── IELTS State ─────────────────────────────────────────────────
       studyHoursGoals: {},
       studyHoursLogs: [],
+      writingFolders: {},
       writingSamples: {},
       speakingTopics: {},
       speakingSubmissions: {},
@@ -59,6 +60,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           sessions: data.sessions || [],
           studyHoursGoals: data.studyHoursGoals || {},
           studyHoursLogs: data.studyHoursLogs || [],
+          writingFolders: data.writingFolders || {},
           writingSamples: data.writingSamples || {},
           speakingTopics: data.speakingTopics || {},
           speakingSubmissions: data.speakingSubmissions || {},
@@ -77,6 +79,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           sessions: [],
           studyHoursGoals: {},
           studyHoursLogs: [],
+          writingFolders: {},
           writingSamples: {},
           speakingTopics: {},
           isHydrated: false,
@@ -500,6 +503,54 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
         syncToBackend(`/study-logs/${logId}`, 'DELETE');
       },
 
+      // ─── Writing Folder Actions ────────────────────────────────────────────────
+      createWritingFolder: (name: string, description?: string) => {
+        const folderId = uuidv4();
+        const folder: Folder = {
+          id: folderId,
+          name: name.trim() || 'Thư mục không tên',
+          description: description || '',
+          deckIds: [], // We don't use this, but keep for type compatibility
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        set((state) => ({
+          writingFolders: { ...state.writingFolders, [folderId]: folder },
+        }));
+        syncToBackend('/writing-folders', 'POST', { id: folderId, name, description });
+        return folderId;
+      },
+
+      updateWritingFolder: (folderId: string, name: string, description?: string) => {
+        set((state) => ({
+          writingFolders: {
+            ...state.writingFolders,
+            [folderId]: {
+              ...state.writingFolders[folderId],
+              name: name.trim() || state.writingFolders[folderId]?.name,
+              description: description ?? state.writingFolders[folderId]?.description,
+              updatedAt: Date.now(),
+            },
+          },
+        }));
+        syncToBackend(`/writing-folders/${folderId}`, 'PUT', { name, description });
+      },
+
+      deleteWritingFolder: (folderId: string) => {
+        set((state) => {
+          const newFolders = { ...state.writingFolders };
+          const newSamples = { ...state.writingSamples };
+          // Unlink samples from folder
+          Object.values(newSamples).forEach((sample) => {
+            if (sample.folderId === folderId) {
+              newSamples[sample.id] = { ...sample, folderId: undefined };
+            }
+          });
+          delete newFolders[folderId];
+          return { writingFolders: newFolders, writingSamples: newSamples };
+        });
+      },
+
       // ─── Writing Sample Actions ────────────────────────────────────────────────
       createWritingSample: (data: Omit<WritingSample, 'id' | 'createdAt' | 'updatedAt'>) => {
         const id = uuidv4();
@@ -525,6 +576,18 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           return { writingSamples: newSamples };
         });
         syncToBackend(`/writing-samples/${id}`, 'DELETE');
+      },
+
+      moveWritingSampleToFolder: (sampleId: string, folderId?: string) => {
+        set((state) => {
+          if (!state.writingSamples[sampleId]) return state;
+          return {
+            writingSamples: {
+              ...state.writingSamples,
+              [sampleId]: { ...state.writingSamples[sampleId], folderId },
+            },
+          };
+        });
       },
 
       // ─── Speaking Topic Actions ────────────────────────────────────────────────
