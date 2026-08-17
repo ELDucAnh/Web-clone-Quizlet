@@ -608,7 +608,7 @@ export default function SpeakingPage() {
               onClick={() => setFilterPart(p)}
               className={`tab-pill ${filterPart === p ? 'active' : ''}`}
             >
-              {p === 'all' ? `Tất cả (${all.length})` : p === 'Full Test' ? `Full Test (${all.filter(t => t.part === p).length})` : `Part ${p} (${all.filter(t => t.part === p).length})`}
+              {p === 'all' ? `Tất cả (${all.length})` : p === 'Full Test' ? `Full Test (${all.filter(t => t.part === (p as any)).length})` : `Part ${p} (${all.filter(t => t.part === p).length})`}
             </button>
           ))}
         </div>
