@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Mic, Plus, Trash2, Edit2, X, Check, Search, ChevronDown, ChevronRight, Play } from 'lucide-react';
 import Link from 'next/link';
+import { useStore } from '@/lib/store';
 import type { SpeakingTopic } from '@/lib/types';
 import { appConfirm } from '@/lib/dialog';
 import { LoadingScreen } from '@/components/LoadingScreen';
