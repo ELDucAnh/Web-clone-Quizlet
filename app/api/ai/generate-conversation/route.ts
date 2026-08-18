@@ -1,27 +1,30 @@
-export const maxDuration = 299; // Allow max 60s for Vercel Hobby
+export const maxDuration = 299; // Allow max 299s for Vercel Hobby
 
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
 
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json({ error: 'Chưa cấu hình GROQ_API_KEY' }, { status: 500 });
+    }
+
     const { words } = await req.json();
 
     if (!words || words.length === 0) {
       return NextResponse.json({ error: 'Missing words' }, { status: 400 });
     }
 
-    const prompt = `You are an expert English teacher. 
-Create an interactive 10-question English learning exercise based on the following vocabulary words:
+    const prompt = `Create an interactive 10-question English learning exercise based on the following vocabulary words:
 ${words.join(', ')}
 
 IMPORTANT RULES:
 - Generate EXACTLY 10 items.
 - The items must alternate randomly between 2 types: "repeat_sentence" and "translate_typing".
 - Every item MUST incorporate at least one vocabulary word from the list above.
-- The output MUST be a JSON array of objects. Do not wrap in markdown \`\`\`json.
+- The output MUST be a valid JSON object with a single key "conversation" containing the array of 10 items.
 
 Format for each type:
 
@@ -38,49 +41,25 @@ Format for each type:
   "type": "translate_typing",
   "vietnamese": "Câu tiếng Việt học thuật, phức tạp cần dịch ra tiếng Anh.",
   "expectedEnglish": "The expected complex English translation using the vocabulary."
-}
+}`;
 
-GENERATE EXACTLY 10 ITEMS AS A JSON ARRAY.`;
+    const completion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: "You are an expert English teacher. Output valid JSON only." },
+        { role: "user", content: prompt }
+      ],
+      model: "llama-3.1-70b-versatile",
+      temperature: 0.7,
+      response_format: { type: "json_object" }
+    });
 
-    const fallbackModels = [
-      'gemini-flash-latest',
-      'gemini-3.6-flash',
-      'gemini-3.5-flash',
-      'gemini-pro-latest'
-    ];
-
-    let result;
-    let lastError;
-
-    for (const modelName of fallbackModels) {
-      try {
-        const model = genAI.getGenerativeModel({ model: modelName });
-        result = await model.generateContent(prompt);
-        if (result) break;
-      } catch (e: any) {
-        lastError = e;
-        console.warn(`Model ${modelName} failed: ${e.message}`);
-      }
-    }
-
-    if (!result) {
-      throw lastError || new Error('All models failed');
-    }
-
-    const responseText = result.response.text();
-    let jsonStr = responseText;
+    const responseText = completion.choices[0]?.message?.content || "";
     
-    // Tìm vị trí của dấu [ đầu tiên và ] cuối cùng (vì đây là Array)
-    const startIndex = jsonStr.indexOf('[');
-    const endIndex = jsonStr.lastIndexOf(']');
-    
-    if (startIndex !== -1 && endIndex !== -1 && endIndex >= startIndex) {
-      jsonStr = jsonStr.substring(startIndex, endIndex + 1);
-    } else {
-      jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
-    }
-    
-    const conversation = JSON.parse(jsonStr);
+    // Parse JSON
+    const parsedData = JSON.parse(responseText);
+
+    // Xử lý fallback trong trường hợp Groq trả về object thay vì mảng trực tiếp (vì đã ép json_object)
+    const conversation = Array.isArray(parsedData) ? parsedData : (parsedData.conversation || parsedData.items || Object.values(parsedData)[0]);
 
     return NextResponse.json({ conversation });
 

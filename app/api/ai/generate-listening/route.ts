@@ -1,20 +1,23 @@
 export const maxDuration = 60; // Allow max 60s for Vercel Hobby
 
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
 
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json({ error: 'Chưa cấu hình GROQ_API_KEY' }, { status: 500 });
+    }
+
     const { words } = await req.json();
 
     if (!words || words.length === 0) {
       return NextResponse.json({ error: 'Missing words' }, { status: 400 });
     }
 
-    const prompt = `You are an expert IELTS Listening examiner. 
-Create a challenging IELTS Listening Section 4 practice exercise based on the following vocabulary words:
+    const prompt = `Create a challenging IELTS Listening Section 4 practice exercise based on the following vocabulary words:
 ${words.join(', ')}
 
 IMPORTANT RULES:
@@ -24,7 +27,7 @@ IMPORTANT RULES:
 - The lecture MUST naturally incorporate as many of the provided vocabulary words as possible.
 - The 10 questions MUST test synthesis of information, inference, and identifying main ideas (like IELTS Listening Section 4). They must NOT be simple word-matching questions.
 - Each question must have exactly 4 options.
-- The output MUST be a valid JSON object. Do not wrap in markdown \`\`\`json.
+- The output MUST be a valid JSON object.
 
 Format:
 {
@@ -37,51 +40,21 @@ Format:
       "options": ["A", "B", "C", "D"],
       "correctAnswer": 0
     }
-    // EXACTLY 10 QUESTIONS
   ]
-}
+}`;
 
-GENERATE THE JSON NOW.`;
+    const completion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: "You are an expert IELTS Listening examiner. Output valid JSON only." },
+        { role: "user", content: prompt }
+      ],
+      model: "llama-3.1-70b-versatile",
+      temperature: 0.7,
+      response_format: { type: "json_object" }
+    });
 
-    const fallbackModels = [
-      'gemini-flash-latest',
-      'gemini-3.6-flash',
-      'gemini-3.5-flash',
-      'gemini-pro-latest'
-    ];
-
-    let result;
-    let lastError;
-
-    for (const modelName of fallbackModels) {
-      try {
-        const model = genAI.getGenerativeModel({ model: modelName });
-        result = await model.generateContent(prompt);
-        if (result) break;
-      } catch (e: any) {
-        lastError = e;
-        console.warn(`Model ${modelName} failed: ${e.message}`);
-      }
-    }
-
-    if (!result) {
-      throw lastError || new Error('All models failed');
-    }
-
-    const responseText = result.response.text();
-    let jsonStr = responseText;
-    
-    // Tìm vị trí của dấu { đầu tiên và } cuối cùng để tránh các chữ rác xung quanh
-    const startIndex = jsonStr.indexOf('{');
-    const endIndex = jsonStr.lastIndexOf('}');
-    
-    if (startIndex !== -1 && endIndex !== -1 && endIndex >= startIndex) {
-      jsonStr = jsonStr.substring(startIndex, endIndex + 1);
-    } else {
-      jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
-    }
-    
-    const listeningPractice = JSON.parse(jsonStr);
+    const responseText = completion.choices[0]?.message?.content || "";
+    const listeningPractice = JSON.parse(responseText);
 
     return NextResponse.json(listeningPractice);
 
