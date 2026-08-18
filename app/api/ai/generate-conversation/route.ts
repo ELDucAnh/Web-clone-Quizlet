@@ -30,28 +30,32 @@ Format for each type:
   "text": "A natural English sentence using the vocabulary."
 }
 
-2. Type "translate_typing" (User reads a Vietnamese sentence and types the English translation):
+2. Type "translate_typing" (User reads a complex Vietnamese sentence and types the English translation):
+- The sentences MUST be highly complex, academic, and structured like IELTS Writing Task 2 arguments or complex ideas.
 {
   "type": "translate_typing",
-  "vietnamese": "Câu tiếng Việt cần dịch ra tiếng Anh.",
-  "expectedEnglish": "The expected English translation using the vocabulary."
+  "vietnamese": "Câu tiếng Việt học thuật, phức tạp cần dịch ra tiếng Anh.",
+  "expectedEnglish": "The expected complex English translation using the vocabulary."
 }
 
-3. Type "listen_quiz" (User listens to a short dialogue, script hidden, and answers 2 multiple choice questions):
+3. Type "listen_quiz" (User listens to a long dialogue, script hidden, and answers 2 multiple choice questions):
+- The dialogue MUST be long and complex, at least 10 lines (minimum 5 turns per speaker), mimicking an academic discussion in IELTS Listening Section 3.
+- The 2 multiple choice questions MUST NOT be simple factual recall. They MUST require the user to synthesize information from multiple lines, infer the speakers' implicit attitudes, or understand their agreements/disagreements.
 {
   "type": "listen_quiz",
   "dialogue": [
     { "speaker": "A", "text": "..." },
-    { "speaker": "B", "text": "..." }
+    { "speaker": "B", "text": "..." },
+    // MUST HAVE AT LEAST 10 LINES
   ],
   "questions": [
     {
-      "question": "A comprehension question about the dialogue?",
+      "question": "A synthesis/inference question about the dialogue?",
       "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
       "correctAnswer": 0 // index of the correct option
     },
     {
-      "question": "Another question?",
+      "question": "A question about the speakers' agreement or underlying attitude?",
       "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
       "correctAnswer": 2
     }
