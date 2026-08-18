@@ -27,6 +27,11 @@ IMPORTANT RULES:
 - Create EXACTLY 20 questions, divided into 4 types (5 questions each).
 - ALL 20 questions MUST strictly follow a generic multiple-choice JSON format.
 
+CRITICAL JSON RULE: 
+- DO NOT output literal newline characters inside any string value! 
+- Every string (especially paragraph text and explanations) MUST be a single continuous line. 
+- If a paragraph is long, keep it as ONE unbroken string. Do NOT press Enter/Return inside the string.
+
 Question Types & Format Instructions:
 1. 5 Multiple Choice (MC) Questions: Standard 4 options (A, B, C, D) testing deep inference.
 2. 5 Matching Heading Questions:
@@ -74,7 +79,7 @@ Format:
             { role: "user", content: prompt }
           ],
           model: modelName,
-          temperature: 0.7,
+          temperature: 0.3,
           max_tokens: 5500,
           response_format: { type: "json_object" }
         });
