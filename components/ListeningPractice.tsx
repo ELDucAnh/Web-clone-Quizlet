@@ -22,6 +22,7 @@ export function ListeningPractice({ cards, onComplete }: ListeningPracticeProps)
   const [answers, setAnswers] = useState<number[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,17 +32,22 @@ export function ListeningPractice({ cards, onComplete }: ListeningPracticeProps)
       body: JSON.stringify({ words })
     })
     .then(res => res.json())
-    .then((result: ListeningData) => {
-      if (result.dialogue && result.questions) {
+    .then((result: any) => {
+      if (result.error) {
+        setErrorMsg(result.error);
+      } else if (result.dialogue && result.questions) {
         setData(result);
-        const fullText = result.dialogue.map(d => d.text).join('. ');
+        const fullText = result.dialogue.map((d: any) => d.text).join('. ');
         setAudioUrl(`/api/tts?text=${encodeURIComponent(fullText)}`);
         setAnswers(new Array(result.questions.length).fill(-1));
+      } else {
+        setErrorMsg('Invalid response format from AI');
       }
       setLoading(false);
     })
     .catch(err => {
       console.error(err);
+      setErrorMsg(err.message || 'Network error');
       setLoading(false);
     });
   }, [cards]);
@@ -71,7 +77,12 @@ export function ListeningPractice({ cards, onComplete }: ListeningPracticeProps)
   }
 
   if (!data) {
-    return <div className="text-center py-10 font-bold text-red-500">Lỗi tạo bài tập. Vui lòng thử lại.</div>;
+    return (
+      <div className="text-center py-10 font-bold text-red-500">
+        Lỗi tạo bài tập. Vui lòng thử lại.<br/>
+        <span className="text-sm font-normal text-gray-500 mt-2 block">Chi tiết lỗi: {errorMsg}</span>
+      </div>
+    );
   }
 
   const isAllAnswered = answers.every(a => a !== -1);

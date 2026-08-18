@@ -43,10 +43,9 @@ Format for each type:
 GENERATE EXACTLY 10 ITEMS AS A JSON ARRAY.`;
 
     const fallbackModels = [
-      'gemini-flash-latest',
-      'gemini-3.6-flash',
-      'gemini-3.5-flash',
-      'gemini-pro-latest'
+      'gemini-1.5-flash',
+      'gemini-1.5-pro',
+      'gemini-1.0-pro'
     ];
 
     let result;
