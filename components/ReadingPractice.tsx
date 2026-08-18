@@ -153,24 +153,60 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
               <p className="text-emerald-600 font-medium">Kéo xuống để xem giải thích chi tiết từng câu.</p>
             </div>
           )}
-
-                      newAns[qIdx] = oIdx;
-                      setAnswers(newAns);
-                    }}>
-                      {opt}
-                    </div>
-                  );
-                })}
+          {data.questions.map((q, qIdx) => (
+            <div key={qIdx} className="bg-[var(--bg)] p-5 rounded-xl border border-[var(--border)] shrink-0 shadow-sm relative">
+              <div className="absolute top-5 left-5 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                {qIdx + 1}
               </div>
-              
-              {submitted && (
-                <div className="mt-4 pl-8 animate-fade-in">
-                  <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl text-yellow-800">
-                    <p className="font-bold mb-1 flex items-center gap-2"><Info size={16}/> Giải thích:</p>
-                    <p className="text-sm leading-relaxed">{q.explanation}</p>
-                  </div>
+              <div className="pl-12">
+                <h3 className="text-lg font-semibold text-[var(--text)] mb-4">{q.question}</h3>
+                <div className={`grid gap-3 ${q.options.length === 3 && q.options.includes('True') ? 'grid-cols-3' : 'grid-cols-1'}`}>
+                  {q.options.map((opt, oIdx) => {
+                    const isSelected = answers[qIdx] === oIdx;
+                    const isCorrectAnswer = q.correctAnswer === oIdx;
+                    
+                    let optClass = "p-4 rounded-xl border-2 transition-all cursor-pointer font-medium text-center ";
+                    
+                    if (!submitted) {
+                      optClass += isSelected ? "border-blue-500 bg-blue-50 text-blue-800 shadow-sm" : "border-[var(--border)] hover:border-blue-300 hover:bg-blue-50 text-[var(--text)]";
+                    } else {
+                      if (isCorrectAnswer) optClass += "border-emerald-500 bg-emerald-50 text-emerald-800";
+                      else if (isSelected && !isCorrectAnswer) optClass += "border-red-500 bg-red-50 text-red-800 opacity-70";
+                      else optClass += "border-gray-100 opacity-50";
+                    }
+
+                    // Nếu là dạng TFNG
+                    const isTFNG = q.options.length === 3 && q.options.includes('True');
+
+                    return (
+                      <div key={oIdx} className={optClass} onClick={() => {
+                        if (submitted) return;
+                        const newAns = [...answers];
+                        newAns[qIdx] = oIdx;
+                        setAnswers(newAns);
+                      }}>
+                        {!isTFNG && (
+                          <span className={`w-6 h-6 rounded flex items-center justify-center text-sm font-bold mr-3 inline-flex ${
+                            submitted && isCorrectAnswer ? 'bg-green-200 text-green-800' : 
+                            submitted && isSelected && !isCorrectAnswer ? 'bg-red-200 text-red-800' : 
+                            'bg-gray-100 text-gray-600'
+                          }`}>
+                            {String.fromCharCode(65 + oIdx)}
+                          </span>
+                        )}
+                        {opt}
+                      </div>
+                    );
+                  })}
                 </div>
-              )}
+
+                {submitted && (
+                  <div className="mt-4 pl-4 border-l-4 border-blue-400 bg-blue-50/50 p-4 rounded-r-xl">
+                    <p className="font-bold text-blue-800 mb-1 flex items-center gap-2"><Info size={16}/> Giải thích:</p>
+                    <p className="text-sm text-blue-900 leading-relaxed">{q.explanation}</p>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
           
