@@ -590,6 +590,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
             },
           };
         });
+        syncToBackend(`/writing-samples/${sampleId}`, 'PUT', { folderId: folderId || null });
       },
 
       // ─── Speaking Topic Actions ────────────────────────────────────────────────

@@ -10,7 +10,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
   try {
     const data = await request.json();
-    const keys = Object.keys(data).filter(k => ['task', 'title', 'topic', 'content', 'band', 'tags'].includes(k));
+    const validKeys = ['task', 'title', 'topic', 'content', 'band', 'tags', 'folderId'];
+    const keys = Object.keys(data).filter(k => validKeys.includes(k));
     
     if (keys.length === 0) {
       return NextResponse.json({ ok: true }, { status: 200 });
@@ -21,7 +22,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     let i = 1;
     
     for (const key of keys) {
-      query += `${key} = $${i}, `;
+      const dbCol = key === 'folderId' ? 'folder_id' : key;
+      query += `${dbCol} = $${i}, `;
       values.push(key === 'tags' ? (data[key] || []) : (data[key] ?? null));
       i++;
     }

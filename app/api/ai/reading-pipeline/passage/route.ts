@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
-import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export const maxDuration = 60; // Allow max 60s for Vercel Hobby
 
 export async function POST(req: Request) {
   try {
-    if (!process.env.GROQ_API_KEY) {
-      return NextResponse.json({ error: 'Chưa cấu hình GROQ_API_KEY' }, { status: 500 });
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ error: 'Chưa cấu hình GEMINI_API_KEY' }, { status: 500 });
     }
 
     const { words, previousContext, part } = await req.json();
@@ -64,33 +64,36 @@ Format:
 }`;
     }
 
-    const fallbackModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-20b', 'groq/compound-mini', 'groq/compound'];
+    const fallbackModels = [
+      'gemini-flash-latest',
+      'gemini-pro',
+      'gemini-1.5-pro',
+      'gemini-1.5-flash-latest'
+    ];
     let data;
     let errors: string[] = [];
+    
+    // Combine prompt and system instruction
+    const fullPrompt = `You are an expert IELTS Reading examiner. Output valid JSON only.\n\n${prompt}`;
 
     for (const modelName of fallbackModels) {
       try {
-        const completion = await groq.chat.completions.create({
-          messages: [
-            { role: "system", content: "You are an expert IELTS Reading examiner. Output valid JSON only." },
-            { role: "user", content: prompt }
-          ],
+        const model = genAI.getGenerativeModel({ 
           model: modelName,
-          temperature: 0.3,
-          max_tokens: 800
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 2000,
+          }
         });
         
-        if (completion) {
-          if (completion.choices[0]?.finish_reason === 'length') {
-            throw new Error("Truncated by max_tokens or hard model limit");
-          }
-          
-          const responseText = completion.choices[0]?.message?.content || "";
-          const match = responseText.match(/\{[\s\S]*\}/);
-          const jsonStr = match ? match[0] : responseText;
-          data = JSON.parse(jsonStr);
-          break; // Successfully parsed JSON, break the loop
-        }
+        const result = await model.generateContent(fullPrompt);
+        const response = await result.response;
+        const responseText = response.text();
+        
+        const match = responseText.match(/\{[\s\S]*\}/);
+        const jsonStr = match ? match[0] : responseText;
+        data = JSON.parse(jsonStr);
+        break; // Successfully parsed JSON, break the loop
       } catch (e: any) {
         errors.push(`[${modelName}]: ${e.message}`);
       }

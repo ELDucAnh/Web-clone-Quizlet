@@ -178,6 +178,7 @@ export async function GET() {
           band: w.band || undefined,
           tags: w.tags || [],
           aiFeedback: w.ai_feedback,
+          folderId: w.folder_id || undefined,
           createdAt: new Date(w.created_at).getTime(),
           updatedAt: new Date(w.updated_at).getTime(),
         };
