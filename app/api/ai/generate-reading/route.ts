@@ -1,3 +1,5 @@
+export const maxDuration = 60; // Allow max 60s for Vercel Hobby
+
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -60,7 +62,10 @@ GENERATE THE JSON NOW.`;
 
     for (const modelName of fallbackModels) {
       try {
-        const model = genAI.getGenerativeModel({ model: modelName });
+        const model = genAI.getGenerativeModel({ 
+          model: modelName,
+          generationConfig: { responseMimeType: 'application/json' }
+        });
         result = await model.generateContent(prompt);
         if (result) break;
       } catch (e: any) {
