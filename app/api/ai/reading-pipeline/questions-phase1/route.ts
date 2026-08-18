@@ -99,7 +99,22 @@ Format:
           }
 
           data = JSON.parse(responseText);
-          break; // Successfully parsed JSON
+        
+        // Normalize data to ensure questions array exists
+        if (Array.isArray(data)) {
+          data = { questions: data };
+        } else if (data && typeof data === 'object' && !Array.isArray(data.questions)) {
+          // Try to find the array in another property
+          const arrayKey = Object.keys(data).find(k => Array.isArray(data[k]));
+          if (arrayKey) {
+            data.questions = data[arrayKey];
+          } else {
+            // Unrecoverable
+            throw new Error("AI returned JSON without an array of questions.");
+          }
+        }
+
+        break; // Successfully parsed JSON
         } catch (e: any) {
           errors.push(`[${modelName}]: ${e.message}`);
         }
@@ -138,6 +153,21 @@ Format:
             }
 
             data = JSON.parse(responseText);
+
+            // Normalize data to ensure questions array exists
+            if (Array.isArray(data)) {
+              data = { questions: data };
+            } else if (data && typeof data === 'object' && !Array.isArray(data.questions)) {
+              // Try to find the array in another property
+              const arrayKey = Object.keys(data).find(k => Array.isArray(data[k]));
+              if (arrayKey) {
+                data.questions = data[arrayKey];
+              } else {
+                // Unrecoverable
+                throw new Error("AI returned JSON without an array of questions.");
+              }
+            }
+
             break; // Successfully parsed JSON
           }
         } catch (e: any) {
