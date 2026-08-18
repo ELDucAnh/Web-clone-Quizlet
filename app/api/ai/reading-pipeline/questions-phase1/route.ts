@@ -61,8 +61,7 @@ Format:
           ],
           model: modelName,
           temperature: 0.3,
-          max_tokens: 1000,
-          response_format: { type: "json_object" }
+          max_tokens: 1000
         });
         if (completion) break;
       } catch (e: any) {
@@ -77,7 +76,9 @@ Format:
     const responseText = completion.choices[0]?.message?.content || "";
     let data;
     try {
-      data = JSON.parse(responseText);
+      const match = responseText.match(/\{[\s\S]*\}/);
+      const jsonStr = match ? match[0] : responseText;
+      data = JSON.parse(jsonStr);
     } catch (parseError: any) {
       if (completion.choices[0]?.finish_reason === 'length') {
         throw new Error("Bị ngắt ngang do Token Limit.");
