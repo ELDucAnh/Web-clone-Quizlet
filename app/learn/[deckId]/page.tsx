@@ -11,13 +11,15 @@ import { TypeAnswer } from '@/components/TypeAnswer';
 import { MatchGame } from '@/components/MatchGame';
 import { GravityGame } from '@/components/GravityGame';
 import { ConversationPractice } from '@/components/ConversationPractice';
+import { ListeningPractice } from '@/components/ListeningPractice';
+import { ReadingPractice } from '@/components/ReadingPractice';
 import { ResultScreen } from '@/components/ResultScreen';
 import { ProgressBar } from '@/components/ProgressBar';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { v4 as uuidv4 } from 'uuid';
 import type { Card } from '@/lib/types';
 
-type StudyMode = 'flashcard' | 'learn' | 'match' | 'gravity' | 'test' | 'conversation';
+type StudyMode = 'flashcard' | 'learn' | 'match' | 'gravity' | 'test' | 'conversation' | 'listening' | 'reading';
 type LearnStage = 'mcq1' | 'type1' | 'mcq2' | 'type2';
 const LEARN_STAGES: LearnStage[] = ['mcq1', 'type1', 'mcq2', 'type2'];
 
@@ -262,7 +264,9 @@ function LearnContent() {
     match: 'Ghép thẻ',
     gravity: 'Gravity',
     test: 'Kiểm tra',
-    conversation: 'Luyện hội thoại'
+    conversation: 'Luyện hội thoại',
+    listening: 'Luyện nghe',
+    reading: 'Luyện đọc'
   };
 
   if (!deck) {
@@ -423,6 +427,22 @@ function LearnContent() {
         <ConversationPractice
           cards={allCards}
           onComplete={(correct, total) => finishSession(correct, total)}
+        />
+      )}
+
+      {/* ── Listening Mode ──────────────────────────── */}
+      {!done && modeParam === 'listening' && (
+        <ListeningPractice
+          cards={allCards}
+          onComplete={(correct: number, total: number) => finishSession(correct, total)}
+        />
+      )}
+
+      {/* ── Reading Mode ──────────────────────────── */}
+      {!done && modeParam === 'reading' && (
+        <ReadingPractice
+          cards={allCards}
+          onComplete={(correct: number, total: number) => finishSession(correct, total)}
         />
       )}
     </div>

@@ -5,8 +5,7 @@ import { ProgressBar } from './ProgressBar';
 
 type ConversationItem = 
   | { type: 'repeat_sentence', speaker: string, text: string }
-  | { type: 'translate_typing', vietnamese: string, expectedEnglish: string }
-  | { type: 'listen_quiz', dialogue: {speaker: string, text: string}[], questions: {question: string, options: string[], correctAnswer: number}[] };
+  | { type: 'translate_typing', vietnamese: string, expectedEnglish: string };
 
 interface ConversationPracticeProps {
   cards: Card[];
@@ -28,10 +27,7 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
   const [translationChecked, setTranslationChecked] = useState(false);
   const [isTranslationCorrect, setIsTranslationCorrect] = useState(false);
 
-  // States for listen_quiz
-  const [quizAnswers, setQuizAnswers] = useState<number[]>([]);
-  const [quizChecked, setQuizChecked] = useState(false);
-  
+
   // Shared
   const [correctCount, setCorrectCount] = useState(0);
 
@@ -175,10 +171,6 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
     setTranslationChecked(true);
   };
 
-  const checkQuiz = () => {
-    setQuizChecked(true);
-  };
-
   const nextItem = () => {
     let wasCorrect = false;
     const item = conversation[currentIdx];
@@ -187,10 +179,6 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
       wasCorrect = transcript.length > 0 && errorWords.length <= 2;
     } else if (item.type === 'translate_typing') {
       wasCorrect = isTranslationCorrect;
-    } else if (item.type === 'listen_quiz') {
-      // Check if all answers are correct
-      const allCorrect = item.questions.every((q, i) => quizAnswers[i] === q.correctAnswer);
-      wasCorrect = allCorrect;
     }
 
     if (wasCorrect) setCorrectCount(c => c + 1);
@@ -201,8 +189,6 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
     setTranslationInput('');
     setTranslationChecked(false);
     setIsTranslationCorrect(false);
-    setQuizAnswers([]);
-    setQuizChecked(false);
 
     if (currentIdx + 1 < conversation.length) {
       setCurrentIdx(i => i + 1);
@@ -215,11 +201,6 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
     const url = `/api/tts?text=${encodeURIComponent(text)}`;
     const audio = new Audio(url);
     audio.play().catch(e => console.error("Audio play failed:", e));
-  };
-
-  const speakDialogue = (dialogue: {speaker: string, text: string}[]) => {
-    const fullText = dialogue.map(d => d.text).join('. ');
-    speak(fullText);
   };
 
   if (loading) {
@@ -350,87 +331,7 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
     );
   }
 
-  // 3. Render Listen Quiz
-  if (currentItem.type === 'listen_quiz') {
-    return (
-      <div className="flex flex-col gap-6 bg-[var(--card)] p-6 rounded-2xl border border-[var(--border)] shadow-sm animate-fade-in">
-        <ProgressBar current={currentIdx} total={conversation.length} label={`Câu ${currentIdx + 1}/${conversation.length} (Nghe)`} />
-        
-        <div className="mt-4 flex flex-col items-center justify-center bg-purple-50 p-6 rounded-xl border border-purple-100">
-          <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white mb-4 shadow-lg animate-pulse-slow">
-            <Headphones size={32} />
-          </div>
-          <h3 className="font-bold text-purple-900 mb-4">Nghe đoạn hội thoại và trả lời câu hỏi</h3>
-          <button onClick={() => speakDialogue(currentItem.dialogue)} className="btn-primary flex items-center gap-2 bg-purple-600 hover:bg-purple-700">
-            <Play size={18} /> Phát Audio
-          </button>
-        </div>
 
-        <div className="mt-4 space-y-6">
-          {currentItem.questions.map((q, qIdx) => (
-            <div key={qIdx} className="bg-[var(--bg)] p-4 rounded-xl border border-[var(--border)]">
-              <p className="font-bold text-[var(--text)] mb-3 flex items-start gap-2">
-                <HelpCircle size={18} className="text-[var(--primary)] shrink-0 mt-0.5" />
-                {q.question}
-              </p>
-              <div className="space-y-2 pl-6">
-                {q.options.map((opt, oIdx) => {
-                  const isSelected = quizAnswers[qIdx] === oIdx;
-                  const isCorrectAnswer = q.correctAnswer === oIdx;
-                  
-                  let optClass = "p-3 rounded-lg border cursor-pointer transition-colors ";
-                  if (!quizChecked) {
-                    optClass += isSelected ? "border-[var(--primary)] bg-blue-50 text-blue-700 font-medium" : "border-gray-200 hover:bg-gray-50 text-[var(--text-muted)]";
-                  } else {
-                    if (isCorrectAnswer) optClass += "border-emerald-500 bg-emerald-50 text-emerald-700 font-bold";
-                    else if (isSelected && !isCorrectAnswer) optClass += "border-red-500 bg-red-50 text-red-700 line-through";
-                    else optClass += "border-gray-100 opacity-50";
-                  }
-
-                  return (
-                    <div key={oIdx} className={optClass} onClick={() => {
-                      if (quizChecked) return;
-                      const newAns = [...quizAnswers];
-                      newAns[qIdx] = oIdx;
-                      setQuizAnswers(newAns);
-                    }}>
-                      {opt}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {quizChecked && (
-          <div className="mt-6 p-4 rounded-xl bg-gray-50 border border-gray-200">
-            <h4 className="font-bold text-gray-700 mb-3 uppercase text-sm tracking-wide">Transcript Hội Thoại</h4>
-            <div className="space-y-2">
-              {currentItem.dialogue.map((d, i) => (
-                <p key={i} className="text-[var(--text)]">
-                  <span className="font-bold text-indigo-600 mr-2">{d.speaker}:</span>
-                  {d.text}
-                </p>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="flex justify-center mt-4">
-          {!quizChecked ? (
-            <button onClick={checkQuiz} disabled={quizAnswers.length < currentItem.questions.length || quizAnswers.includes(undefined as any)} className="btn-primary w-full max-w-xs py-3 disabled:opacity-50">
-              Chốt đáp án
-            </button>
-          ) : (
-            <button onClick={nextItem} className="btn-primary w-full max-w-xs py-3">
-              Tiếp tục <ArrowRight size={18} />
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   return <div>Unknown exercise type</div>;
 }

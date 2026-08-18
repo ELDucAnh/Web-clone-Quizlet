@@ -12,12 +12,12 @@ export async function POST(req: NextRequest) {
     }
 
     const prompt = `You are an expert English teacher. 
-Create an interactive 20-question English learning exercise based on the following vocabulary words:
+Create an interactive 10-question English learning exercise based on the following vocabulary words:
 ${words.join(', ')}
 
 IMPORTANT RULES:
-- Generate EXACTLY 20 items.
-- The items must alternate randomly between 3 types: "repeat_sentence", "translate_typing", and "listen_quiz".
+- Generate EXACTLY 10 items.
+- The items must alternate randomly between 2 types: "repeat_sentence" and "translate_typing".
 - Every item MUST incorporate at least one vocabulary word from the list above.
 - The output MUST be a JSON array of objects. Do not wrap in markdown \`\`\`json.
 
@@ -38,31 +38,7 @@ Format for each type:
   "expectedEnglish": "The expected complex English translation using the vocabulary."
 }
 
-3. Type "listen_quiz" (User listens to a long dialogue, script hidden, and answers 2 multiple choice questions):
-- The dialogue MUST be long and complex, at least 10 lines (minimum 5 turns per speaker), mimicking an academic discussion in IELTS Listening Section 3.
-- The 2 multiple choice questions MUST NOT be simple factual recall. They MUST require the user to synthesize information from multiple lines, infer the speakers' implicit attitudes, or understand their agreements/disagreements.
-{
-  "type": "listen_quiz",
-  "dialogue": [
-    { "speaker": "A", "text": "..." },
-    { "speaker": "B", "text": "..." },
-    // MUST HAVE AT LEAST 10 LINES
-  ],
-  "questions": [
-    {
-      "question": "A synthesis/inference question about the dialogue?",
-      "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
-      "correctAnswer": 0 // index of the correct option
-    },
-    {
-      "question": "A question about the speakers' agreement or underlying attitude?",
-      "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
-      "correctAnswer": 2
-    }
-  ]
-}
-
-GENERATE EXACTLY 20 ITEMS AS A JSON ARRAY.`;
+GENERATE EXACTLY 10 ITEMS AS A JSON ARRAY.`;
 
     const fallbackModels = [
       'gemini-flash-latest',
