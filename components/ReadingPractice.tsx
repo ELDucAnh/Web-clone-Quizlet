@@ -34,19 +34,19 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
       try {
         const words = cards.map(c => c.term);
         
-        setLoadingStep('Bước 1/7: Đang viết đoạn mở bài (15% hoàn thành)...');
+        setLoadingStep('Bước 1/4: Đang viết đoạn mở bài (25% hoàn thành)...');
         const res1 = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words, part: 1 }) });
         const part1 = await res1.json();
         if (part1.error) throw new Error(part1.error);
         
         if (!isMounted) return;
-        setLoadingStep('Bước 2/7: Đang viết đoạn thân bài (30% hoàn thành)...');
+        setLoadingStep('Bước 2/4: Đang viết đoạn thân bài (50% hoàn thành)...');
         const res2 = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words, part: 2, previousContext: part1.paragraphs.join('\\n\\n') }) });
         const part2 = await res2.json();
         if (part2.error) throw new Error(part2.error);
         
         if (!isMounted) return;
-        setLoadingStep('Bước 3/7: Đang viết đoạn kết bài (45% hoàn thành)...');
+        setLoadingStep('Bước 3/4: Đang viết đoạn kết bài (75% hoàn thành)...');
         const res3 = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words, part: 3, previousContext: [...part1.paragraphs, ...part2.paragraphs].join('\\n\\n') }) });
         const part3 = await res3.json();
         if (part3.error) throw new Error(part3.error);
@@ -54,36 +54,18 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
         const fullParagraphs = [...part1.paragraphs, ...part2.paragraphs, ...part3.paragraphs];
         
         if (!isMounted) return;
-        setLoadingStep('Bước 4/7: Đang soạn 5 câu hỏi đầu (50% hoàn thành)...');
+        setLoadingStep('Bước 4/4: Đang soạn 7 câu hỏi True/False/Not Given (100% hoàn thành)...');
         const res4 = await fetch('/api/ai/reading-pipeline/questions-phase1', { method: 'POST', body: JSON.stringify({ paragraphs: fullParagraphs }) });
         const q1 = await res4.json();
         if (q1.error) throw new Error(q1.error);
-
-        if (!isMounted) return;
-        setLoadingStep('Bước 5/7: Đang soạn 5 câu tiếp theo (70% hoàn thành)...');
-        const res5 = await fetch('/api/ai/reading-pipeline/questions-phase2', { method: 'POST', body: JSON.stringify({ paragraphs: fullParagraphs }) });
-        const q2 = await res5.json();
-        if (q2.error) throw new Error(q2.error);
-
-        if (!isMounted) return;
-        setLoadingStep('Bước 6/7: Đang soạn 5 câu áp chót (85% hoàn thành)...');
-        const res6 = await fetch('/api/ai/reading-pipeline/questions-phase3', { method: 'POST', body: JSON.stringify({ paragraphs: fullParagraphs }) });
-        const q3 = await res6.json();
-        if (q3.error) throw new Error(q3.error);
-
-        if (!isMounted) return;
-        setLoadingStep('Bước 7/7: Đang soạn 5 câu khó cuối cùng (100% hoàn thành)...');
-        const res7 = await fetch('/api/ai/reading-pipeline/questions-phase4', { method: 'POST', body: JSON.stringify({ paragraphs: fullParagraphs }) });
-        const q4 = await res7.json();
-        if (q4.error) throw new Error(q4.error);
 
         if (isMounted) {
           setData({
             title: part1.title,
             paragraphs: fullParagraphs,
-            questions: [...q1.questions, ...q2.questions, ...q3.questions, ...q4.questions]
+            questions: [...q1.questions]
           });
-          setAnswers(new Array(q1.questions.length + q2.questions.length + q3.questions.length + q4.questions.length).fill(-1));
+          setAnswers(new Array(q1.questions.length).fill(-1));
           setLoading(false);
         }
       } catch (err: any) {
@@ -172,31 +154,6 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
             </div>
           )}
 
-          {data.questions.map((q, qIdx) => (
-            <div key={qIdx} className="bg-[var(--bg)] p-5 rounded-xl border border-[var(--border)] shrink-0">
-              <p className="font-bold text-[var(--text)] mb-4 text-lg flex items-start gap-2">
-                <span className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm shrink-0 mt-0.5">{qIdx + 1}</span>
-                {q.question}
-              </p>
-              <div className="space-y-3 pl-8">
-                {q.options.map((opt, oIdx) => {
-                  const isSelected = answers[qIdx] === oIdx;
-                  const isCorrectAnswer = q.correctAnswer === oIdx;
-                  
-                  let optClass = "p-4 rounded-xl border transition-all cursor-pointer ";
-                  
-                  if (!submitted) {
-                    optClass += isSelected ? "border-blue-500 bg-blue-50 text-blue-800 font-medium shadow-sm" : "border-gray-200 hover:bg-gray-50 text-[var(--text-muted)]";
-                  } else {
-                    if (isCorrectAnswer) optClass += "border-emerald-500 bg-emerald-50 text-emerald-800 font-bold";
-                    else if (isSelected && !isCorrectAnswer) optClass += "border-red-500 bg-red-50 text-red-800 line-through";
-                    else optClass += "border-gray-100 opacity-50";
-                  }
-
-                  return (
-                    <div key={oIdx} className={optClass} onClick={() => {
-                      if (submitted) return;
-                      const newAns = [...answers];
                       newAns[qIdx] = oIdx;
                       setAnswers(newAns);
                     }}>

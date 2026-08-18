@@ -25,8 +25,8 @@ CRITICAL JSON RULE: DO NOT use literal newlines inside strings. Keep each paragr
 
 Format:
 {
-  "title": "...",
-  "paragraphs": ["Para 1...", "Para 2..."]
+  "title": "[Insert an academic title here]",
+  "paragraphs": ["[Write the full, lengthy first paragraph here]", "[Write the full, lengthy second paragraph here]"]
 }`;
     } else if (part === 2) {
       prompt = `Continue the following highly academic reading passage. 
@@ -43,7 +43,7 @@ CRITICAL JSON RULE: DO NOT use literal newlines inside strings. Keep each paragr
 
 Format:
 {
-  "paragraphs": ["Para 3...", "Para 4..."]
+  "paragraphs": ["[Write the full, lengthy third paragraph here]", "[Write the full, lengthy fourth paragraph here]"]
 }`;
     } else {
       prompt = `Conclude the following highly academic reading passage.
@@ -60,7 +60,7 @@ CRITICAL JSON RULE: DO NOT use literal newlines inside strings. Keep each paragr
 
 Format:
 {
-  "paragraphs": ["Para 5...", "Para 6..."]
+  "paragraphs": ["[Write the full, lengthy fifth paragraph here]", "[Write the full, lengthy sixth paragraph here]"]
 }`;
     }
 
