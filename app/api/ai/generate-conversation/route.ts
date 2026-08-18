@@ -12,16 +12,53 @@ export async function POST(req: NextRequest) {
     }
 
     const prompt = `You are an expert English teacher. 
-Create a short, natural English conversation between two people (A and B) that includes ALL of the following vocabulary words:
+Create an interactive 20-question English learning exercise based on the following vocabulary words:
 ${words.join(', ')}
 
-The conversation should be realistic, engaging, and make contextual sense.
-Format the output as a simple array of objects in JSON:
-[
-  { "speaker": "A", "text": "..." },
-  { "speaker": "B", "text": "..." }
-]
-Only output the JSON array, no markdown or other text.`;
+IMPORTANT RULES:
+- Generate EXACTLY 20 items.
+- The items must alternate randomly between 3 types: "repeat_sentence", "translate_typing", and "listen_quiz".
+- Every item MUST incorporate at least one vocabulary word from the list above.
+- The output MUST be a JSON array of objects. Do not wrap in markdown \`\`\`json.
+
+Format for each type:
+
+1. Type "repeat_sentence" (User listens and repeats to practice pronunciation):
+{
+  "type": "repeat_sentence",
+  "speaker": "A",
+  "text": "A natural English sentence using the vocabulary."
+}
+
+2. Type "translate_typing" (User reads a Vietnamese sentence and types the English translation):
+{
+  "type": "translate_typing",
+  "vietnamese": "Câu tiếng Việt cần dịch ra tiếng Anh.",
+  "expectedEnglish": "The expected English translation using the vocabulary."
+}
+
+3. Type "listen_quiz" (User listens to a short dialogue, script hidden, and answers 2 multiple choice questions):
+{
+  "type": "listen_quiz",
+  "dialogue": [
+    { "speaker": "A", "text": "..." },
+    { "speaker": "B", "text": "..." }
+  ],
+  "questions": [
+    {
+      "question": "A comprehension question about the dialogue?",
+      "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
+      "correctAnswer": 0 // index of the correct option
+    },
+    {
+      "question": "Another question?",
+      "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
+      "correctAnswer": 2
+    }
+  ]
+}
+
+GENERATE EXACTLY 20 ITEMS AS A JSON ARRAY.`;
 
     const fallbackModels = [
       'gemini-flash-latest',

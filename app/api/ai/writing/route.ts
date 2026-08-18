@@ -90,11 +90,32 @@ BẠN BẮT BUỘC PHẢI TRẢ VỀ KẾT QUẢ DƯỚI DẠNG CHUỖI JSON H�
     "GRA": 6.5
   },
   "feedback": {
-    "TR": "PHÂN TÍCH RẤT SÂU: Giải thích cặn kẽ tại sao bài viết được điểm này, phân tích từng đoạn văn xem đã trả lời trọn vẹn câu hỏi chưa. Chỉ ra chính xác luận điểm nào hời hợt, luận điểm nào tốt. (ít nhất 4-5 câu)",
-    "CC": "PHÂN TÍCH RẤT SÂU: Đánh giá cực kỳ chi tiết về sự mạch lạc giữa các câu và các đoạn. Chỉ ra những chỗ chuyển ý bị gượng ép, hoặc lặp từ nối quá nhiều. Đưa ra gợi ý cấu trúc mạch lạc hơn. (ít nhất 4-5 câu)",
-    "LR": "PHÂN TÍCH RẤT SÂU: Nhận xét chi tiết về vốn từ vựng, mức độ sử dụng collocation và idiomatic expressions. Chỉ ra đích danh những cụm từ dùng sai ngữ cảnh hoặc không tự nhiên, và khen ngợi những cụm từ xuất sắc. (ít nhất 4-5 câu)",
-    "GRA": "PHÂN TÍCH RẤT SÂU: Phân tích độ phức tạp của cấu trúc câu (câu đơn, câu ghép, câu phức). Chỉ ra những lỗi sai ngữ pháp lặp đi lặp lại hoặc lỗi chia thì, giới từ. Đánh giá về sự đa dạng ngữ pháp. (ít nhất 4-5 câu)"
-  },
+    "TR": {
+      "summary": "Nhận xét tổng quan cực kỳ chi tiết (ít nhất 4-5 câu). Giải thích cặn kẽ tại sao bài viết được điểm này, phân tích từng đoạn xem trả lời trọn vẹn chưa.",
+      "detailedReasons": [
+        "Trích dẫn lỗi 1 (nếu có)",
+        "Trích dẫn lỗi 2 (nếu có)"
+      ]
+    },
+    "CC": {
+      "summary": "Nhận xét tổng quan về sự mạch lạc giữa các đoạn (ít nhất 4-5 câu).",
+      "detailedReasons": [
+        "Trích dẫn chỗ chuyển ý gượng ép (nếu có)"
+      ]
+    },
+    "LR": {
+      "summary": "Nhận xét tổng quan về vốn từ vựng (ít nhất 4-5 câu).",
+      "detailedReasons": [
+        "Trích dẫn đích danh cụm từ dùng sai ngữ cảnh (nếu có)"
+      ]
+    },
+    "GRA": {
+      "summary": "Nhận xét tổng quan về ngữ pháp (ít nhất 4-5 câu).",
+      "detailedReasons": [
+        "Trích dẫn những lỗi sai lặp đi lặp lại hoặc lỗi cấu trúc (nếu có)"
+      ]
+    }
+  }, // CHÚ Ý CỰC KỲ QUAN TRỌNG: Mảng 'detailedReasons' PHẢI chỉ ra TẤT CẢ các chỗ trong bài khiến điểm bị mất. Nếu bài đạt Band 4, 5, 6 thì mảng này phải có RẤT NHIỀU lỗi được chỉ rõ. Nhưng NẾU Band điểm của tiêu chí đó là 8.5 hoặc 9.0 thì mảng 'detailedReasons' KHÔNG CẦN CHỈ LỖI MÀ ĐỂ TRỐNG [].
   "grammarErrors": [
     {
       "error": "Trích dẫn lại chính xác câu/cụm từ bị sai trong bài",

@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Volume2, Loader2, ArrowRight, Check, X, ArrowLeft } from 'lucide-react';
+import { Mic, MicOff, Volume2, Loader2, ArrowRight, Check, X, Play, Type, Headphones, HelpCircle } from 'lucide-react';
 import type { Card } from '@/lib/types';
 import { ProgressBar } from './ProgressBar';
 
-interface Message {
-  speaker: string;
-  text: string;
-}
+type ConversationItem = 
+  | { type: 'repeat_sentence', speaker: string, text: string }
+  | { type: 'translate_typing', vietnamese: string, expectedEnglish: string }
+  | { type: 'listen_quiz', dialogue: {speaker: string, text: string}[], questions: {question: string, options: string[], correctAnswer: number}[] };
 
 interface ConversationPracticeProps {
   cards: Card[];
@@ -15,11 +15,25 @@ interface ConversationPracticeProps {
 
 export function ConversationPractice({ cards, onComplete }: ConversationPracticeProps) {
   const [loading, setLoading] = useState(true);
-  const [conversation, setConversation] = useState<Message[]>([]);
-  const [currentMsgIdx, setCurrentMsgIdx] = useState(0);
+  const [conversation, setConversation] = useState<ConversationItem[]>([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  
+  // States for repeat_sentence
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [errorWords, setErrorWords] = useState<string[]>([]);
+  
+  // States for translate_typing
+  const [translationInput, setTranslationInput] = useState('');
+  const [translationChecked, setTranslationChecked] = useState(false);
+  const [isTranslationCorrect, setIsTranslationCorrect] = useState(false);
+
+  // States for listen_quiz
+  const [quizAnswers, setQuizAnswers] = useState<number[]>([]);
+  const [quizChecked, setQuizChecked] = useState(false);
+  
+  // Shared
+  const [correctCount, setCorrectCount] = useState(0);
 
   const recognitionRef = useRef<any>(null);
   const isRecordingRef = useRef<boolean>(false);
@@ -27,7 +41,6 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
   const lastErrorTimeRef = useRef<number>(0);
 
   useEffect(() => {
-    // Generate conversation
     const words = cards.map(c => c.term);
     fetch('/api/ai/generate-conversation', {
       method: 'POST',
@@ -35,8 +48,10 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
     })
     .then(res => res.json())
     .then(data => {
-      if (data.conversation) {
+      if (data.conversation && Array.isArray(data.conversation)) {
         setConversation(data.conversation);
+      } else {
+        setConversation([]);
       }
       setLoading(false);
     })
@@ -78,7 +93,6 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
       };
 
       recognition.onerror = (event: any) => {
-        console.error('Speech recognition error', event.error);
         if (event.error === 'not-allowed') {
           isRecordingRef.current = false;
           setIsRecording(false);
@@ -102,11 +116,7 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
 
       recognition.onend = () => {
         if (isRecordingRef.current) {
-          try {
-            recognition.start();
-          } catch (e) {
-            console.error('Failed to restart recognition', e);
-          }
+          try { recognition.start(); } catch (e) {}
         }
       };
 
@@ -117,14 +127,12 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
   };
 
   const toggleRecording = () => {
-    window.speechSynthesis.cancel();
     if (isRecording) {
       isRecordingRef.current = false;
       recognitionRef.current?.stop();
       setIsRecording(false);
       checkPronunciation();
     } else {
-      // Recreate instance every time to avoid stale state bugs in Chrome/Edge
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch(e) {}
       }
@@ -135,134 +143,294 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
       }
       isRecordingRef.current = true;
       setTranscript('');
-      try {
-        recognition.start();
-      } catch(e) {
-        console.error('Start error', e);
-      }
+      try { recognition.start(); } catch(e) {}
       setIsRecording(true);
     }
   };
 
   const checkPronunciation = () => {
-    if (!conversation[currentMsgIdx]) return;
-    const targetText = conversation[currentMsgIdx].text.toLowerCase().replace(/[^\w\s]/gi, '');
+    const item = conversation[currentIdx];
+    if (item.type !== 'repeat_sentence') return;
+    const targetText = item.text.toLowerCase().replace(/[^\w\s]/gi, '');
     const spokenText = transcript.toLowerCase().replace(/[^\w\s]/gi, '');
-    
     const targetWords = targetText.split(/\s+/).filter(Boolean);
     const spokenWords = spokenText.split(/\s+/).filter(Boolean);
-    
-    // Very basic check: which target words are missing in spoken text
     const missing = targetWords.filter(w => !spokenWords.includes(w));
     setErrorWords(missing);
   };
 
-  const nextMessage = () => {
+  const checkTranslation = () => {
+    const item = conversation[currentIdx];
+    if (item.type !== 'translate_typing') return;
+    
+    // Very basic validation: Check if user included key vocabulary words
+    const expectedWords = item.expectedEnglish.toLowerCase().replace(/[^\w\s]/gi, '').split(/\s+/).filter(Boolean);
+    const userWords = translationInput.toLowerCase().replace(/[^\w\s]/gi, '').split(/\s+/).filter(Boolean);
+    
+    // Find intersection. If they got at least 50% of the words, we consider it a pass for learning purposes.
+    const intersection = expectedWords.filter(w => userWords.includes(w));
+    const isCorrect = intersection.length >= expectedWords.length * 0.5;
+    
+    setIsTranslationCorrect(isCorrect);
+    setTranslationChecked(true);
+  };
+
+  const checkQuiz = () => {
+    setQuizChecked(true);
+  };
+
+  const nextItem = () => {
+    let wasCorrect = false;
+    const item = conversation[currentIdx];
+    
+    if (item.type === 'repeat_sentence') {
+      wasCorrect = transcript.length > 0 && errorWords.length <= 2;
+    } else if (item.type === 'translate_typing') {
+      wasCorrect = isTranslationCorrect;
+    } else if (item.type === 'listen_quiz') {
+      // Check if all answers are correct
+      const allCorrect = item.questions.every((q, i) => quizAnswers[i] === q.correctAnswer);
+      wasCorrect = allCorrect;
+    }
+
+    if (wasCorrect) setCorrectCount(c => c + 1);
+    
+    // Reset states
     setTranscript('');
     setErrorWords([]);
-    if (currentMsgIdx + 1 < conversation.length) {
-      setCurrentMsgIdx(i => i + 1);
+    setTranslationInput('');
+    setTranslationChecked(false);
+    setIsTranslationCorrect(false);
+    setQuizAnswers([]);
+    setQuizChecked(false);
+
+    if (currentIdx + 1 < conversation.length) {
+      setCurrentIdx(i => i + 1);
     } else {
-      onComplete(cards.length, cards.length);
+      onComplete(correctCount + (wasCorrect ? 1 : 0), conversation.length);
     }
   };
 
   const speak = (text: string) => {
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-US';
-    window.speechSynthesis.speak(utter);
+    const url = `/api/tts?text=${encodeURIComponent(text)}`;
+    const audio = new Audio(url);
+    audio.play().catch(e => console.error("Audio play failed:", e));
+  };
+
+  const speakDialogue = (dialogue: {speaker: string, text: string}[]) => {
+    const fullText = dialogue.map(d => d.text).join('. ');
+    speak(fullText);
   };
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4 bg-[var(--card)] rounded-2xl border border-[var(--border)]">
         <Loader2 size={32} className="animate-spin text-[var(--primary)]" />
-        <p className="text-[var(--text-muted)] text-sm font-medium">AI đang tạo kịch bản hội thoại từ từ vựng của bạn...</p>
+        <p className="text-[var(--text-muted)] text-sm font-medium">AI đang soạn 20 bài tập ngẫu nhiên từ từ vựng của bạn...</p>
       </div>
     );
   }
 
   if (conversation.length === 0) {
-    return <div className="text-center py-10">Lỗi tạo hội thoại.</div>;
+    return <div className="text-center py-10 font-bold text-red-500">Lỗi tạo bài tập. Bộ từ vựng cần có ít nhất 1 từ.</div>;
   }
 
-  const currentMsg = conversation[currentMsgIdx];
-  const words = currentMsg.text.split(' ');
-  const spokenTextLower = transcript.toLowerCase().replace(/[^\w\s]/gi, '');
-  const spokenWordsArray = spokenTextLower.split(/\s+/).filter(Boolean);
+  const currentItem = conversation[currentIdx];
 
-  return (
-    <div className="flex flex-col gap-6 bg-[var(--card)] p-6 rounded-2xl border border-[var(--border)] shadow-sm animate-fade-in">
-      <ProgressBar current={currentMsgIdx} total={conversation.length} label={`Câu ${currentMsgIdx + 1}/${conversation.length}`} />
-      
-      <div className="flex items-start gap-4 mt-4">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-bold flex items-center justify-center flex-shrink-0 shadow-md">
-          {currentMsg.speaker}
-        </div>
-        <div className="flex-1">
-          <p className="text-xl font-medium text-[var(--text)] leading-relaxed">
-            {words.map((w, i) => {
-              const cleanWord = w.toLowerCase().replace(/[^\w]/g, '');
-              const isSpoken = spokenWordsArray.includes(cleanWord);
-              const isError = errorWords.includes(cleanWord);
-              
-              let colorClass = "";
-              if (isSpoken) {
-                colorClass = "text-emerald-500 font-bold drop-shadow-sm transition-colors";
-              } else if (!isRecording && transcript && !isSpoken) {
-                colorClass = "text-red-500 font-bold underline decoration-red-200 decoration-2 underline-offset-4 transition-colors";
-              }
+  // 1. Render Repeat Sentence
+  if (currentItem.type === 'repeat_sentence') {
+    const words = currentItem.text.split(' ');
+    const spokenTextLower = transcript.toLowerCase().replace(/[^\w\s]/gi, '');
+    const spokenWordsArray = spokenTextLower.split(/\s+/).filter(Boolean);
 
-              return (
-                <span key={i} className={colorClass}>
-                  {w}{' '}
-                </span>
-              );
-            })}
-          </p>
-          <div className="flex items-center gap-2 mt-3">
-             <button onClick={() => speak(currentMsg.text)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--bg)] transition-colors" title="Nghe người bản xứ đọc">
-               <Volume2 size={16} />
-             </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-8 pt-6 border-t border-[var(--border)] flex flex-col items-center gap-4">
-        <p className="text-sm font-medium text-[var(--text-muted)]">Đọc to câu trên để kiểm tra phát âm</p>
+    return (
+      <div className="flex flex-col gap-6 bg-[var(--card)] p-6 rounded-2xl border border-[var(--border)] shadow-sm animate-fade-in">
+        <ProgressBar current={currentIdx} total={conversation.length} label={`Câu ${currentIdx + 1}/${conversation.length} (Đọc)`} />
         
-        <button 
-          onClick={toggleRecording}
-          className={`w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg transition-all ${isRecording ? 'bg-red-500 animate-pulse scale-110' : 'bg-[var(--primary)] hover:scale-105'}`}
-        >
-          {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
-        </button>
-
-        {isRecording && transcript && (
-          <div className="w-full bg-[var(--bg)] p-4 rounded-xl text-center">
-            <p className="text-sm text-[var(--text-muted)] mb-1">Bạn đang đọc:</p>
-            <p className="text-[var(--text)] font-medium">&quot;{transcript.replace(/\[\.\.\.\]$/, '')}&quot;</p>
+        <div className="flex items-start gap-4 mt-4">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-bold flex items-center justify-center flex-shrink-0 shadow-md">
+            {currentItem.speaker}
           </div>
-        )}
-
-        {transcript && !isRecording && (
-          <div className="w-full bg-[var(--bg)] p-4 rounded-xl text-center">
-            <p className="text-sm text-[var(--text-muted)] mb-1">Bạn đã đọc:</p>
-            <p className="text-[var(--text)] font-medium">&quot;{transcript.replace(/\[\.\.\.\]$/, '')}&quot;</p>
-            {errorWords.length > 0 ? (
-              <p className="text-red-500 text-sm mt-2 font-bold"><X size={14} className="inline mr-1"/> Phát âm sai hoặc thiếu từ bị bôi đỏ</p>
-            ) : (
-              <p className="text-emerald-500 text-sm mt-2 font-bold"><Check size={14} className="inline mr-1"/> Phát âm rất tốt!</p>
-            )}
+          <div className="flex-1">
+            <p className="text-xl font-medium text-[var(--text)] leading-relaxed">
+              {words.map((w, i) => {
+                const cleanWord = w.toLowerCase().replace(/[^\w]/g, '');
+                const isSpoken = spokenWordsArray.includes(cleanWord);
+                const isError = errorWords.includes(cleanWord);
+                let colorClass = "";
+                if (isSpoken) colorClass = "text-emerald-500 font-bold drop-shadow-sm transition-colors";
+                else if (!isRecording && transcript && !isSpoken) colorClass = "text-red-500 font-bold underline decoration-red-200 decoration-2 underline-offset-4 transition-colors";
+                return <span key={i} className={colorClass}>{w} </span>;
+              })}
+            </p>
+            <div className="flex items-center gap-2 mt-3">
+               <button onClick={() => speak(currentItem.text)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--bg)] transition-colors" title="Nghe người bản xứ đọc">
+                 <Volume2 size={16} />
+               </button>
+            </div>
           </div>
-        )}
+        </div>
 
-        {(!isRecording && transcript) && (
-          <button onClick={nextMessage} className="btn-primary w-full max-w-xs mt-4 py-3">
-            Tiếp tục <ArrowRight size={18} />
+        <div className="mt-8 pt-6 border-t border-[var(--border)] flex flex-col items-center gap-4">
+          <p className="text-sm font-medium text-[var(--text-muted)]">Đọc to câu trên để kiểm tra phát âm</p>
+          <button onClick={toggleRecording} className={`w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg transition-all ${isRecording ? 'bg-red-500 animate-pulse scale-110' : 'bg-[var(--primary)] hover:scale-105'}`}>
+            {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
           </button>
-        )}
+
+          {isRecording && transcript && (
+            <div className="w-full bg-[var(--bg)] p-4 rounded-xl text-center">
+              <p className="text-[var(--text)] font-medium">&quot;{transcript.replace(/\[\.\.\.\]$/, '')}&quot;</p>
+            </div>
+          )}
+
+          {transcript && !isRecording && (
+            <div className="w-full bg-[var(--bg)] p-4 rounded-xl text-center">
+              <p className="text-[var(--text)] font-medium">&quot;{transcript.replace(/\[\.\.\.\]$/, '')}&quot;</p>
+              {errorWords.length > 0 ? (
+                <p className="text-red-500 text-sm mt-2 font-bold"><X size={14} className="inline mr-1"/> Phát âm sai hoặc thiếu từ bị bôi đỏ</p>
+              ) : (
+                <p className="text-emerald-500 text-sm mt-2 font-bold"><Check size={14} className="inline mr-1"/> Phát âm rất tốt!</p>
+              )}
+            </div>
+          )}
+
+          {(!isRecording && transcript) && (
+            <button onClick={nextItem} className="btn-primary w-full max-w-xs mt-4 py-3">Tiếp tục <ArrowRight size={18} /></button>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // 2. Render Translate Typing
+  if (currentItem.type === 'translate_typing') {
+    return (
+      <div className="flex flex-col gap-6 bg-[var(--card)] p-6 rounded-2xl border border-[var(--border)] shadow-sm animate-fade-in">
+        <ProgressBar current={currentIdx} total={conversation.length} label={`Câu ${currentIdx + 1}/${conversation.length} (Dịch)`} />
+        
+        <div className="mt-4">
+          <h3 className="font-bold text-[var(--text-muted)] mb-2 flex items-center gap-2">
+            <Type size={18} className="text-blue-500" /> Dịch câu sau sang tiếng Anh:
+          </h3>
+          <p className="text-xl font-medium text-[var(--text)] bg-blue-50 p-4 rounded-xl border border-blue-100">{currentItem.vietnamese}</p>
+        </div>
+
+        <div className="mt-4">
+          <textarea
+            className="w-full bg-[var(--bg)] border border-[var(--border)] rounded-xl p-4 text-[var(--text)] focus:outline-none focus:border-[var(--primary)] resize-none h-32"
+            placeholder="Gõ bản dịch tiếng Anh của bạn vào đây..."
+            value={translationInput}
+            onChange={(e) => setTranslationInput(e.target.value)}
+            disabled={translationChecked}
+          />
+        </div>
+
+        {translationChecked && (
+          <div className={`p-4 rounded-xl border ${isTranslationCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+            <p className={`font-bold flex items-center gap-2 mb-2 ${isTranslationCorrect ? 'text-emerald-600' : 'text-red-600'}`}>
+              {isTranslationCorrect ? <><Check size={18} /> Khá tốt!</> : <><X size={18} /> Cần cố gắng hơn</>}
+            </p>
+            <p className="text-sm text-[var(--text-muted)]">Đáp án gợi ý từ AI:</p>
+            <p className="font-medium text-[var(--text)]">{currentItem.expectedEnglish}</p>
+          </div>
+        )}
+
+        <div className="flex justify-center mt-4">
+          {!translationChecked ? (
+            <button onClick={checkTranslation} disabled={!translationInput.trim()} className="btn-primary w-full max-w-xs py-3 disabled:opacity-50">
+              Kiểm tra
+            </button>
+          ) : (
+            <button onClick={nextItem} className="btn-primary w-full max-w-xs py-3">
+              Tiếp tục <ArrowRight size={18} />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Render Listen Quiz
+  if (currentItem.type === 'listen_quiz') {
+    return (
+      <div className="flex flex-col gap-6 bg-[var(--card)] p-6 rounded-2xl border border-[var(--border)] shadow-sm animate-fade-in">
+        <ProgressBar current={currentIdx} total={conversation.length} label={`Câu ${currentIdx + 1}/${conversation.length} (Nghe)`} />
+        
+        <div className="mt-4 flex flex-col items-center justify-center bg-purple-50 p-6 rounded-xl border border-purple-100">
+          <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white mb-4 shadow-lg animate-pulse-slow">
+            <Headphones size={32} />
+          </div>
+          <h3 className="font-bold text-purple-900 mb-4">Nghe đoạn hội thoại và trả lời câu hỏi</h3>
+          <button onClick={() => speakDialogue(currentItem.dialogue)} className="btn-primary flex items-center gap-2 bg-purple-600 hover:bg-purple-700">
+            <Play size={18} /> Phát Audio
+          </button>
+        </div>
+
+        <div className="mt-4 space-y-6">
+          {currentItem.questions.map((q, qIdx) => (
+            <div key={qIdx} className="bg-[var(--bg)] p-4 rounded-xl border border-[var(--border)]">
+              <p className="font-bold text-[var(--text)] mb-3 flex items-start gap-2">
+                <HelpCircle size={18} className="text-[var(--primary)] shrink-0 mt-0.5" />
+                {q.question}
+              </p>
+              <div className="space-y-2 pl-6">
+                {q.options.map((opt, oIdx) => {
+                  const isSelected = quizAnswers[qIdx] === oIdx;
+                  const isCorrectAnswer = q.correctAnswer === oIdx;
+                  
+                  let optClass = "p-3 rounded-lg border cursor-pointer transition-colors ";
+                  if (!quizChecked) {
+                    optClass += isSelected ? "border-[var(--primary)] bg-blue-50 text-blue-700 font-medium" : "border-gray-200 hover:bg-gray-50 text-[var(--text-muted)]";
+                  } else {
+                    if (isCorrectAnswer) optClass += "border-emerald-500 bg-emerald-50 text-emerald-700 font-bold";
+                    else if (isSelected && !isCorrectAnswer) optClass += "border-red-500 bg-red-50 text-red-700 line-through";
+                    else optClass += "border-gray-100 opacity-50";
+                  }
+
+                  return (
+                    <div key={oIdx} className={optClass} onClick={() => {
+                      if (quizChecked) return;
+                      const newAns = [...quizAnswers];
+                      newAns[qIdx] = oIdx;
+                      setQuizAnswers(newAns);
+                    }}>
+                      {opt}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {quizChecked && (
+          <div className="mt-6 p-4 rounded-xl bg-gray-50 border border-gray-200">
+            <h4 className="font-bold text-gray-700 mb-3 uppercase text-sm tracking-wide">Transcript Hội Thoại</h4>
+            <div className="space-y-2">
+              {currentItem.dialogue.map((d, i) => (
+                <p key={i} className="text-[var(--text)]">
+                  <span className="font-bold text-indigo-600 mr-2">{d.speaker}:</span>
+                  {d.text}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-center mt-4">
+          {!quizChecked ? (
+            <button onClick={checkQuiz} disabled={quizAnswers.length < currentItem.questions.length || quizAnswers.includes(undefined as any)} className="btn-primary w-full max-w-xs py-3 disabled:opacity-50">
+              Chốt đáp án
+            </button>
+          ) : (
+            <button onClick={nextItem} className="btn-primary w-full max-w-xs py-3">
+              Tiếp tục <ArrowRight size={18} />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return <div>Unknown exercise type</div>;
 }

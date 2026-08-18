@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { PenLine, Mic, Sparkles, BookOpen, Check, X, Loader2, Play, Square, AlertCircle, Plus, Upload, History, Trash2, Search } from 'lucide-react';
+import { PenLine, Mic, Sparkles, BookOpen, Check, X, Loader2, Play, Square, AlertCircle, Plus, Upload, History, Trash2, Search, ChevronRight } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { appAlert, appConfirm } from '@/lib/dialog';
 import Link from 'next/link';
@@ -856,15 +856,39 @@ function FeedbackPanel({ feedback, isGrading, defaultDeckId, type }: { feedback:
         <div>
           <h4 className="font-bold text-[var(--text)] mb-3 text-sm uppercase tracking-wide border-b pb-2">Điểm 4 Tiêu Chí</h4>
           <div className="flex flex-col gap-3">
-            {Object.entries(feedback.scores || {}).map(([crit, score]: any) => (
-              <div key={crit} className="bg-[var(--bg)] p-3 rounded-xl border border-[var(--border)]">
-                <div className="flex items-center justify-between mb-1">
-                  <span className={`font-black text-${themeColor}-600`}>{crit}</span>
-                  <span className="font-bold text-lg">{score}</span>
+            {Object.entries(feedback.scores || {}).map(([crit, score]: any) => {
+              const critFeedback = feedback.feedback[crit];
+              const isObject = typeof critFeedback === 'object' && critFeedback !== null;
+              const summaryText = isObject ? critFeedback.summary : critFeedback;
+              const detailedReasons = isObject ? critFeedback.detailedReasons || [] : [];
+              
+              return (
+                <div key={crit} className="bg-[var(--bg)] p-3 rounded-xl border border-[var(--border)]">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`font-black text-${themeColor}-600`}>{crit}</span>
+                    <span className="font-bold text-lg">{score}</span>
+                  </div>
+                  <p className="text-[14px] text-[var(--text-muted)] leading-relaxed">{summaryText}</p>
+                  
+                  {detailedReasons.length > 0 && (
+                    <details className="mt-3 text-sm group cursor-pointer border-t border-[var(--border)] pt-2">
+                      <summary className="font-semibold text-[var(--primary)] flex items-center justify-between outline-none select-none">
+                        Chi tiết các lỗi mất điểm ({detailedReasons.length})
+                        <ChevronRight size={16} className="transform group-open:rotate-90 transition-transform text-[var(--primary)]" />
+                      </summary>
+                      <ul className="mt-3 space-y-3">
+                        {detailedReasons.map((reason: string, i: number) => (
+                          <li key={i} className="leading-relaxed bg-red-50 text-red-700 p-3 rounded-lg border border-red-100 flex items-start gap-2">
+                            <span className="mt-0.5 text-red-500 font-bold">•</span>
+                            <span>{reason}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
                 </div>
-                <p className="text-[14px] text-[var(--text-muted)] leading-relaxed">{feedback.feedback[crit]}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
