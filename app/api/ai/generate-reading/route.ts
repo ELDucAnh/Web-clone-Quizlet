@@ -22,7 +22,7 @@ ${words.join(', ')}
 
 IMPORTANT RULES:
 - The reading passage MUST be at a C2 proficiency level, highly academic, abstract, and extremely complex.
-- The passage MUST be long (around 800-1200 words) and contain exactly 6 or 7 long paragraphs.
+- The passage MUST be around 600-800 words and contain exactly 6 long paragraphs.
 - The passage MUST naturally incorporate as many of the provided vocabulary words as possible.
 - Create EXACTLY 20 questions, divided into 4 types (5 questions each).
 - ALL 20 questions MUST strictly follow a generic multiple-choice JSON format.
@@ -41,7 +41,7 @@ Question Types & Format Instructions:
 
 - Each question must have EXACTLY the options specified above.
 - The "correctAnswer" is the 0-indexed integer of the correct option in the "options" array.
-- Each question MUST include an "explanation" field that explains in detail WHY the answer is correct and why others are wrong.
+- Each question MUST include an "explanation" field. IMPORTANT: Keep the explanation EXTREMELY short and concise (max 1 sentence) to save tokens.
 - The output MUST be a valid JSON object.
 
 Format:
@@ -90,7 +90,16 @@ Format:
     }
 
     const responseText = completion.choices[0]?.message?.content || "";
-    const readingPractice = JSON.parse(responseText);
+    let readingPractice;
+    
+    try {
+      readingPractice = JSON.parse(responseText);
+    } catch (parseError: any) {
+      if (completion.choices[0]?.finish_reason === 'length') {
+        throw new Error("AI đang viết thì bị ngắt ngang do vượt quá giới hạn Token/Phút (TPM). Vui lòng nghỉ tay chờ 1 phút rồi tạo lại nhé!");
+      }
+      throw new Error("Lỗi rách file JSON (do AI bị ngắt kết nối hoặc hết hạn ngạch Token): " + parseError.message);
+    }
 
     return NextResponse.json(readingPractice);
 
