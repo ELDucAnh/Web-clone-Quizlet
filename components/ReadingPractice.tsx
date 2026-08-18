@@ -25,64 +25,70 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [loadingStep, setLoadingStep] = useState<string>('Đang khởi động hệ thống...');
   const [loadingPhase2, setLoadingPhase2] = useState(false);
 
   useEffect(() => {
-    const words = cards.map(c => c.term);
-    fetch('/api/ai/generate-reading', {
-      method: 'POST',
-      body: JSON.stringify({ words })
-    })
-    .then(res => res.json())
-    .then((result: any) => {
-      if (result.error) {
-        setErrorMsg(result.error);
-        alert('Lỗi từ AI (Reading): ' + result.error);
-      } else if (result.paragraphs && result.questions) {
-        setData(result);
-        setAnswers(new Array(result.questions.length).fill(-1));
-      } else {
-        setErrorMsg('Invalid response format from AI');
-        alert('Lỗi: AI trả về sai định dạng!');
+    let isMounted = true;
+    const generatePipeline = async () => {
+      try {
+        const words = cards.map(c => c.term);
+        
+        setLoadingStep('Bước 1/5: Đang viết đoạn mở bài (20% hoàn thành)...');
+        const res1 = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words, part: 1 }) });
+        const part1 = await res1.json();
+        if (part1.error) throw new Error(part1.error);
+        
+        if (!isMounted) return;
+        setLoadingStep('Bước 2/5: Đang viết đoạn thân bài (40% hoàn thành)...');
+        const res2 = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words, part: 2, previousContext: part1.paragraphs.join('\\n\\n') }) });
+        const part2 = await res2.json();
+        if (part2.error) throw new Error(part2.error);
+        
+        if (!isMounted) return;
+        setLoadingStep('Bước 3/5: Đang viết đoạn kết bài (60% hoàn thành)...');
+        const res3 = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words, part: 3, previousContext: [...part1.paragraphs, ...part2.paragraphs].join('\\n\\n') }) });
+        const part3 = await res3.json();
+        if (part3.error) throw new Error(part3.error);
+
+        const fullParagraphs = [...part1.paragraphs, ...part2.paragraphs, ...part3.paragraphs];
+        
+        if (!isMounted) return;
+        setLoadingStep('Bước 4/5: Đang soạn 10 câu hỏi đầu (80% hoàn thành)...');
+        const res4 = await fetch('/api/ai/reading-pipeline/questions-phase1', { method: 'POST', body: JSON.stringify({ paragraphs: fullParagraphs }) });
+        const q1 = await res4.json();
+        if (q1.error) throw new Error(q1.error);
+
+        if (!isMounted) return;
+        setLoadingStep('Bước 5/5: Đang soạn 10 câu khó cuối cùng (100% hoàn thành)...');
+        const res5 = await fetch('/api/ai/reading-pipeline/questions-phase2', { method: 'POST', body: JSON.stringify({ paragraphs: fullParagraphs }) });
+        const q2 = await res5.json();
+        if (q2.error) throw new Error(q2.error);
+
+        if (isMounted) {
+          setData({
+            title: part1.title,
+            paragraphs: fullParagraphs,
+            questions: [...q1.questions, ...q2.questions]
+          });
+          setAnswers(new Array(q1.questions.length + q2.questions.length).fill(-1));
+          setLoading(false);
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          console.error(err);
+          setErrorMsg(err.message || 'Pipeline Error');
+          alert('Lỗi Pipeline (Reading): ' + err.message);
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    })
-    .catch(err => {
-      console.error(err);
-      setErrorMsg(err.message || 'Network error');
-      alert('Lỗi kết nối: ' + err.message);
-      setLoading(false);
-    });
+    };
+    generatePipeline();
+    return () => { isMounted = false; };
   }, [cards]);
 
   const handleLoadPhase2 = async () => {
-    if (!data) return;
-    setLoadingPhase2(true);
-    try {
-      const words = cards.map(c => c.term);
-      const res = await fetch('/api/ai/generate-reading-phase2', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ words, paragraphs: data.paragraphs })
-      });
-      const phase2Data = await res.json();
-      if (!res.ok || phase2Data.error) {
-        throw new Error(phase2Data.error || 'Failed to load phase 2');
-      }
-      
-      setData(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          questions: [...prev.questions, ...phase2Data.questions]
-        };
-      });
-      setAnswers(prev => [...prev, ...Array(phase2Data.questions.length).fill(-1)]);
-    } catch (e: any) {
-      alert("Lỗi tải Phase 2: " + e.message);
-    } finally {
-      setLoadingPhase2(false);
-    }
+    // Không dùng nữa vì giờ pipeline đã làm 20 câu 1 lúc
   };
 
   const handleSubmit = () => {
@@ -104,7 +110,7 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4 bg-[var(--card)] rounded-2xl border border-[var(--border)]">
         <Loader2 size={32} className="animate-spin text-[var(--primary)]" />
-        <p className="text-[var(--text-muted)] text-sm font-medium">AI đang soạn bài đọc học thuật IELTS Passage 3...</p>
+        <p className="text-[var(--text-muted)] text-sm font-medium">{loadingStep}</p>
       </div>
     );
   }
@@ -200,16 +206,6 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
           ))}
           
           <div className="flex flex-col gap-3 justify-center mt-6 sticky bottom-0 bg-[var(--card)] py-4 shrink-0 border-t border-[var(--border)] z-10">
-            {!submitted && data.questions.length === 5 && (
-              <button 
-                onClick={handleLoadPhase2} 
-                disabled={loadingPhase2} 
-                className="btn-secondary w-full py-3 text-base flex items-center justify-center gap-2 border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
-              >
-                {loadingPhase2 ? <Loader2 size={20} className="animate-spin" /> : <HelpCircle size={20} />}
-                {loadingPhase2 ? "Đang rặn nốt 5 câu nâng cao..." : "Tải thêm 5 câu (TFNG & Matching Info) - Không tốn bài mới"}
-              </button>
-            )}
 
             {!submitted ? (
               <button 
