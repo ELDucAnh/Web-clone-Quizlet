@@ -1,42 +1,46 @@
-export const maxDuration = 60; // Allow max 60s for Vercel Hobby
-
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY
+});
 
-export async function POST(req: NextRequest) {
+export const maxDuration = 60; // Allows up to 60s for Vercel Hobby
+
+export async function POST(req: Request) {
   try {
     if (!process.env.GROQ_API_KEY) {
       return NextResponse.json({ error: 'Chưa cấu hình GROQ_API_KEY' }, { status: 500 });
     }
 
-    const { words } = await req.json();
-
-    if (!words || words.length === 0) {
-      return NextResponse.json({ error: 'Missing words' }, { status: 400 });
+    const { words, paragraphs } = await req.json();
+    if (!words || !Array.isArray(words) || !paragraphs || !Array.isArray(paragraphs)) {
+      return NextResponse.json({ error: 'Missing words or paragraphs' }, { status: 400 });
     }
 
-    const prompt = `Create an EXTREMELY complex, high-difficulty IELTS Reading Passage 3 practice exercise based on the following vocabulary words:
-${words.join(', ')}
+    const prompt = `Based on the following highly academic reading passage and vocabulary words:
+Vocabulary: ${words.join(', ')}
+
+Passage:
+${paragraphs.join('\n\n')}
 
 IMPORTANT RULES:
-- The reading passage MUST be at a C2 proficiency level, highly academic, abstract, and extremely complex.
-- The passage MUST be around 600-800 words and contain exactly 6 long paragraphs.
-- The passage MUST naturally incorporate as many of the provided vocabulary words as possible.
-- Create EXACTLY 10 questions, divided into 2 types (5 questions each).
+- Create EXACTLY 10 questions based on the passage provided above.
+- The questions MUST be divided into 2 types (5 questions each).
 - ALL 10 questions MUST strictly follow a generic multiple-choice JSON format.
 
 CRITICAL JSON RULE: 
 - DO NOT output literal newline characters inside any string value! 
-- Every string (especially paragraph text and explanations) MUST be a single continuous line. 
-- If a paragraph is long, keep it as ONE unbroken string. Do NOT press Enter/Return inside the string.
+- Every string (especially explanations) MUST be a single continuous line. 
+- Do NOT press Enter/Return inside any string.
 
 Question Types & Format Instructions:
-1. 5 Multiple Choice (MC) Questions: Standard 4 options (A, B, C, D) testing deep inference.
-2. 5 Matching Heading Questions:
-   - "question": "Which heading best fits Paragraph [X]?"
-   - "options": Provide 4 different tricky academic headings.
+1. 5 True/False/Not Given (TFNG) Questions:
+   - "question": "Do the following statement agree with the claims of the writer? Statement: [Insert abstract statement]"
+   - "options": EXACTLY 3 options: ["True", "False", "Not Given"]
+2. 5 Matching Information Questions:
+   - "question": "Which paragraph contains the following information: [Insert specific abstract information]?"
+   - "options": Provide 4 different paragraph references, e.g., ["Paragraph 1", "Paragraph 2", "Paragraph 4", "Paragraph 6"].
 
 - Each question must have EXACTLY the options specified above.
 - The "correctAnswer" is the 0-indexed integer of the correct option in the "options" array.
@@ -45,16 +49,11 @@ Question Types & Format Instructions:
 
 Format:
 {
-  "title": "A highly academic title",
-  "paragraphs": [
-    "Paragraph 1 text...",
-    "Paragraph 2 text..."
-  ],
   "questions": [
     {
-      "question": "Which heading best fits Paragraph 2?",
-      "options": ["The evolution of X", "The sudden decline of Y", "A misunderstanding of Z", "The future of W"],
-      "correctAnswer": 2,
+      "question": "Do the following statement agree with the claims of the writer? Statement: The evolution of X is fast.",
+      "options": ["True", "False", "Not Given"],
+      "correctAnswer": 0,
       "explanation": "..."
     }
     // EXACTLY 10 QUESTIONS TOTAL
@@ -74,7 +73,7 @@ Format:
           ],
           model: modelName,
           temperature: 0.3,
-          max_tokens: 4000,
+          max_tokens: 3000,
           response_format: { type: "json_object" }
         });
         if (completion) break;
@@ -89,10 +88,10 @@ Format:
     }
 
     const responseText = completion.choices[0]?.message?.content || "";
-    let readingPractice;
+    let phase2Data;
     
     try {
-      readingPractice = JSON.parse(responseText);
+      phase2Data = JSON.parse(responseText);
     } catch (parseError: any) {
       if (completion.choices[0]?.finish_reason === 'length') {
         throw new Error("AI đang viết thì bị ngắt ngang do vượt quá giới hạn Token/Phút (TPM). Vui lòng nghỉ tay chờ 1 phút rồi tạo lại nhé!");
@@ -100,10 +99,9 @@ Format:
       throw new Error("Lỗi rách file JSON (do AI bị ngắt kết nối hoặc hết hạn ngạch Token): " + parseError.message);
     }
 
-    return NextResponse.json(readingPractice);
+    return NextResponse.json(phase2Data);
 
   } catch (error: any) {
-    console.error('Error generating reading:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

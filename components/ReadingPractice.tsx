@@ -25,6 +25,7 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [loadingPhase2, setLoadingPhase2] = useState(false);
 
   useEffect(() => {
     const words = cards.map(c => c.term);
@@ -53,6 +54,36 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
       setLoading(false);
     });
   }, [cards]);
+
+  const handleLoadPhase2 = async () => {
+    if (!data) return;
+    setLoadingPhase2(true);
+    try {
+      const words = cards.map(c => c.term);
+      const res = await fetch('/api/ai/generate-reading-phase2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ words, paragraphs: data.paragraphs })
+      });
+      const phase2Data = await res.json();
+      if (!res.ok || phase2Data.error) {
+        throw new Error(phase2Data.error || 'Failed to load phase 2');
+      }
+      
+      setData(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          questions: [...prev.questions, ...phase2Data.questions]
+        };
+      });
+      setAnswers(prev => [...prev, ...Array(phase2Data.questions.length).fill(-1)]);
+    } catch (e: any) {
+      alert("Lỗi tải Phase 2: " + e.message);
+    } finally {
+      setLoadingPhase2(false);
+    }
+  };
 
   const handleSubmit = () => {
     if (!data) return;
@@ -168,7 +199,18 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
             </div>
           ))}
           
-          <div className="flex justify-center mt-6 sticky bottom-0 bg-[var(--card)] py-4 shrink-0">
+          <div className="flex flex-col gap-3 justify-center mt-6 sticky bottom-0 bg-[var(--card)] py-4 shrink-0 border-t border-[var(--border)] z-10">
+            {!submitted && data.questions.length === 10 && (
+              <button 
+                onClick={handleLoadPhase2} 
+                disabled={loadingPhase2} 
+                className="btn-secondary w-full py-3 text-base flex items-center justify-center gap-2 border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
+              >
+                {loadingPhase2 ? <Loader2 size={20} className="animate-spin" /> : <HelpCircle size={20} />}
+                {loadingPhase2 ? "Đang rặn nốt 10 câu nâng cao..." : "Tải thêm 10 câu (TFNG & Matching Info) - Không tốn bài mới"}
+              </button>
+            )}
+
             {!submitted ? (
               <button 
                 onClick={handleSubmit} 
