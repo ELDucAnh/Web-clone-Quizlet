@@ -71,11 +71,18 @@ Format:
         
         const result = await model.generateContent(fullPrompt);
         const response = await result.response;
-        const responseText = response.text();
+        let responseText = response.text();
         
-        const match = responseText.match(/\{[\s\S]*\}/);
-        const jsonStr = match ? match[0] : responseText;
-        data = JSON.parse(jsonStr);
+        responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+        
+        // Find the first { or [ and last } or ]
+        const firstBrace = responseText.search(/[\{\[]/);
+        const lastBrace = responseText.search(/[\}\]][^}\]]*$/);
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          responseText = responseText.substring(firstBrace, lastBrace + 1);
+        }
+
+        data = JSON.parse(responseText);
         break; // Successfully parsed JSON, break the loop
       } catch (e: any) {
         errors.push(`[${modelName}]: ${e.message}`);
@@ -83,7 +90,7 @@ Format:
     }
 
     if (!data) {
-      throw new Error('All Groq models failed. Details: ' + errors.join(' | '));
+      throw new Error('All Gemini models failed. Details: ' + errors.join(' | '));
     }
 
     return NextResponse.json(data);
