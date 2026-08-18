@@ -43,15 +43,31 @@ Format:
   ]
 }`;
 
-    const completion = await groq.chat.completions.create({
-      messages: [
-        { role: "system", content: "You are an expert IELTS Listening examiner. Output valid JSON only." },
-        { role: "user", content: prompt }
-      ],
-      model: "llama-3.1-70b-versatile",
-      temperature: 0.7,
-      response_format: { type: "json_object" }
-    });
+    const fallbackModels = ['llama-3.3-70b-versatile', 'llama3-70b-8192', 'mixtral-8x7b-32768'];
+    let completion;
+    let lastError;
+
+    for (const modelName of fallbackModels) {
+      try {
+        completion = await groq.chat.completions.create({
+          messages: [
+            { role: "system", content: "You are an expert IELTS Listening examiner. Output valid JSON only." },
+            { role: "user", content: prompt }
+          ],
+          model: modelName,
+          temperature: 0.7,
+          response_format: { type: "json_object" }
+        });
+        if (completion) break;
+      } catch (e: any) {
+        lastError = e;
+        console.warn(`Groq Model ${modelName} failed: ${e.message}`);
+      }
+    }
+
+    if (!completion) {
+      throw lastError || new Error('All Groq models failed');
+    }
 
     const responseText = completion.choices[0]?.message?.content || "";
     const listeningPractice = JSON.parse(responseText);
