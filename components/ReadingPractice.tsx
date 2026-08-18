@@ -34,18 +34,24 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
       try {
         const words = cards.map(c => c.term);
         
-        setLoadingStep('Đang biên soạn bài đọc học thuật 400 từ và 5 câu hỏi TFNG siêu khó...');
-        const res = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words }) });
-        const result = await res.json();
-        if (result.error) throw new Error(result.error);
+        setLoadingStep('Bước 1/2: Đang viết bài đọc học thuật 400 từ (50% hoàn thành)...');
+        const res1 = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words }) });
+        const part1 = await res1.json();
+        if (part1.error) throw new Error(part1.error);
+        
+        if (!isMounted) return;
+        setLoadingStep('Bước 2/2: Đang soạn 5 câu hỏi True/False/Not Given (100% hoàn thành)...');
+        const res2 = await fetch('/api/ai/reading-pipeline/questions-phase1', { method: 'POST', body: JSON.stringify({ paragraphs: part1.paragraphs }) });
+        const q1 = await res2.json();
+        if (q1.error) throw new Error(q1.error);
         
         if (isMounted) {
           setData({
-            title: result.title,
-            paragraphs: result.paragraphs,
-            questions: [...result.questions]
+            title: part1.title,
+            paragraphs: part1.paragraphs,
+            questions: [...q1.questions]
           });
-          setAnswers(new Array(result.questions.length).fill(-1));
+          setAnswers(new Array(q1.questions.length).fill(-1));
           setLoading(false);
         }
       } catch (err: any) {

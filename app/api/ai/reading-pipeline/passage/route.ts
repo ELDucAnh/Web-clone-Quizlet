@@ -13,21 +13,14 @@ export async function POST(req: Request) {
 
     const { words } = await req.json();
 
-    const prompt = `Write a highly academic, C2 proficiency level IELTS reading passage (approximately 400 words) and EXACTLY 5 True/False/Not Given questions based on it.
+    const prompt = `Write a highly academic, C2 proficiency level IELTS reading passage (approximately 400 words).
 Vocabulary words to creatively and naturally include: ${words.join(', ')}
 
 IMPORTANT RULES:
 - Generate an academic title.
 - Generate an academic passage divided into 3-4 paragraphs.
-- Generate EXACTLY 5 "True / False / Not Given" questions based on the passage.
 - Output MUST be a valid JSON object.
-CRITICAL JSON RULE: DO NOT use literal newlines inside strings. Keep each paragraph and each explanation as a single continuous string.
-
-Question Format Instructions:
-- "question": "Do the following statement agree with the claims of the writer? Statement: [Insert abstract statement here]"
-- "options": EXACTLY 3 options: ["True", "False", "Not Given"]
-- "correctAnswer": 0-indexed integer (0 for True, 1 for False, 2 for Not Given)
-- "explanation": A short, concise explanation (1-2 sentences) on why it is True, False, or Not Given.
+CRITICAL JSON RULE: DO NOT use literal newlines inside strings. Keep each paragraph as a single continuous string.
 
 Format:
 {
@@ -36,14 +29,6 @@ Format:
     "[Write the full first paragraph here]",
     "[Write the full second paragraph here]",
     "[Write the full third paragraph here]"
-  ],
-  "questions": [
-    {
-      "question": "Do the following statement agree with the claims of the writer? Statement: X is Y.",
-      "options": ["True", "False", "Not Given"],
-      "correctAnswer": 0,
-      "explanation": "Because..."
-    }
   ]
 }`;
 
@@ -90,14 +75,10 @@ Format:
 
           // Normalize data
           if (Array.isArray(data)) {
-             throw new Error("Returned array instead of full object with title/paragraphs/questions");
-          }
-          if (data && !Array.isArray(data.questions)) {
-            const arrayKey = Object.keys(data).find(k => Array.isArray(data[k]) && k !== 'paragraphs');
-            if (arrayKey) data.questions = data[arrayKey];
+             throw new Error("Returned array instead of full object with title/paragraphs");
           }
 
-          if (data && data.title && data.paragraphs && data.questions) {
+          if (data && data.title && data.paragraphs) {
             break; // Successfully parsed JSON
           } else {
             throw new Error("Missing required fields in JSON.");
