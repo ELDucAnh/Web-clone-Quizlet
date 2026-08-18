@@ -73,12 +73,19 @@ Format:
         const response = await result.response;
         let responseText = response.text();
         
-        responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+        responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
         
-        // Find the first { or [ and last } or ]
-        const firstBrace = responseText.search(/[\{\[]/);
-        const lastBrace = responseText.search(/[\}\]][^}\]]*$/);
-        if (firstBrace !== -1 && lastBrace !== -1) {
+        // Find the first { or [ and last } or ] safely to prevent ReDoS
+        const firstCurly = responseText.indexOf('{');
+        const firstSquare = responseText.indexOf('[');
+        let firstBrace = -1;
+        if (firstCurly !== -1 && firstSquare !== -1) firstBrace = Math.min(firstCurly, firstSquare);
+        else if (firstCurly !== -1) firstBrace = firstCurly;
+        else firstBrace = firstSquare;
+
+        const lastBrace = Math.max(responseText.lastIndexOf('}'), responseText.lastIndexOf(']'));
+        
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
           responseText = responseText.substring(firstBrace, lastBrace + 1);
         }
 
