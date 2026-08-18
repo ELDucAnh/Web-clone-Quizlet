@@ -101,9 +101,9 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-8">
-        {/* Cột trên: Bài đọc */}
-        <div>
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+        {/* Cột trái: Bài đọc */}
+        <div className="w-full lg:w-7/12 lg:sticky lg:top-4 lg:max-h-[85vh] overflow-y-auto custom-scrollbar pr-2 pb-10">
           <div className="bg-blue-50 p-6 or p-8 rounded-2xl border border-blue-100 shadow-inner h-full">
             <h3 className="text-2xl font-black text-blue-900 mb-6 text-center leading-snug">{data.title}</h3>
             <div className="space-y-4 text-[var(--text)] text-left leading-relaxed">
@@ -114,8 +114,8 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
           </div>
         </div>
 
-        {/* Cột dưới: Câu hỏi */}
-        <div className="flex flex-col gap-6 mt-4">
+        {/* Cột phải: Câu hỏi */}
+        <div className="w-full lg:w-5/12 flex flex-col gap-6">
           {submitted && (
             <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-200 text-center mb-2 shrink-0">
               <h3 className="text-2xl font-black text-emerald-700 mb-2">Kết quả: {score}/{data.questions.length}</h3>

@@ -17,36 +17,48 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing words' }, { status: 400 });
     }
 
-    const prompt = `Create a highly complex IELTS Reading Passage 3 practice exercise based on the following vocabulary words:
+    const prompt = `Create an EXTREMELY complex, high-difficulty IELTS Reading Passage 3 practice exercise based on the following vocabulary words:
 ${words.join(', ')}
 
 IMPORTANT RULES:
-- Create exactly ONE reading passage and EXACTLY 10 multiple-choice questions.
-- The reading passage MUST be academic, highly complex, and contain exactly 6 paragraphs (mimicking IELTS Reading Passage 3).
+- The reading passage MUST be at a C2 proficiency level, highly academic, abstract, and extremely complex.
+- The passage MUST be long (around 800-1200 words) and contain exactly 6 or 7 long paragraphs.
 - The passage MUST naturally incorporate as many of the provided vocabulary words as possible.
-- The 10 questions MUST test deep comprehension, inference, author's tone/purpose, and detailed synthesis.
-- Each question must have exactly 4 options.
-- Each question MUST include an "explanation" field that explains WHY the correct answer is right and why others might be wrong.
+- Create EXACTLY 20 questions, divided into 4 types (5 questions each).
+- ALL 20 questions MUST strictly follow a generic multiple-choice JSON format.
+
+Question Types & Format Instructions:
+1. 5 Multiple Choice (MC) Questions: Standard 4 options (A, B, C, D) testing deep inference.
+2. 5 Matching Heading Questions:
+   - "question": "Which heading best fits Paragraph [X]?"
+   - "options": Provide 4 different tricky academic headings.
+3. 5 True/False/Not Given (TFNG) Questions:
+   - "question": "Do the following statement agree with the claims of the writer? Statement: [Insert abstract statement]"
+   - "options": EXACTLY 3 options: ["True", "False", "Not Given"]
+4. 5 Matching Information Questions:
+   - "question": "Which paragraph contains the following information: [Insert specific abstract information]?"
+   - "options": Provide 4 different paragraph references, e.g., ["Paragraph 1", "Paragraph 2", "Paragraph 4", "Paragraph 6"].
+
+- Each question must have EXACTLY the options specified above.
+- The "correctAnswer" is the 0-indexed integer of the correct option in the "options" array.
+- Each question MUST include an "explanation" field that explains in detail WHY the answer is correct and why others are wrong.
 - The output MUST be a valid JSON object.
 
 Format:
 {
-  "title": "Title of the passage",
+  "title": "A highly academic title",
   "paragraphs": [
     "Paragraph 1 text...",
-    "Paragraph 2 text...",
-    "Paragraph 3 text...",
-    "Paragraph 4 text...",
-    "Paragraph 5 text...",
-    "Paragraph 6 text..."
+    "Paragraph 2 text..."
   ],
   "questions": [
     {
-      "question": "What is the author's main argument in the third paragraph?",
-      "options": ["A", "B", "C", "D"],
-      "correctAnswer": 0,
-      "explanation": "Option A is correct because... Option B is incorrect because..."
+      "question": "Which heading best fits Paragraph 2?",
+      "options": ["The evolution of X", "The sudden decline of Y", "A misunderstanding of Z", "The future of W"],
+      "correctAnswer": 2,
+      "explanation": "..."
     }
+    // EXACTLY 20 QUESTIONS TOTAL
   ]
 }`;
 
@@ -63,7 +75,7 @@ Format:
           ],
           model: modelName,
           temperature: 0.7,
-          max_tokens: 3000,
+          max_tokens: 5500,
           response_format: { type: "json_object" }
         });
         if (completion) break;

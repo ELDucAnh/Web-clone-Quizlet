@@ -280,7 +280,7 @@ function LearnContent() {
   const currentCard = studyCards[currentIndex];
 
   return (
-    <div className="flex flex-col gap-4 max-w-3xl mx-auto animate-fade-in">
+    <div className={`flex flex-col gap-4 mx-auto animate-fade-in ${modeParam === 'reading' ? 'max-w-7xl w-full px-4' : 'max-w-3xl w-full'}`}>
       {/* ── Header ──────────────────────────────────────── */}
       <div className="flex items-center gap-3">
         <Link href={`/study/${deckId}`} className="w-9 h-9 flex items-center justify-center rounded-xl border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg)] transition-colors flex-shrink-0">
