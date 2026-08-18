@@ -6,6 +6,7 @@ const groq = new Groq({
 });
 
 export const maxDuration = 60; // Allows up to 60s for Vercel Hobby
+export const runtime = 'edge';
 
 export async function POST(req: Request) {
   try {
