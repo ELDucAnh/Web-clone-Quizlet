@@ -48,12 +48,12 @@ Format:
 }`;
 
     const fallbackModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-20b', 'groq/compound-mini', 'groq/compound'];
-    let completion;
+    let data;
     let errors: string[] = [];
 
     for (const modelName of fallbackModels) {
       try {
-        completion = await groq.chat.completions.create({
+        const completion = await groq.chat.completions.create({
           messages: [
             { role: "system", content: "You are an expert IELTS Reading examiner. Output valid JSON only." },
             { role: "user", content: prompt }
@@ -62,29 +62,25 @@ Format:
           temperature: 0.3,
           max_tokens: 1500
         });
+        
         if (completion) {
           if (completion.choices[0]?.finish_reason === 'length') {
             throw new Error("Truncated by max_tokens or hard model limit");
           }
-          break;
+          
+          const responseText = completion.choices[0]?.message?.content || "";
+          const match = responseText.match(/\{[\s\S]*\}/);
+          const jsonStr = match ? match[0] : responseText;
+          data = JSON.parse(jsonStr);
+          break; // Successfully parsed JSON, break the loop
         }
       } catch (e: any) {
         errors.push(`[${modelName}]: ${e.message}`);
       }
     }
 
-    if (!completion) {
+    if (!data) {
       throw new Error('All Groq models failed. Details: ' + errors.join(' | '));
-    }
-
-    const responseText = completion.choices[0]?.message?.content || "";
-    let data;
-    try {
-      const match = responseText.match(/\{[\s\S]*\}/);
-      const jsonStr = match ? match[0] : responseText;
-      data = JSON.parse(jsonStr);
-    } catch (parseError: any) {
-      throw new Error("Lỗi rách file JSON: " + parseError.message);
     }
 
     return NextResponse.json(data);
