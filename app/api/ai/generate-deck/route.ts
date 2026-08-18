@@ -6,7 +6,6 @@ import { authOptions } from '@/lib/auth';
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
 
 export const maxDuration = 60;
-export const runtime = 'edge';
 
 export async function POST(req: Request) {
   try {
