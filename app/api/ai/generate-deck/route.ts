@@ -43,9 +43,9 @@ Văn bản:
 ${text}
 """`;
 
-    const fallbackModels = ['llama-3.3-70b-versatile', 'llama3-70b-8192', 'mixtral-8x7b-32768'];
+    const fallbackModels = ['llama-3.3-70b-versatile', 'llama3-8b-8192', 'llama3-70b-8192', 'gemma2-9b-it'];
     let completion;
-    let lastError;
+    let errors: string[] = [];
 
     for (const modelName of fallbackModels) {
       try {
@@ -60,13 +60,13 @@ ${text}
         });
         if (completion) break;
       } catch (e: any) {
-        lastError = e;
+        errors.push(`[${modelName}]: ${e.message}`);
         console.warn(`Groq Model ${modelName} failed: ${e.message}`);
       }
     }
 
     if (!completion) {
-      throw lastError || new Error('All Groq models failed');
+      throw new Error('All Groq models failed. Details: ' + errors.join(' | '));
     }
 
     const responseText = completion.choices[0]?.message?.content || "";
