@@ -64,7 +64,7 @@ Format:
       'groq/compound'
     ];
 
-    let data;
+    let data: any;
     let errors: string[] = [];
     
     // Combine prompt and system instruction

@@ -54,7 +54,7 @@ Format:
       'groq/compound'
     ];
     
-    let data;
+    let data: any;
     let errors: string[] = [];
     
     for (const modelName of fallbackGroq) {
