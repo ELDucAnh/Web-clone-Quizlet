@@ -25,9 +25,9 @@ Passage:
 ${paragraphs.join('\n\n')}
 
 IMPORTANT RULES:
-- Create EXACTLY 10 questions based on the passage provided above.
-- The questions MUST be divided into 2 types (5 questions each).
-- ALL 10 questions MUST strictly follow a generic multiple-choice JSON format.
+- Create EXACTLY 5 questions based on the passage provided above.
+- The questions MUST be divided into 2 types (3 TFNG, 2 Matching Information).
+- ALL 5 questions MUST strictly follow a generic multiple-choice JSON format.
 
 CRITICAL JSON RULE: 
 - DO NOT output literal newline characters inside any string value! 
@@ -35,10 +35,10 @@ CRITICAL JSON RULE:
 - Do NOT press Enter/Return inside any string.
 
 Question Types & Format Instructions:
-1. 5 True/False/Not Given (TFNG) Questions:
+1. 3 True/False/Not Given (TFNG) Questions:
    - "question": "Do the following statement agree with the claims of the writer? Statement: [Insert abstract statement]"
    - "options": EXACTLY 3 options: ["True", "False", "Not Given"]
-2. 5 Matching Information Questions:
+2. 2 Matching Information Questions:
    - "question": "Which paragraph contains the following information: [Insert specific abstract information]?"
    - "options": Provide 4 different paragraph references, e.g., ["Paragraph 1", "Paragraph 2", "Paragraph 4", "Paragraph 6"].
 
@@ -56,7 +56,7 @@ Format:
       "correctAnswer": 0,
       "explanation": "..."
     }
-    // EXACTLY 10 QUESTIONS TOTAL
+    // EXACTLY 5 QUESTIONS TOTAL
   ]
 }`;
 
@@ -73,7 +73,7 @@ Format:
           ],
           model: modelName,
           temperature: 0.3,
-          max_tokens: 3000,
+          max_tokens: 1500,
           response_format: { type: "json_object" }
         });
         if (completion) break;

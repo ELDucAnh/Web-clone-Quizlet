@@ -22,10 +22,10 @@ ${words.join(', ')}
 
 IMPORTANT RULES:
 - The reading passage MUST be at a C2 proficiency level, highly academic, abstract, and extremely complex.
-- The passage MUST be around 600-800 words and contain exactly 6 long paragraphs.
+- The passage MUST be short but dense (around 300-400 words) and contain exactly 3 or 4 paragraphs.
 - The passage MUST naturally incorporate as many of the provided vocabulary words as possible.
-- Create EXACTLY 10 questions, divided into 2 types (5 questions each).
-- ALL 10 questions MUST strictly follow a generic multiple-choice JSON format.
+- Create EXACTLY 5 questions, divided into 2 types (3 MC, 2 Matching Heading).
+- ALL 5 questions MUST strictly follow a generic multiple-choice JSON format.
 
 CRITICAL JSON RULE: 
 - DO NOT output literal newline characters inside any string value! 
@@ -33,8 +33,8 @@ CRITICAL JSON RULE:
 - If a paragraph is long, keep it as ONE unbroken string. Do NOT press Enter/Return inside the string.
 
 Question Types & Format Instructions:
-1. 5 Multiple Choice (MC) Questions: Standard 4 options (A, B, C, D) testing deep inference.
-2. 5 Matching Heading Questions:
+1. 3 Multiple Choice (MC) Questions: Standard 4 options (A, B, C, D) testing deep inference.
+2. 2 Matching Heading Questions:
    - "question": "Which heading best fits Paragraph [X]?"
    - "options": Provide 4 different tricky academic headings.
 
@@ -57,7 +57,7 @@ Format:
       "correctAnswer": 2,
       "explanation": "..."
     }
-    // EXACTLY 10 QUESTIONS TOTAL
+    // EXACTLY 5 QUESTIONS TOTAL
   ]
 }`;
 
@@ -74,7 +74,7 @@ Format:
           ],
           model: modelName,
           temperature: 0.3,
-          max_tokens: 4000,
+          max_tokens: 2000,
           response_format: { type: "json_object" }
         });
         if (completion) break;

@@ -200,14 +200,14 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
           ))}
           
           <div className="flex flex-col gap-3 justify-center mt-6 sticky bottom-0 bg-[var(--card)] py-4 shrink-0 border-t border-[var(--border)] z-10">
-            {!submitted && data.questions.length === 10 && (
+            {!submitted && data.questions.length === 5 && (
               <button 
                 onClick={handleLoadPhase2} 
                 disabled={loadingPhase2} 
                 className="btn-secondary w-full py-3 text-base flex items-center justify-center gap-2 border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
               >
                 {loadingPhase2 ? <Loader2 size={20} className="animate-spin" /> : <HelpCircle size={20} />}
-                {loadingPhase2 ? "Đang rặn nốt 10 câu nâng cao..." : "Tải thêm 10 câu (TFNG & Matching Info) - Không tốn bài mới"}
+                {loadingPhase2 ? "Đang rặn nốt 5 câu nâng cao..." : "Tải thêm 5 câu (TFNG & Matching Info) - Không tốn bài mới"}
               </button>
             )}
 
