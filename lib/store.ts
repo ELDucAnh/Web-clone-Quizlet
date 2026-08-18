@@ -351,6 +351,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
             },
           };
         });
+        syncToBackend(`/decks/${deckId}`, 'PUT', { folderId });
       },
 
       removeDeckFromFolder: (folderId: string, deckId: string) => {
@@ -372,6 +373,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
             },
           };
         });
+        syncToBackend(`/decks/${deckId}`, 'PUT', { folderId: null });
       },
 
       // ─── Card Actions ─────────────────────────────────────────────────
