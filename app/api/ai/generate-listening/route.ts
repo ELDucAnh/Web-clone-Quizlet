@@ -43,7 +43,7 @@ Format:
   ]
 }`;
 
-    const fallbackModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-20b', 'groq/compound-mini'];
+    const fallbackModels = ['groq/compound', 'groq/compound-mini'];
     let completion;
     let errors: string[] = [];
 
@@ -56,7 +56,7 @@ Format:
           ],
           model: modelName,
           temperature: 0.7,
-          max_tokens: 4096,
+          max_tokens: 3000,
           response_format: { type: "json_object" }
         });
         if (completion) break;
