@@ -1,4 +1,4 @@
-export const maxDuration = 500; // Allow max 60s for Vercel Hobby
+export const maxDuration = 299; // Allow max 60s for Vercel Hobby
 
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
