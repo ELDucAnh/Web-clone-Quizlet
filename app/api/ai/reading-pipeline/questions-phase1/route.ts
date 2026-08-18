@@ -46,7 +46,7 @@ Format:
       "explanation": "[Write a short explanation here]"
     }
   ]
-}\`;
+}`;
 
     const fallbackGroq = [
       'qwen/qwen3.6-27b', 
