@@ -61,7 +61,7 @@ Format:
           ],
           model: modelName,
           temperature: 0.3,
-          max_tokens: 1000
+          max_tokens: 1500
         });
         if (completion) break;
       } catch (e: any) {

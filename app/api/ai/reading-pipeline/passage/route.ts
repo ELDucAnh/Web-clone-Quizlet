@@ -77,7 +77,7 @@ Format:
           ],
           model: modelName,
           temperature: 0.3,
-          max_tokens: 600
+          max_tokens: 800
         });
         if (completion) break;
       } catch (e: any) {
