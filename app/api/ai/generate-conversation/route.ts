@@ -43,9 +43,10 @@ Format for each type:
 GENERATE EXACTLY 10 ITEMS AS A JSON ARRAY.`;
 
     const fallbackModels = [
-      'gemini-1.5-flash',
-      'gemini-1.5-pro',
-      'gemini-1.0-pro'
+      'gemini-flash-latest',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-pro-latest'
     ];
 
     let result;
@@ -53,10 +54,7 @@ GENERATE EXACTLY 10 ITEMS AS A JSON ARRAY.`;
 
     for (const modelName of fallbackModels) {
       try {
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          generationConfig: { responseMimeType: 'application/json' }
-        });
+        const model = genAI.getGenerativeModel({ model: modelName });
         result = await model.generateContent(prompt);
         if (result) break;
       } catch (e: any) {
@@ -70,9 +68,18 @@ GENERATE EXACTLY 10 ITEMS AS A JSON ARRAY.`;
     }
 
     const responseText = result.response.text();
-
-    // Parse JSON
-    const jsonStr = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    let jsonStr = responseText;
+    
+    // Tìm vị trí của dấu [ đầu tiên và ] cuối cùng (vì đây là Array)
+    const startIndex = jsonStr.indexOf('[');
+    const endIndex = jsonStr.lastIndexOf(']');
+    
+    if (startIndex !== -1 && endIndex !== -1 && endIndex >= startIndex) {
+      jsonStr = jsonStr.substring(startIndex, endIndex + 1);
+    } else {
+      jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
+    }
+    
     const conversation = JSON.parse(jsonStr);
 
     return NextResponse.json({ conversation });

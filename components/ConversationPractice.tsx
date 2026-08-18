@@ -44,15 +44,20 @@ export function ConversationPractice({ cards, onComplete }: ConversationPractice
     })
     .then(res => res.json())
     .then(data => {
-      if (data.conversation && Array.isArray(data.conversation)) {
+      if (data.error) {
+        alert('Lỗi từ AI (Conversation): ' + data.error);
+        setConversation([]);
+      } else if (data.conversation && Array.isArray(data.conversation)) {
         setConversation(data.conversation);
       } else {
+        alert('Lỗi: AI trả về sai định dạng!');
         setConversation([]);
       }
       setLoading(false);
     })
     .catch(err => {
       console.error(err);
+      alert('Lỗi kết nối: ' + err.message);
       setLoading(false);
     });
   }, [cards]);

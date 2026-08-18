@@ -36,17 +36,20 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
     .then((result: any) => {
       if (result.error) {
         setErrorMsg(result.error);
+        alert('Lỗi từ AI (Reading): ' + result.error);
       } else if (result.paragraphs && result.questions) {
         setData(result);
         setAnswers(new Array(result.questions.length).fill(-1));
       } else {
         setErrorMsg('Invalid response format from AI');
+        alert('Lỗi: AI trả về sai định dạng!');
       }
       setLoading(false);
     })
     .catch(err => {
       console.error(err);
       setErrorMsg(err.message || 'Network error');
+      alert('Lỗi kết nối: ' + err.message);
       setLoading(false);
     });
   }, [cards]);

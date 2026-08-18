@@ -35,6 +35,7 @@ export function ListeningPractice({ cards, onComplete }: ListeningPracticeProps)
     .then((result: any) => {
       if (result.error) {
         setErrorMsg(result.error);
+        alert('Lỗi từ AI (Listening): ' + result.error);
       } else if (result.dialogue && result.questions) {
         setData(result);
         const fullText = result.dialogue.map((d: any) => d.text).join('. ');
@@ -42,12 +43,14 @@ export function ListeningPractice({ cards, onComplete }: ListeningPracticeProps)
         setAnswers(new Array(result.questions.length).fill(-1));
       } else {
         setErrorMsg('Invalid response format from AI');
+        alert('Lỗi: AI trả về sai định dạng!');
       }
       setLoading(false);
     })
     .catch(err => {
       console.error(err);
       setErrorMsg(err.message || 'Network error');
+      alert('Lỗi kết nối: ' + err.message);
       setLoading(false);
     });
   }, [cards]);
