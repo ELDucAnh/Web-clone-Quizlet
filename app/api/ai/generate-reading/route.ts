@@ -1,5 +1,4 @@
 export const maxDuration = 60; // Allow max 60s for Vercel Hobby
-export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
