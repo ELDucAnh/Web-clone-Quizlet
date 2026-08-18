@@ -14,23 +14,22 @@ export async function POST(req: NextRequest) {
     }
 
     const prompt = `You are an expert IELTS Listening examiner. 
-Create a challenging IELTS Listening Section 3 practice exercise based on the following vocabulary words:
+Create a challenging IELTS Listening Section 4 practice exercise based on the following vocabulary words:
 ${words.join(', ')}
 
 IMPORTANT RULES:
-- Create exactly ONE dialogue and EXACTLY 10 multiple-choice questions.
-- The dialogue MUST be a complex academic discussion between 2 or 3 speakers (e.g., a tutor and two students).
-- The dialogue MUST be long (around 150-250 words, at least 10 turns).
-- The dialogue MUST naturally incorporate as many of the provided vocabulary words as possible.
-- The 10 questions MUST test synthesis of information, inference, identifying speaker attitudes, and understanding agreements/disagreements (like IELTS Listening Section 3). They must NOT be simple word-matching questions.
+- Create exactly ONE academic lecture/presentation and EXACTLY 10 multiple-choice questions.
+- The lecture MUST be a complex academic monologue given by a SINGLE speaker (e.g., a university professor or expert).
+- The lecture MUST be long (around 200-300 words).
+- The lecture MUST naturally incorporate as many of the provided vocabulary words as possible.
+- The 10 questions MUST test synthesis of information, inference, and identifying main ideas (like IELTS Listening Section 4). They must NOT be simple word-matching questions.
 - Each question must have exactly 4 options.
 - The output MUST be a valid JSON object. Do not wrap in markdown \`\`\`json.
 
 Format:
 {
   "dialogue": [
-    { "speaker": "Tutor", "text": "..." },
-    { "speaker": "Student A", "text": "..." }
+    { "speaker": "Professor", "text": "The entire academic lecture text here..." }
   ],
   "questions": [
     {

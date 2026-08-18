@@ -74,7 +74,7 @@ export function ListeningPractice({ cards, onComplete }: ListeningPracticeProps)
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4 bg-[var(--card)] rounded-2xl border border-[var(--border)]">
         <Loader2 size={32} className="animate-spin text-[var(--primary)]" />
-        <p className="text-[var(--text-muted)] text-sm font-medium">AI đang soạn bài nghe IELTS Part 3 từ từ vựng của bạn...</p>
+        <p className="text-[var(--text-muted)] text-sm font-medium">AI đang soạn bài thuyết trình IELTS Part 4 từ từ vựng của bạn...</p>
       </div>
     );
   }
@@ -97,8 +97,8 @@ export function ListeningPractice({ cards, onComplete }: ListeningPracticeProps)
           <Headphones size={24} />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-[var(--text)]">IELTS Listening Section 3</h2>
-          <p className="text-sm text-[var(--text-muted)]">Nghe đoạn hội thoại học thuật và trả lời {data.questions.length} câu hỏi.</p>
+          <h2 className="text-xl font-bold text-[var(--text)]">IELTS Listening Section 4</h2>
+          <p className="text-sm text-[var(--text-muted)]">Nghe bài thuyết trình học thuật và trả lời {data.questions.length} câu hỏi.</p>
         </div>
       </div>
 
@@ -112,7 +112,7 @@ export function ListeningPractice({ cards, onComplete }: ListeningPracticeProps)
         ) : (
           <p className="text-red-500">Không thể tải Audio</p>
         )}
-        {!submitted && <p className="text-sm text-purple-700 mt-2">* Script hội thoại đã bị ẩn. Hãy nghe và chọn đáp án.</p>}
+        {!submitted && <p className="text-sm text-purple-700 mt-2">* Script bài thuyết trình đã bị ẩn. Hãy nghe và chọn đáp án.</p>}
       </div>
 
       <div className="space-y-8 mt-4">
@@ -162,7 +162,7 @@ export function ListeningPractice({ cards, onComplete }: ListeningPracticeProps)
 
           <div className="p-6 rounded-2xl bg-gray-50 border border-gray-200">
             <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2 text-lg border-b pb-3">
-              <FileText size={20} className="text-indigo-500"/> Transcript Hội Thoại
+              <FileText size={20} className="text-indigo-500"/> Transcript Bài Thuyết Trình
             </h4>
             <div className="space-y-4">
               {data.dialogue.map((d, i) => (
