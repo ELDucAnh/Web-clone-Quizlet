@@ -19,7 +19,7 @@ ${paragraphs.join('\n\n')}
 
 IMPORTANT RULES:
 - Create EXACTLY 5 questions based on the passage provided above.
-- The questions MUST be divided into 2 types (3 MC, 2 Matching Heading).
+- The questions MUST be divided into 2 types (2 MC, 3 Matching Heading).
 - ALL 5 questions MUST strictly follow a generic multiple-choice JSON format.
 
 CRITICAL JSON RULE: 
@@ -27,8 +27,8 @@ CRITICAL JSON RULE:
 - Every string (especially explanations) MUST be a single continuous line. 
 
 Question Types & Format Instructions:
-1. 3 Multiple Choice (MC) Questions: Standard 4 options (A, B, C, D) testing deep inference.
-2. 2 Matching Heading Questions:
+1. 2 Multiple Choice (MC) Questions: Standard 4 options (A, B, C, D) testing deep inference.
+2. 3 Matching Heading Questions:
    - "question": "Which heading best fits Paragraph [X]?"
    - "options": Provide 4 different tricky academic headings.
 

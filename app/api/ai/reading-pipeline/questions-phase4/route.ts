@@ -19,7 +19,7 @@ ${paragraphs.join('\n\n')}
 
 IMPORTANT RULES:
 - Create EXACTLY 5 questions based on the passage provided above.
-- The questions MUST be divided into 2 types (3 MC, 2 Matching Heading).
+- The questions MUST be divided into 2 types (2 TFNG, 3 Matching Information).
 - ALL 5 questions MUST strictly follow a generic multiple-choice JSON format.
 
 CRITICAL JSON RULE: 
@@ -27,10 +27,12 @@ CRITICAL JSON RULE:
 - Every string (especially explanations) MUST be a single continuous line. 
 
 Question Types & Format Instructions:
-1. 3 Multiple Choice (MC) Questions: Standard 4 options (A, B, C, D) testing deep inference.
-2. 2 Matching Heading Questions:
-   - "question": "Which heading best fits Paragraph [X]?"
-   - "options": Provide 4 different tricky academic headings.
+1. 2 True/False/Not Given (TFNG) Questions:
+   - "question": "Do the following statement agree with the claims of the writer? Statement: [Insert abstract statement]"
+   - "options": EXACTLY 3 options: ["True", "False", "Not Given"]
+2. 3 Matching Information Questions:
+   - "question": "Which paragraph contains the following information: [Insert specific abstract information]?"
+   - "options": Provide 4 different paragraph references, e.g., ["Paragraph 1", "Paragraph 2", "Paragraph 4", "Paragraph 6"].
 
 - The "correctAnswer" is the 0-indexed integer of the correct option in the "options" array.
 - Each question MUST include an "explanation" field. IMPORTANT: Keep the explanation EXTREMELY short and concise (max 1 sentence) to save tokens.
@@ -40,8 +42,8 @@ Format:
 {
   "questions": [
     {
-      "question": "What is the main idea of paragraph 1?",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "question": "Do the following statement agree with the claims of the writer? Statement: X is Y.",
+      "options": ["True", "False", "Not Given"],
       "correctAnswer": 0,
       "explanation": "..."
     }

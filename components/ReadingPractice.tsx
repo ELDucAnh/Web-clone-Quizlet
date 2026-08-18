@@ -34,19 +34,19 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
       try {
         const words = cards.map(c => c.term);
         
-        setLoadingStep('Bước 1/5: Đang viết đoạn mở bài (20% hoàn thành)...');
+        setLoadingStep('Bước 1/7: Đang viết đoạn mở bài (15% hoàn thành)...');
         const res1 = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words, part: 1 }) });
         const part1 = await res1.json();
         if (part1.error) throw new Error(part1.error);
         
         if (!isMounted) return;
-        setLoadingStep('Bước 2/5: Đang viết đoạn thân bài (40% hoàn thành)...');
+        setLoadingStep('Bước 2/7: Đang viết đoạn thân bài (30% hoàn thành)...');
         const res2 = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words, part: 2, previousContext: part1.paragraphs.join('\\n\\n') }) });
         const part2 = await res2.json();
         if (part2.error) throw new Error(part2.error);
         
         if (!isMounted) return;
-        setLoadingStep('Bước 3/5: Đang viết đoạn kết bài (60% hoàn thành)...');
+        setLoadingStep('Bước 3/7: Đang viết đoạn kết bài (45% hoàn thành)...');
         const res3 = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words, part: 3, previousContext: [...part1.paragraphs, ...part2.paragraphs].join('\\n\\n') }) });
         const part3 = await res3.json();
         if (part3.error) throw new Error(part3.error);
@@ -54,24 +54,36 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
         const fullParagraphs = [...part1.paragraphs, ...part2.paragraphs, ...part3.paragraphs];
         
         if (!isMounted) return;
-        setLoadingStep('Bước 4/5: Đang soạn 10 câu hỏi đầu (80% hoàn thành)...');
+        setLoadingStep('Bước 4/7: Đang soạn 5 câu hỏi đầu (50% hoàn thành)...');
         const res4 = await fetch('/api/ai/reading-pipeline/questions-phase1', { method: 'POST', body: JSON.stringify({ paragraphs: fullParagraphs }) });
         const q1 = await res4.json();
         if (q1.error) throw new Error(q1.error);
 
         if (!isMounted) return;
-        setLoadingStep('Bước 5/5: Đang soạn 10 câu khó cuối cùng (100% hoàn thành)...');
+        setLoadingStep('Bước 5/7: Đang soạn 5 câu tiếp theo (70% hoàn thành)...');
         const res5 = await fetch('/api/ai/reading-pipeline/questions-phase2', { method: 'POST', body: JSON.stringify({ paragraphs: fullParagraphs }) });
         const q2 = await res5.json();
         if (q2.error) throw new Error(q2.error);
+
+        if (!isMounted) return;
+        setLoadingStep('Bước 6/7: Đang soạn 5 câu áp chót (85% hoàn thành)...');
+        const res6 = await fetch('/api/ai/reading-pipeline/questions-phase3', { method: 'POST', body: JSON.stringify({ paragraphs: fullParagraphs }) });
+        const q3 = await res6.json();
+        if (q3.error) throw new Error(q3.error);
+
+        if (!isMounted) return;
+        setLoadingStep('Bước 7/7: Đang soạn 5 câu khó cuối cùng (100% hoàn thành)...');
+        const res7 = await fetch('/api/ai/reading-pipeline/questions-phase4', { method: 'POST', body: JSON.stringify({ paragraphs: fullParagraphs }) });
+        const q4 = await res7.json();
+        if (q4.error) throw new Error(q4.error);
 
         if (isMounted) {
           setData({
             title: part1.title,
             paragraphs: fullParagraphs,
-            questions: [...q1.questions, ...q2.questions]
+            questions: [...q1.questions, ...q2.questions, ...q3.questions, ...q4.questions]
           });
-          setAnswers(new Array(q1.questions.length + q2.questions.length).fill(-1));
+          setAnswers(new Array(q1.questions.length + q2.questions.length + q3.questions.length + q4.questions.length).fill(-1));
           setLoading(false);
         }
       } catch (err: any) {
