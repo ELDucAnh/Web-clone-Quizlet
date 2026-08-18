@@ -65,10 +65,10 @@ Format:
     }
 
     const fallbackModels = [
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
       'gemini-flash-latest',
-      'gemini-pro',
-      'gemini-1.5-pro',
-      'gemini-1.5-flash-latest'
+      'gemini-pro-latest'
     ];
     let data;
     let errors: string[] = [];
