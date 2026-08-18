@@ -43,7 +43,7 @@ Văn bản:
 ${text}
 """`;
 
-    const fallbackModels = ['llama-3.3-70b-versatile', 'llama3-8b-8192', 'llama3-70b-8192', 'gemma2-9b-it'];
+    const fallbackModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-20b', 'groq/compound-mini'];
     let completion;
     let errors: string[] = [];
 
