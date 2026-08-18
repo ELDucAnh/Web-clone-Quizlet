@@ -34,38 +34,18 @@ export function ReadingPractice({ cards, onComplete }: ReadingPracticeProps) {
       try {
         const words = cards.map(c => c.term);
         
-        setLoadingStep('Bước 1/4: Đang viết đoạn mở bài (25% hoàn thành)...');
-        const res1 = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words, part: 1 }) });
-        const part1 = await res1.json();
-        if (part1.error) throw new Error(part1.error);
+        setLoadingStep('Đang biên soạn bài đọc học thuật 400 từ và 5 câu hỏi TFNG siêu khó...');
+        const res = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words }) });
+        const result = await res.json();
+        if (result.error) throw new Error(result.error);
         
-        if (!isMounted) return;
-        setLoadingStep('Bước 2/4: Đang viết đoạn thân bài (50% hoàn thành)...');
-        const res2 = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words, part: 2, previousContext: part1.paragraphs.join('\\n\\n') }) });
-        const part2 = await res2.json();
-        if (part2.error) throw new Error(part2.error);
-        
-        if (!isMounted) return;
-        setLoadingStep('Bước 3/4: Đang viết đoạn kết bài (75% hoàn thành)...');
-        const res3 = await fetch('/api/ai/reading-pipeline/passage', { method: 'POST', body: JSON.stringify({ words, part: 3, previousContext: [...part1.paragraphs, ...part2.paragraphs].join('\\n\\n') }) });
-        const part3 = await res3.json();
-        if (part3.error) throw new Error(part3.error);
-
-        const fullParagraphs = [...part1.paragraphs, ...part2.paragraphs, ...part3.paragraphs];
-        
-        if (!isMounted) return;
-        setLoadingStep('Bước 4/4: Đang soạn 7 câu hỏi True/False/Not Given (100% hoàn thành)...');
-        const res4 = await fetch('/api/ai/reading-pipeline/questions-phase1', { method: 'POST', body: JSON.stringify({ paragraphs: fullParagraphs }) });
-        const q1 = await res4.json();
-        if (q1.error) throw new Error(q1.error);
-
         if (isMounted) {
           setData({
-            title: part1.title,
-            paragraphs: fullParagraphs,
-            questions: [...q1.questions]
+            title: result.title,
+            paragraphs: result.paragraphs,
+            questions: [...result.questions]
           });
-          setAnswers(new Array(q1.questions.length).fill(-1));
+          setAnswers(new Array(result.questions.length).fill(-1));
           setLoading(false);
         }
       } catch (err: any) {
