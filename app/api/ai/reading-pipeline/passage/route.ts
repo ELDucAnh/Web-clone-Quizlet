@@ -13,12 +13,15 @@ export async function POST(req: Request) {
 
     const { words } = await req.json();
 
-    const prompt = `Write a highly academic, C2 proficiency level IELTS reading passage (approximately 400 words).
-Vocabulary words to creatively and naturally include: ${words.join(', ')}
+    const prompt = `Write an engaging, logical, and highly coherent academic IELTS reading passage (C1 Advanced proficiency level, approximately 400 words).
+The passage MUST have a clear central theme (e.g., Psychology, Sociology, Biology, Technology, or History) and flow naturally from introduction to conclusion.
+
+Vocabulary words to integrate seamlessly and contextually: ${words.join(', ')}
+(IMPORTANT: Do not just randomly insert the vocabulary words. They MUST make perfect sense within the logical context of the sentences).
 
 IMPORTANT RULES:
-- Generate an academic title.
-- Generate an academic passage divided into 3-4 paragraphs.
+- Generate a captivating academic title.
+- Generate a highly coherent academic passage divided into 3-4 paragraphs.
 - Output MUST be a valid JSON object.
 CRITICAL JSON RULE: DO NOT use literal newlines inside strings. Keep each paragraph as a single continuous string.
 
