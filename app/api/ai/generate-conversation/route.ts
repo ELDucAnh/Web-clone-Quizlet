@@ -17,25 +17,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing words' }, { status: 400 });
     }
 
-    const prompt = `Create an interactive 10-question English learning exercise based on the following vocabulary words:
+    const prompt = `Create an advanced 10-question IELTS Writing Task 2 translation exercise based on the following vocabulary words:
 ${words.join(', ')}
 
 IMPORTANT RULES:
 - Generate EXACTLY 10 items.
-- The items must alternate randomly between 2 types: "repeat_sentence" and "translate_typing".
+- ALL items must be of type "translate_typing".
 - Every item MUST incorporate at least one vocabulary word from the list above.
 - The output MUST be a valid JSON object with a single key "conversation" containing the array of 10 items.
 
-Format for each type:
-
-1. Type "repeat_sentence" (User listens and repeats to practice pronunciation):
-{
-  "type": "repeat_sentence",
-  "speaker": "A",
-  "text": "A natural English sentence using the vocabulary."
-}
-
-2. Type "translate_typing" (User reads a complex Vietnamese sentence and types the English translation):
+Format for each item (User reads a complex Vietnamese sentence and types the English translation):
 - The sentences MUST be highly complex, academic, and structured like IELTS Writing Task 2 arguments or complex ideas.
 {
   "type": "translate_typing",
