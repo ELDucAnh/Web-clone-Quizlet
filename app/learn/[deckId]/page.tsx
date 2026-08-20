@@ -60,8 +60,9 @@ function LearnContent() {
 
   useEffect(() => {
     if (allCards.length === 0) return;
+    const shouldReset = searchParams.get('resetSession') === 'true';
     const unmastered = allCards.filter(c => progress[c.id]?.learnStage !== 'mastered');
-    const cardsToStudy = (modeParam === 'learn' && unmastered.length > 0) ? unmastered : allCards;
+    const cardsToStudy = (modeParam === 'learn' && unmastered.length > 0 && !shouldReset) ? unmastered : allCards;
     const shuffled = settings.shuffleCards ? shuffleArray([...cardsToStudy]) : [...cardsToStudy];
     setStudyCards(shuffled);
     setCurrentIndex(0);
@@ -71,7 +72,7 @@ function LearnContent() {
     const initialStageMap: Record<string, number> = {};
     let initialSteps = 0;
     let initialMastered = 0;
-    if (modeParam === 'learn') {
+    if (modeParam === 'learn' && !shouldReset) {
       allCards.forEach(c => {
         const stageStr = progress[c.id]?.learnStage;
         if (stageStr === 'mastered') {
@@ -90,8 +91,11 @@ function LearnContent() {
 
     let restored = false;
     if (modeParam === 'learn') {
-      try {
-        const savedStr = localStorage.getItem(`vocab_learn_${deckId}`);
+      if (shouldReset) {
+        localStorage.removeItem(`vocab_learn_${deckId}`);
+      } else {
+        try {
+          const savedStr = localStorage.getItem(`vocab_learn_${deckId}`);
         if (savedStr) {
           const saved = JSON.parse(savedStr);
           if (saved && typeof saved === 'object') {
@@ -103,6 +107,7 @@ function LearnContent() {
           }
         }
       } catch (e) {}
+      }
     }
 
     if (!restored) {
@@ -197,11 +202,12 @@ function LearnContent() {
         });
       }
 
-      setCorrectSteps(s => s + 1);
+      if (stageIdx < LEARN_STAGES.length) {
+        setCorrectSteps(s => s + 1);
+      }
 
       setLearnStageMap(prev => {
         const newMap = { ...prev, [card.id]: nextStage };
-        // Count total mastered based on newMap, checking allCards so the progress bar label matches
         const totalMastered = allCards.filter(c => (newMap[c.id] ?? 0) >= LEARN_STAGES.length).length;
 
         if (totalMastered >= allCards.length) {

@@ -144,7 +144,7 @@ function NotificationsContent() {
                   </p>
                 </div>
                 <Link
-                  href={`/learn/${notif.deckId}?mode=learn`}
+                  href={`/learn/${notif.deckId}?mode=learn&resetSession=true`}
                   className="btn-primary py-2 px-5 flex-shrink-0 sm:w-auto w-full justify-center"
                 >
                   <BookOpen size={15} /> Ôn tập ngay
