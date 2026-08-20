@@ -120,7 +120,8 @@ function LearnContent() {
 
   useEffect(() => {
     if (modeParam !== 'learn' || allCards.length === 0 || !mounted) return;
-    if (done) {
+    const shouldReset = searchParams.get('resetSession') === 'true';
+    if (done || shouldReset) {
       try { localStorage.removeItem(`vocab_learn_${deckId}`); } catch(e) {}
     } else {
       try {
@@ -132,7 +133,7 @@ function LearnContent() {
         }));
       } catch(e) {}
     }
-  }, [learnStageMap, learnCorrect, correctSteps, currentIndex, deckId, modeParam, allCards.length, done, mounted]);
+  }, [learnStageMap, learnCorrect, correctSteps, currentIndex, deckId, modeParam, allCards.length, done, mounted, searchParams]);
 
   useEffect(() => {
     if (!settings.showTimer) return;
@@ -181,6 +182,7 @@ function LearnContent() {
   };
 
   const handleLearnAnswer = (isCorrect: boolean) => {
+    const shouldReset = searchParams.get('resetSession') === 'true';
     const card = studyCards[currentIndex];
     const stageIdx = learnStageMap[card.id] ?? 0;
 
@@ -188,18 +190,20 @@ function LearnContent() {
       const nextStage = stageIdx + 1;
       const nowMastered = nextStage >= LEARN_STAGES.length;
 
-      // Save to persistent store immediately
-      if (nowMastered) {
-        updateProgress(card.id, {
-          learnStage: 'mastered',
-          repetitions: (progress[card.id]?.repetitions ?? 0) + 1,
-          lastAnswered: Date.now(),
-        });
-      } else {
-        updateProgress(card.id, {
-          learnStage: LEARN_STAGES[nextStage] || 'unseen',
-          lastAnswered: Date.now(),
-        });
+      // Save to persistent store immediately, UNLESS we are in a review session
+      if (!shouldReset) {
+        if (nowMastered) {
+          updateProgress(card.id, {
+            learnStage: 'mastered',
+            repetitions: (progress[card.id]?.repetitions ?? 0) + 1,
+            lastAnswered: Date.now(),
+          });
+        } else {
+          updateProgress(card.id, {
+            learnStage: LEARN_STAGES[nextStage] || 'unseen',
+            lastAnswered: Date.now(),
+          });
+        }
       }
 
       if (stageIdx < LEARN_STAGES.length) {
@@ -232,10 +236,12 @@ function LearnContent() {
     } else {
       // Wrong answer — step back but not below 0
       const newStage = Math.max(0, stageIdx - 1);
-      updateProgress(card.id, {
-        learnStage: LEARN_STAGES[newStage] || 'unseen',
-        lastAnswered: Date.now(),
-      });
+      if (!shouldReset) {
+        updateProgress(card.id, {
+          learnStage: LEARN_STAGES[newStage] || 'unseen',
+          lastAnswered: Date.now(),
+        });
+      }
       setCorrectSteps(s => Math.max(0, s - (stageIdx - newStage)));
       setLearnStageMap(prev => {
         const newMap = { ...prev, [card.id]: newStage };
