@@ -102,7 +102,7 @@ function LearnContent() {
             setLearnStageMap(saved.learnStageMap || initialStageMap);
             setLearnCorrect(saved.learnCorrect || initialMastered);
             setCorrectSteps(saved.correctSteps || initialSteps);
-            setCurrentIndex(saved.currentIndex || 0);
+            setCurrentIndex((typeof saved.currentIndex === 'number' && saved.currentIndex < shuffled.length) ? saved.currentIndex : 0);
             restored = true;
           }
         }
