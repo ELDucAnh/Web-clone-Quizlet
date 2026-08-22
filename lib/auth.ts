@@ -3,6 +3,12 @@ import GoogleProvider from "next-auth/providers/google";
 import { db } from "./db";
 import { v4 as uuidv4 } from "uuid";
 
+// Validate UUID v4 format
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function isValidUUID(id: string): boolean {
+  return UUID_REGEX.test(id);
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -60,14 +66,17 @@ export const authOptions: NextAuthOptions = {
       if (session?.user?.email) {
         try {
           const { rows } = await db.query('SELECT id FROM users WHERE email = $1', [session.user.email]);
-          if (rows.length > 0) {
-            (session.user as any).id = rows[0].id; // DB UUID!
+          if (rows.length > 0 && isValidUUID(rows[0].id)) {
+            (session.user as any).id = rows[0].id; // DB UUID - guaranteed valid
           } else {
-            (session.user as any).id = token.sub; // Fallback
+            // DB returned no user or invalid ID — do NOT use token.sub (Google numeric ID)
+            // Return session without id so routes return 401 (Unauthorized) properly
+            console.error('[Auth] Could not find valid UUID for user:', session.user.email);
           }
         } catch (err) {
           console.error("session fetch user error", err);
-          (session.user as any).id = token.sub;
+          // Do NOT fallback to token.sub — it's a numeric Google ID, not a UUID
+          // Routes will safely return 401 when id is missing
         }
       }
       return session;
