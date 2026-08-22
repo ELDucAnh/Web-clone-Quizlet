@@ -26,7 +26,7 @@ function NotificationsContent() {
     { label: '30 ngày', ms: 30 * 24 * 60 * 60 * 1000 },
   ];
 
-  const dueNotifications: { deckId: string; deckName: string; intervalLabel: string; overdue: boolean; dateDue: number }[] = [];
+  const dueNotifications: { deckId: string; deckName: string; intervalLabel: string; overdue: boolean; dateDue: number; daysOverdue: number }[] = [];
 
   deckList.forEach(deck => {
     if (!deck.completedAt || deck.cardCount === 0) return;
@@ -36,31 +36,22 @@ function NotificationsContent() {
     if (masteredCount < deck.cardCount) return;
 
     const completedAt = deck.completedAt;
-
-    let highestIntervalDue = -1;
-    let highestIntervalLabel = '';
-    let highestDateDue = 0;
+    const lastStudied = (deck.lastStudied && deck.lastStudied > completedAt) ? deck.lastStudied : completedAt;
 
     for (let i = 0; i < intervals.length; i++) {
       const dateDue = completedAt + intervals[i].ms;
-      if (now >= dateDue) {
-        const lastStudied = deck.lastStudied || 0;
-        if (lastStudied < dateDue) {
-          highestIntervalDue = i;
-          highestIntervalLabel = intervals[i].label;
-          highestDateDue = dateDue;
-        }
+      if (now >= dateDue && lastStudied < dateDue) {
+        const daysOverdue = Math.floor((now - dateDue) / (24 * 60 * 60 * 1000));
+        dueNotifications.push({
+          deckId: deck.id,
+          deckName: deck.name,
+          intervalLabel: intervals[i].label,
+          overdue: daysOverdue > 0,
+          dateDue,
+          daysOverdue,
+        });
+        break;
       }
-    }
-
-    if (highestIntervalDue !== -1) {
-      dueNotifications.push({
-        deckId: deck.id,
-        deckName: deck.name,
-        intervalLabel: highestIntervalLabel,
-        overdue: true,
-        dateDue: highestDateDue,
-      });
     }
   });
 
@@ -70,6 +61,10 @@ function NotificationsContent() {
   studyHoursLogs.forEach(l => { skillStats[l.skill] = (skillStats[l.skill] || 0) + l.minutes; });
   const activeGoals = Object.values(studyHoursGoals).filter(g => !g.deadline || g.deadline >= now);
   const unmetGoals = activeGoals.filter(g => (skillStats[g.skill] || 0) < g.targetHours * 60);
+
+  const formatDate = (ts: number) => new Date(ts).toLocaleDateString('vi-VN', {
+    day: '2-digit', month: '2-digit', year: 'numeric'
+  });
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in max-w-3xl mx-auto w-full">
@@ -138,9 +133,15 @@ function NotificationsContent() {
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <h3 className="font-bold text-[var(--text)] text-[0.9375rem]">{notif.deckName}</h3>
                     <span className="badge badge-yellow">Ôn tập {notif.intervalLabel}</span>
+                    {notif.daysOverdue > 0 && (
+                      <span className="badge" style={{ background: 'var(--error-light)', color: 'var(--error)' }}>
+                        Trễ {notif.daysOverdue} ngày
+                      </span>
+                    )}
                   </div>
                   <p className="text-[var(--text-muted)] text-sm">
-                    Tiến độ hiện tại: <span className="font-semibold text-[var(--text)]">{mastered}/{deck.cardCount} ({pct}%)</span>
+                    Đến hạn: <span className="font-semibold text-[var(--text)]">{formatDate(notif.dateDue)}</span>
+                    {' · '}Tiến độ: <span className="font-semibold text-[var(--text)]">{mastered}/{deck.cardCount} ({pct}%)</span>
                   </p>
                 </div>
                 <Link

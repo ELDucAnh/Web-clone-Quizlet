@@ -9,10 +9,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const { name, description, folderId } = await request.json();
+    const body = await request.json();
+    const { name, description, folderId } = body;
     
-    const fields = [];
-    const values = [];
+    const fields: string[] = [];
+    const values: any[] = [];
     let idx = 1;
 
     if (name !== undefined) {
@@ -23,24 +24,32 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       fields.push(`description=$${idx++}`);
       values.push(description || null);
     }
-    if (folderId !== undefined) {
+    if ('folderId' in body) {
       fields.push(`folder_id=$${idx++}`);
       values.push(folderId || null);
     }
+
+    if (fields.length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+    }
     
     fields.push(`updated_at=NOW()`);
+
+    // Push WHERE clause values AFTER building fields, so idx is correct
+    const deckIdIdx = idx++;
+    const userIdIdx = idx;
     values.push(params.id, userId);
 
     const { rows } = await db.query(
       `UPDATE decks SET ${fields.join(', ')}
-       WHERE id=$${idx++} AND user_id=$${idx} RETURNING *`,
+       WHERE id=$${deckIdIdx} AND user_id=$${userIdIdx} RETURNING *`,
       values
     );
     if (!rows.length) return NextResponse.json({ error: 'Deck not found' }, { status: 404 });
     return NextResponse.json(rows[0]);
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[Deck PUT Error]', error);
+    return NextResponse.json({ error: 'Internal Server Error', message: error?.message || String(error) }, { status: 500 });
   }
 }
 
