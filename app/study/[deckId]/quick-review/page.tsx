@@ -29,7 +29,9 @@ export default function QuickReviewPage() {
   const deckId = params.deckId as string;
   const [mounted, setMounted] = useState(false);
 
-  const { decks, cards, cardsByDeck, addSession } = useStore();
+  const { decks, cards, cardsByDeck, addSession, settings } = useStore();
+  const questionField = settings.answerLanguage === 'definition' ? 'term' : 'definition';
+  const answerField = settings.answerLanguage === 'definition' ? 'definition' : 'term';
 
   const [state, setState] = useState<QuickReviewState | null>(null);
   const sessionStart = useRef(Date.now());
@@ -191,8 +193,8 @@ export default function QuickReviewPage() {
               key={currentCard.id + "-" + state.chunkIndex}
               card={currentCard}
               allCards={state.deckCards}
-              questionField="definition"
-              answerField="term"
+              questionField={questionField}
+              answerField={answerField}
               onAnswer={handleMcqAnswer}
             />
           ) : null

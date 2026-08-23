@@ -33,6 +33,8 @@ export default function LearnPage() {
   const [mounted, setMounted] = useState(false);
 
   const { decks, cards, cardsByDeck, updateProgress, addSession, settings, progress } = useStore();
+  const questionField = settings.answerLanguage === 'definition' ? 'term' : 'definition';
+  const answerField = settings.answerLanguage === 'definition' ? 'definition' : 'term';
 
   const [state, setState] = useState<LearnState | null>(null);
   const sessionStart = useRef(Date.now());
@@ -242,16 +244,16 @@ export default function LearnPage() {
               key={currentCard.id + "-" + state.phase + "-" + state.retryCount}
               card={currentCard}
               allCards={state.deckCards}
-              questionField="definition"
-              answerField="term"
+              questionField={questionField}
+              answerField={answerField}
               onAnswer={(isCorrect) => handleAnswer(isCorrect, currentCard)}
             />
           ) : (
             <TypeAnswer
               key={currentCard.id + "-" + state.phase + "-" + state.retryCount}
               card={currentCard}
-              questionField="definition"
-              answerField="term"
+              questionField={questionField}
+              answerField={answerField}
               onAnswer={(isCorrect) => handleAnswer(isCorrect, currentCard)}
             />
           )
