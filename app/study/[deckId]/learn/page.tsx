@@ -113,7 +113,7 @@ export default function LearnPage() {
       let { pass, deckIndex, phase, batchQueue, wrongQueue, progressCount, deckCards, retryCount } = prev;
 
       const newWrongQueue = isCorrect ? wrongQueue : [...wrongQueue, card];
-      const newProgress = isCorrect ? progressCount + 1 : progressCount;
+      const newProgress = isCorrect ? Math.min(progressCount + 1, totalPoints) : progressCount;
       const nextBatchQueue = batchQueue.slice(1);
 
       // 1. If still cards in current sub-queue

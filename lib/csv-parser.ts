@@ -119,10 +119,12 @@ export async function parseCSVFile(file: File): Promise<ParseResult> {
     'answer',
     'từ',
     'nghĩa',
+    'thuật ngữ',
+    'định nghĩa',
   ];
   const firstRow = raw[0].map((c) => c.toLowerCase());
   const looksLikeHeader = firstRow.some((cell) =>
-    headerKeywords.includes(cell)
+    headerKeywords.some((kw) => cell.includes(kw))
   );
   const startIdx = looksLikeHeader ? 1 : 0;
   if (looksLikeHeader) {

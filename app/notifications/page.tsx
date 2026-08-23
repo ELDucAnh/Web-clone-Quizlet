@@ -5,7 +5,7 @@ import { Bell, BookOpen, Clock, CheckCircle2 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 
 function NotificationsContent() {
-  const { decks, cardsByDeck, progress, studyHoursGoals, studyHoursLogs } = useStore();
+  const { decks, cardsByDeck, progress, sessions, studyHoursGoals, studyHoursLogs } = useStore();
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState(Date.now());
 
@@ -36,11 +36,23 @@ function NotificationsContent() {
     if (masteredCount < deck.cardCount) return;
 
     const completedAt = deck.completedAt;
-    const lastStudied = (deck.lastStudied && deck.lastStudied > completedAt) ? deck.lastStudied : completedAt;
+
+    // Lấy tất cả sessions của deck này (sau khi hoàn thành)
+    const deckSessions = sessions.filter(
+      s => s.deckId === deck.id && s.startedAt > completedAt
+    );
 
     for (let i = 0; i < intervals.length; i++) {
       const dateDue = completedAt + intervals[i].ms;
-      if (now >= dateDue && lastStudied < dateDue) {
+
+      // Interval chưa đến hạn → bỏ qua hoàn toàn
+      if (now < dateDue) break;
+
+      // Interval đã đến hạn → kiểm tra xem đã có session SAU dateDue chưa
+      const hasStudiedAfterDue = deckSessions.some(s => s.startedAt >= dateDue);
+
+      if (!hasStudiedAfterDue) {
+        // Chưa ôn sau mốc này → hiện thông báo
         const daysOverdue = Math.floor((now - dateDue) / (24 * 60 * 60 * 1000));
         dueNotifications.push({
           deckId: deck.id,
@@ -50,8 +62,9 @@ function NotificationsContent() {
           dateDue,
           daysOverdue,
         });
-        break;
+        break; // Chỉ hiện 1 thông báo (interval gần nhất chưa ôn)
       }
+      // Đã ôn sau mốc này → tiếp tục kiểm tra interval tiếp theo
     }
   });
 

@@ -124,8 +124,8 @@ export function checkTypeAnswer(
   const maxLen = Math.max(input.length, correct.length);
   const similarity = maxLen === 0 ? 1 : 1 - distance / maxLen;
 
-  // Cho phép sai tối đa 10% độ dài chuỗi nếu không strictMode
-  const threshold = strictMode ? 0 : Math.max(1, Math.floor(correct.length * 0.1));
+  // Phải khớp chính xác (sau normalize) — không cho phép typo
+  const threshold = 0;
   const isCorrect = distance <= threshold;
 
   return { isCorrect, similarity };

@@ -17,7 +17,7 @@ export function ProgressBar({
   className = '',
   label,
 }: ProgressBarProps) {
-  const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+  const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
 
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
