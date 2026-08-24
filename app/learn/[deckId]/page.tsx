@@ -234,25 +234,25 @@ function LearnContent() {
         return newMap;
       });
     } else {
-      // Wrong answer — step back but not below 0
-      const newStage = Math.max(0, stageIdx - 1);
+      // Wrong answer — KHÔNG trừ % và KHÔNG lùi stage.
+      // Giữ nguyên correctSteps (thanh % không giảm).
+      // Thẻ giữ nguyên stage hiện tại, chuyển sang thẻ tiếp theo.
+      // Thẻ sẽ xuất hiện lại vì chưa mastered, và khi trả lời đúng sẽ cộng thêm %.
       if (!shouldReset) {
         updateProgress(card.id, {
-          learnStage: LEARN_STAGES[newStage] || 'unseen',
           lastAnswered: Date.now(),
         });
       }
-      setCorrectSteps(s => Math.max(0, s - (stageIdx - newStage)));
-      setLearnStageMap(prev => {
-        const newMap = { ...prev, [card.id]: newStage };
+      // Không thay đổi learnStageMap — giữ nguyên stage của thẻ
+      setCurrentIndex(prev => {
         let nextIdx = (currentIndex + 1) % studyCards.length;
         let loopCount = 0;
-        while ((newMap[studyCards[nextIdx].id] ?? 0) >= LEARN_STAGES.length && loopCount < studyCards.length) {
+        // Bỏ qua các thẻ đã mastered
+        while ((learnStageMap[studyCards[nextIdx].id] ?? 0) >= LEARN_STAGES.length && loopCount < studyCards.length) {
           nextIdx = (nextIdx + 1) % studyCards.length;
           loopCount++;
         }
-        setCurrentIndex(nextIdx);
-        return newMap;
+        return nextIdx;
       });
     }
   };
