@@ -37,6 +37,7 @@ export default function MockTestPage() {
   const lastErrorTimeRef = useRef<number>(0);
   const timerRef = useRef<any>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -123,10 +124,30 @@ export default function MockTestPage() {
     return null;
   };
 
-  const speak = (text: string) => {
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-US';
-    window.speechSynthesis.speak(utter);
+  const speak = async (text: string) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    window.speechSynthesis.cancel();
+
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      if (!res.ok) throw new Error('TTS failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.play();
+    } catch (err) {
+      console.error('TTS API error, falling back to browser TTS:', err);
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'en-US';
+      window.speechSynthesis.speak(utter);
+    }
   };
 
   const handleExaminerTurn = async (currentHistory: Message[]) => {
@@ -161,6 +182,7 @@ export default function MockTestPage() {
   };
 
   const toggleRecording = () => {
+    if (audioRef.current) audioRef.current.pause();
     window.speechSynthesis.cancel();
     if (isRecording) {
       isRecordingRef.current = false;
@@ -196,6 +218,7 @@ export default function MockTestPage() {
   };
 
   const abortTest = () => {
+    if (audioRef.current) audioRef.current.pause();
     window.speechSynthesis.cancel();
     if (recognitionRef.current) {
       isRecordingRef.current = false;

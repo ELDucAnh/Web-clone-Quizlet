@@ -30,7 +30,7 @@ export function TypeAnswer({
   const correctAnswer = card[answerField];
 
   const speak = (text: string) => {
-    const url = `/api/tts?text=${encodeURIComponent(text)}`;
+    const url = `/api/tts?text=${encodeURIComponent(text)}&v=2`;
     const audio = new Audio(url);
     audio.play().catch(e => console.error("Audio play failed:", e));
   };
