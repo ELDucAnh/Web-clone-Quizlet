@@ -147,7 +147,7 @@ async function generateAudio(text: string): Promise<NextResponse> {
           finalBuffer = Buffer.concat([wavHeader, totalPCM]);
         }
 
-        return new NextResponse(finalBuffer, {
+        return new NextResponse(new Uint8Array(finalBuffer), {
           headers: {
             'Content-Type': 'audio/wav',
             'Cache-Control': 'public, max-age=86400',
@@ -173,7 +173,7 @@ async function generateAudio(text: string): Promise<NextResponse> {
     audioBuffers.push(Buffer.from(await res.arrayBuffer()));
   }
 
-  return new NextResponse(Buffer.concat(audioBuffers), {
+  return new NextResponse(new Uint8Array(Buffer.concat(audioBuffers)), {
     headers: {
       'Content-Type': 'audio/mpeg',
       'Cache-Control': 'public, max-age=604800',
