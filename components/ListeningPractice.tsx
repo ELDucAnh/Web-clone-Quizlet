@@ -1,9 +1,9 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Headphones, Loader2, Play, Pause, RotateCcw, ChevronDown, ChevronUp,
   Check, X, FileText, Sparkles, AlertCircle, TrendingUp, Star,
-  Volume2, Lightbulb, Award, MessageSquare, ArrowRight, SkipForward
+  Volume2, Lightbulb, Award, MessageSquare, ArrowRight
 } from 'lucide-react';
 import type { Card } from '@/lib/types';
 
@@ -147,7 +147,6 @@ export function ListeningPractice({ cards, onComplete }: ListeningPracticeProps)
   const [phase, setPhase] = useState<Phase>('loading');
   const [dialogueData, setDialogueData] = useState<DialogueData | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [audioGenerating, setAudioGenerating] = useState(false);
   const [showScript, setShowScript] = useState(false);
   const [userSummary, setUserSummary] = useState('');
   const [analysis, setAnalysis] = useState<SummaryAnalysis | null>(null);
@@ -188,16 +187,26 @@ export function ListeningPractice({ cards, onComplete }: ListeningPracticeProps)
   }, []);
 
   const generateAudio = async (text: string) => {
-    setAudioGenerating(true);
     try {
-      // We call our TTS endpoint - it now uses Groq AI voice
-      const url = `/api/tts?text=${encodeURIComponent(text)}`;
-      setAudioUrl(url);
+      // POST to avoid URL length limits for long dialogue texts
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error(`TTS failed: ${res.status}`);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      setAudioUrl(objectUrl);
+    } catch (err: any) {
+      console.error('[ListeningPractice] Audio generation failed:', err);
+      // Set empty so player shows error state
+      setAudioUrl(null);
     } finally {
-      setAudioGenerating(false);
       setPhase('listening');
     }
   };
+
 
   const handleSubmitSummary = async () => {
     if (!userSummary.trim() || !dialogueData) return;
