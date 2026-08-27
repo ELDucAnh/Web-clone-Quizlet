@@ -113,40 +113,33 @@ async function generateAudio(text: string): Promise<NextResponse> {
     try {
       const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
       const chunks = splitIntoChunks(text);
-      
       console.log(`[TTS] Generating ${chunks.length} chunk(s) via Groq Orpheus`);
-      
-      const wavBuffers: Buffer[] = [];
-      
-      for (const chunk of chunks) {
-        const response = await (groq.audio.speech as any).create({
+
+      // Run all chunks in parallel (Orpheus is fast)
+      const wavPromises = chunks.map(chunk =>
+        (groq.audio.speech as any).create({
           model: TTS_MODEL,
           voice: TTS_VOICE,
           input: chunk,
           response_format: 'wav',
-        });
-
-        const arrayBuffer = await response.arrayBuffer();
-        if (arrayBuffer.byteLength > 0) {
-          wavBuffers.push(Buffer.from(arrayBuffer));
-        }
-      }
+        }).then((r: any) => r.arrayBuffer())
+      );
+      const arrayBuffers: ArrayBuffer[] = await Promise.all(wavPromises);
+      const wavBuffers = arrayBuffers
+        .map(ab => Buffer.from(ab))
+        .filter(b => b.byteLength > 0);
 
       if (wavBuffers.length > 0) {
         let finalBuffer: Buffer;
-
         if (wavBuffers.length === 1) {
-          // Single chunk — return as-is
           finalBuffer = wavBuffers[0];
         } else {
-          // Multiple chunks — concatenate WAV PCM data properly
           const header = parseWAVHeader(wavBuffers[0]);
           const pcmChunks = wavBuffers.map(buf => extractPCMData(buf));
           const totalPCM = Buffer.concat(pcmChunks);
           const wavHeader = buildWAVHeader(totalPCM.length, header.numChannels, header.sampleRate, header.bitsPerSample);
           finalBuffer = Buffer.concat([wavHeader, totalPCM]);
         }
-
         return new NextResponse(new Uint8Array(finalBuffer), {
           headers: {
             'Content-Type': 'audio/wav',
@@ -155,22 +148,39 @@ async function generateAudio(text: string): Promise<NextResponse> {
         });
       }
     } catch (e: any) {
-      console.warn('[TTS] Groq Orpheus failed, falling back to Google TTS:', e?.message);
+      const msg = e?.message || '';
+      // If terms not accepted, skip immediately — don't waste time
+      if (msg.includes('model_terms_required') || msg.includes('terms')) {
+        console.warn('[TTS] Groq terms not accepted yet, skipping to Google TTS');
+      } else {
+        console.warn('[TTS] Groq Orpheus failed:', msg);
+      }
+      // Fall through to Google TTS
     }
   }
 
-  // ── 2. Fallback: Google Translate TTS ───────────────────────────────────
-  console.log('[TTS] Using Google Translate TTS fallback');
+  // ── 2. Google Translate TTS — fetch ALL chunks in parallel ───────────────
+  console.log('[TTS] Using Google Translate TTS fallback (parallel)');
   const googleChunks = splitIntoChunks(text, 180);
+  console.log(`[TTS] ${googleChunks.length} Google TTS chunks`);
+
+  // Parallel fetch — much faster than sequential for long texts
+  const BATCH_SIZE = 8; // Limit concurrency to avoid rate limiting
   const audioBuffers: Buffer[] = [];
 
-  for (const chunk of googleChunks) {
-    const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=en-US&client=gtx`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-    });
-    if (!res.ok) throw new Error(`Google TTS failed: ${res.status}`);
-    audioBuffers.push(Buffer.from(await res.arrayBuffer()));
+  for (let i = 0; i < googleChunks.length; i += BATCH_SIZE) {
+    const batch = googleChunks.slice(i, i + BATCH_SIZE);
+    const batchResults = await Promise.all(
+      batch.map(async (chunk) => {
+        const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=en-US&client=gtx`;
+        const res = await fetch(url, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+        });
+        if (!res.ok) throw new Error(`Google TTS chunk failed: ${res.status}`);
+        return Buffer.from(await res.arrayBuffer());
+      })
+    );
+    audioBuffers.push(...batchResults);
   }
 
   return new NextResponse(new Uint8Array(Buffer.concat(audioBuffers)), {
