@@ -143,7 +143,7 @@ async function generateAudio(text: string): Promise<NextResponse> {
         return new NextResponse(new Uint8Array(finalBuffer), {
           headers: {
             'Content-Type': 'audio/wav',
-            'Cache-Control': 'public, max-age=86400',
+            'Cache-Control': 'no-store',
           },
         });
       }
@@ -186,7 +186,7 @@ async function generateAudio(text: string): Promise<NextResponse> {
   return new NextResponse(new Uint8Array(Buffer.concat(audioBuffers)), {
     headers: {
       'Content-Type': 'audio/mpeg',
-      'Cache-Control': 'public, max-age=604800',
+      'Cache-Control': 'no-store',
     },
   });
 }
