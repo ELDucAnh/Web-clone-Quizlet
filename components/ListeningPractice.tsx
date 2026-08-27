@@ -287,7 +287,7 @@ export function ListeningPractice({ cards, onComplete }: ListeningPracticeProps)
               <p className="font-bold mb-1">Hướng dẫn:</p>
               <ol className="list-decimal list-inside space-y-1 text-amber-700 dark:text-amber-400">
                 <li>Nghe hội thoại bên dưới (có thể nghe nhiều lần)</li>
-                <li>Khi sẵn sàng, nhấn <strong>"Viết tóm tắt"</strong></li>
+                <li>Khi sẵn sàng, nhấn <strong>&quot;Viết tóm tắt&quot;</strong></li>
                 <li>Gõ những gì bạn nghe được — bằng tiếng Anh hoặc tiếng Việt</li>
                 <li>AI sẽ phân tích và cho biết bạn đã hiểu được bao nhiêu</li>
               </ol>
@@ -547,7 +547,7 @@ export function ListeningPractice({ cards, onComplete }: ListeningPracticeProps)
               <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">Đáp án mẫu (tham khảo)</span>
             </div>
             <p className="text-sm text-indigo-800 dark:text-indigo-200 leading-relaxed italic">
-              "{analysis.suggestedSummary}"
+              &quot;{analysis.suggestedSummary}&quot;
             </p>
           </div>
         )}
