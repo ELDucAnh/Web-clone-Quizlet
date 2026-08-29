@@ -124,30 +124,16 @@ export default function MockTestPage() {
     return null;
   };
 
-  const speak = async (text: string) => {
+  const speak = (text: string) => {
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current = null;
     }
     window.speechSynthesis.cancel();
-
-    try {
-      const res = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
-      });
-      if (!res.ok) throw new Error('TTS failed');
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.play();
-    } catch (err) {
-      console.error('TTS API error, falling back to browser TTS:', err);
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'en-US';
-      window.speechSynthesis.speak(utter);
-    }
+    const url = `/api/tts?text=${encodeURIComponent(text)}&v=3`;
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    audio.play().catch(e => console.error('[TTS] Play blocked:', e));
   };
 
   const handleExaminerTurn = async (currentHistory: Message[]) => {
