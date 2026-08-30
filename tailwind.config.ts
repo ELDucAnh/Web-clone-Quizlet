@@ -26,6 +26,8 @@ const config: Config = {
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in-out',
         'slide-up': 'slideUp 0.3s ease-out',
+        'slide-up-sheet': 'slideUpSheet 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
+        'scale-in': 'scaleIn 0.2s ease-out',
         'shake': 'shake 0.4s ease-in-out',
         'bounce-in': 'bounceIn 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97)',
         'fall': 'fall linear forwards',
@@ -53,6 +55,14 @@ const config: Config = {
         fall: {
           '0%': { transform: 'translateY(-10%)' },
           '100%': { transform: 'translateY(110vh)' },
+        },
+        slideUpSheet: {
+          '0%': { transform: 'translateY(100%)' },
+          '100%': { transform: 'translateY(0)' },
+        },
+        scaleIn: {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
         },
       },
     },

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import {
   Home, Library, Folder, Plus, ChevronLeft, ChevronRight,
-  Settings, X, Bell, Clock, PenLine, Mic, Sparkles
+  Settings, X, Bell, Clock, PenLine, Mic, Sparkles, Map
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -151,6 +151,13 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             icon={<Sparkles size={18} className="text-purple-500" />}
             label="Phòng thi AI"
             active={pathname === '/ai-training'}
+            collapsed={collapsed}
+          />
+          <NavItem
+            href="/roadmap"
+            icon={<Map size={18} className="text-emerald-500" />}
+            label="Lộ Trình 140 Ngày"
+            active={!!pathname?.startsWith('/roadmap')}
             collapsed={collapsed}
           />
         </nav>
