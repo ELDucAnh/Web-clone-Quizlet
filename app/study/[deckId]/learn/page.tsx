@@ -177,6 +177,14 @@ export default function LearnPage() {
             };
           } else {
             // Pass 2 complete -> Session complete!
+            // Mark all cards as mastered
+            deckCards.forEach(c => {
+              updateProgress(c.id, {
+                learnStage: 'mastered',
+                lastAnswered: Date.now(),
+              });
+            });
+
             addSession({
               id: uuidv4(),
               deckId,
