@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   ChevronLeft, ChevronRight, RotateCcw, Shuffle, Volume2, Star,
   BookOpen, Layers, Brain, PenLine, Shuffle as ShuffleIcon, Droplets,
-  TrendingUp, Search, Pencil, Zap, MessageCircle, Headphones,
+  TrendingUp, Search, Pencil, Zap, MessageCircle, Headphones, Mic,
   MoreVertical, Trash2, Play, Pause, Folder, ChevronRight as CR,
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
@@ -205,6 +205,7 @@ export default function SetDetailPage() {
     { icon: <PenLine size={20} />, label: 'Kiểm tra', href: `/learn/${deckId}?mode=test` },
     { icon: <ShuffleIcon size={20} />, label: 'Ghép thẻ', href: `/learn/${deckId}?mode=match` },
     { icon: <Droplets size={20} />, label: 'Gravity', href: `/learn/${deckId}?mode=gravity` },
+    { icon: <Mic size={20} />, label: 'Luyện phát âm', href: `/study/${deckId}/pronunciation` },
     { icon: <MessageCircle size={20} />, label: 'Luyện hội thoại', href: `/learn/${deckId}?mode=conversation` },
     { icon: <Headphones size={20} />, label: 'Luyện nghe', href: `/learn/${deckId}?mode=listening` },
     { icon: <BookOpen size={20} />, label: 'Luyện đọc', href: `/learn/${deckId}?mode=reading` },

@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Folder, Plus, MoreVertical, Pencil, Trash2, X, BookOpen,
-  ChevronRight, ArrowLeft, TrendingUp
+  ChevronRight, ArrowLeft, TrendingUp, SortAsc
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { appConfirm } from '@/lib/dialog';
@@ -22,6 +22,7 @@ export default function FolderDetailPage() {
   const [editDesc, setEditDesc] = useState('');
   const [showAddDeck, setShowAddDeck] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'decks'>('all');
+  const [sortBy, setSortBy] = useState<'recent' | 'alpha' | 'studied'>('recent');
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -52,7 +53,12 @@ export default function FolderDetailPage() {
 
   const folderDecks = folder.deckIds
     .map((id) => decks[id])
-    .filter(Boolean);
+    .filter(Boolean)
+    .sort((a, b) => {
+      if (sortBy === 'alpha') return a.name.localeCompare(b.name);
+      if (sortBy === 'studied') return (b.lastStudied || 0) - (a.lastStudied || 0);
+      return b.createdAt - a.createdAt;
+    });
 
   const handleSaveEdit = () => {
     if (!editName.trim()) return;
@@ -191,6 +197,19 @@ export default function FolderDetailPage() {
         >
           <Plus size={13} /> Thêm học phần
         </button>
+        {/* Sort dropdown */}
+        <div className="ml-auto flex items-center gap-2">
+          <SortAsc size={14} className="text-[var(--text-muted)]" />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="h-8 px-2 pr-7 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-xs outline-none cursor-pointer focus:border-[var(--primary)] transition-colors"
+          >
+            <option value="recent">Mới nhất</option>
+            <option value="studied">Đã học gần đây</option>
+            <option value="alpha">A-Z</option>
+          </select>
+        </div>
       </div>
 
       {/* ── Content ──────────────────────────────────── */}

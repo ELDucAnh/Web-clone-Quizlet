@@ -319,7 +319,9 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
           delete newFolders[folderId];
           return { folders: newFolders, decks: newDecks };
         });
+        syncToBackend(`/folders/${folderId}`, 'DELETE');
       },
+
 
       addDeckToFolder: (folderId: string, deckId: string) => {
         set((state) => {

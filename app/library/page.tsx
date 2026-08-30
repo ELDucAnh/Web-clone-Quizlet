@@ -64,7 +64,10 @@ function LibraryContent() {
 
   const folderList = Object.values(folders)
     .filter((f) => !search || f.name.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => b.updatedAt - a.updatedAt);
+    .sort((a, b) => {
+      if (sortBy === 'alpha') return a.name.localeCompare(b.name);
+      return b.updatedAt - a.updatedAt; // 'recent' and 'studied' both sort by updatedAt for folders
+    });
 
   // Starred terms: collect all starred cards
   const starredCards = Object.values(cards).filter((c) => c.starred);

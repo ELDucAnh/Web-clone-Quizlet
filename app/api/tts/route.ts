@@ -144,6 +144,7 @@ async function generateAudio(text: string): Promise<NextResponse> {
           headers: {
             'Content-Type': 'audio/wav',
             'Cache-Control': 'no-store',
+            'X-TTS-Source': 'groq-orpheus',
           },
         });
       }
@@ -187,6 +188,7 @@ async function generateAudio(text: string): Promise<NextResponse> {
     headers: {
       'Content-Type': 'audio/mpeg',
       'Cache-Control': 'no-store',
+      'X-TTS-Source': 'google-translate',
     },
   });
 }
