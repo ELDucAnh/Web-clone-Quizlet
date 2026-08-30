@@ -302,6 +302,7 @@ function SampleCard({ sample, currentFolderId }: { sample: WritingSample; curren
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-[var(--text)] leading-snug truncate">{sample.title}</h3>
           {sample.aiFeedback?.topicImage && (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img src={sample.aiFeedback.topicImage} alt="Topic" className="max-h-48 rounded-lg mb-2 mt-2 object-contain border border-[var(--border)] bg-[var(--bg)]" />
           )}
           {sample.topic && (

@@ -16,7 +16,7 @@ function loadProgress(): Set<number> {
 }
 
 function saveProgress(completed: Set<number>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...completed]));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(completed)));
 }
 
 const SKILL_META: Record<Skill, { color: string; bg: string; icon: React.ReactNode; label: string }> = {
@@ -157,7 +157,7 @@ export default function RoadmapPage() {
     if (status === 'locked') return;
 
     setCompleted(prev => {
-      const next = new Set(prev);
+      const next = new Set(Array.from(prev));
       if (next.has(day)) {
         // Uncomplete: also uncheck all subsequent completed days
         for (let d = day; d <= 140; d++) next.delete(d);

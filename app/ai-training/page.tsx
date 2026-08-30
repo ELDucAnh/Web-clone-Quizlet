@@ -130,6 +130,7 @@ function AIHistoryRoom() {
             {isWriting && selectedItem.aiFeedback?.topicImage && (
               <div className="mb-4">
                 <p className="text-xs font-bold text-gray-500 uppercase mb-2">Ảnh đề bài:</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={selectedItem.aiFeedback.topicImage} alt="Topic" className="max-h-64 object-contain rounded-xl border border-gray-200 p-2 bg-white" />
               </div>
             )}
@@ -363,6 +364,7 @@ function AIWritingRoom({ defaultDeckId }: { defaultDeckId: string }) {
               <p className="text-xs font-bold text-[var(--text-muted)] mb-2 uppercase">Đính kèm biểu đồ (Tùy chọn):</p>
               {topicImage ? (
                 <div className="relative inline-block border border-[var(--border)] rounded-xl overflow-hidden shadow-sm bg-white">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={topicImage} alt="Topic Chart" className="max-h-48 object-contain p-2" />
                   <button onClick={() => setTopicImage(null)} className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full hover:bg-red-500 transition-colors">
                     <X size={14} />

@@ -222,6 +222,7 @@ export function TopNavbar({ onMobileMenuOpen, onCreateFolder }: TopNavbarProps) 
                   aria-label="Menu người dùng"
                 >
                   {session?.user?.image ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img src={session.user.image} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
                     initials
