@@ -1,14 +1,21 @@
-// lib/roadmap-data.ts — IELTS 140-day roadmap: 5.5 → 7.5, 3h/day
+// lib/roadmap-data.ts — IELTS 140-day: 5.5 → 7.5
+// Vocab rules: ≤150 new words/day OR ≤150 review words/day
+// Reading: CamCore 600 (B1-B9, 70/batch) → Topic vocab (TR1-TR13, 70/topic) → Cambridge IELTS practice
+// Listening: CamListen 600 (BL1-BL20, 30/batch + 40p dictation) → Intensive drill
+// Writing T2: 40 topics × 100 collocations + 1 full essay (2 sessions/week)
+// Writing T1: 2 essays/session (1 session/week)
+// Speaking: 30 topics × 50 vocab + pronunciation + Part 2 AI (2 sessions/week, weeks 1-15)
+// Grammar: systematic weekly point
 
 export type Phase = 1 | 2 | 3 | 4;
 export type TaskType = 'vocab' | 'reading' | 'listening' | 'writing' | 'speaking' | 'grammar' | 'mock';
 
 export interface DayTask {
-  id: string;       // unique per-day key for checkbox tracking
+  id: string;
   type: TaskType;
-  title: string;    // short title shown in checklist
-  detail: string;   // full description shown in modal
-  url?: string;     // resource URL
+  title: string;
+  detail: string;
+  url?: string;
 }
 
 export interface RoadmapDay {
@@ -23,29 +30,29 @@ export interface RoadmapDay {
 }
 
 export const PHASES = [
-  { id: 1 as Phase, name: 'Xây Nền Tảng',  bandRange: '5.5 → 6.0', days: [1,35]   as [number,number], color: '#4f8ef7', bg: '#EFF6FF', description: 'Nắm format IELTS, chiến lược cơ bản và từ vựng nền tảng cho 5 chủ đề đầu.' },
-  { id: 2 as Phase, name: 'Bứt Phá',       bandRange: '6.0 → 6.5', days: [36,70]  as [number,number], color: '#a855f7', bg: '#F5F3FF', description: 'Chinh phục dạng câu khó, xây chiến lược thi bài bản, nâng vocab học thuật.' },
-  { id: 3 as Phase, name: 'Đào Sâu',       bandRange: '6.5 → 7.0', days: [71,105] as [number,number], color: '#06b6d4', bg: '#ECFEFF', description: 'Nâng cao 4 kỹ năng lên Band 7: inference, complex grammar, academic style. Nghe mỗi ngày!' },
-  { id: 4 as Phase, name: 'Thực Chiến',    bandRange: '7.0 → 7.5', days: [106,140] as [number,number], color: '#f59e0b', bg: '#FFFBEB', description: 'Full mock test mỗi 3 ngày, 4 tasks/ngày ở giai đoạn cuối, phân tích lỗi từng tiêu chí, tinh chỉnh đến ngày thi.' },
+  { id: 1 as Phase, name: 'Xây Nền Tảng', bandRange: '5.5 → 6.0', days: [1,35] as [number,number], color: '#4f8ef7', bg: '#EFF6FF', description: 'CamCore 600 Batch 1-9 (nền tảng từ vựng) + CamListen BL1-10 + Writing T01-T10 + Speaking SP01-10.' },
+  { id: 2 as Phase, name: 'Bứt Phá', bandRange: '6.0 → 6.5', days: [36,70] as [number,number], color: '#a855f7', bg: '#F5F3FF', description: 'Topic Reading TR1-TR11 + CamListen BL11-BL20 (hoàn thành 600!) + Writing T11-T20 + Speaking SP11-20.' },
+  { id: 3 as Phase, name: 'Đào Sâu', bandRange: '6.5 → 7.0', days: [71,105] as [number,number], color: '#06b6d4', bg: '#ECFEFF', description: 'Topic Reading TR12-TR13 → Cambridge IELTS Reading practice + Dictation intensive + Writing T21-T30 + Speaking SP21-30.' },
+  { id: 4 as Phase, name: 'Thực Chiến', bandRange: '7.0 → 7.5', days: [106,140] as [number,number], color: '#f59e0b', bg: '#FFFBEB', description: 'Full mock test + Writing T31-T40 + Speaking mock (SP done!) + 4 tasks/day tuần 19-20.' },
 ];
 
-// ─── URL Constants ──────────────────────────────────────────
 const BBC6   = 'https://www.bbc.co.uk/learningenglish/english/features/6-minute-english';
 const BCG    = 'https://learnenglish.britishcouncil.org/grammar';
-const BCR    = 'https://learnenglish.britishcouncil.org/reading';
-const BCL    = 'https://learnenglish.britishcouncil.org/listening';
-const VOA    = 'https://learningenglish.voanews.com/';
-const BBCENV = 'https://www.bbc.com/news/science-environment';
-const BBCTECH= 'https://www.bbc.com/news/technology';
-const BBCHLTH= 'https://www.bbc.com/news/health';
-const BBCBIZ = 'https://www.bbc.com/news/business';
-const BBCWRD = 'https://www.bbc.com/news/world';
+const CAMDICT= 'https://dictionary.cambridge.org/';
 const IELTS  = 'https://ieltsonlinetests.com/';
-const TED    = 'https://ed.ted.com/';
+const BBCENV = 'https://www.bbc.com/news/science-environment';
 
-// ─── Week Data (20 weeks × 7 days, 3-4 tasks per day) ──────
 type T = { id: string; type: TaskType; title: string; detail: string; url?: string };
 type WeekDef = { theme: string; themeEn: string; phase: Phase; milestone?: string; days: T[][] };
+
+// ─── Helpers ─────────────────────────────────────────────────
+const r = (id: string, title: string, detail: string, url?: string): T => ({ id, type: 'reading', title, detail, url });
+const l = (id: string, title: string, detail: string, url?: string): T => ({ id, type: 'listening', title, detail, url });
+const w = (id: string, title: string, detail: string, url?: string): T => ({ id, type: 'writing', title, detail, url });
+const s = (id: string, title: string, detail: string, url?: string): T => ({ id, type: 'speaking', title, detail, url });
+const g = (id: string, title: string, detail: string, url?: string): T => ({ id, type: 'grammar', title, detail, url });
+const v = (id: string, title: string, detail: string, url?: string): T => ({ id, type: 'vocab', title, detail, url });
+const m = (id: string, title: string, detail: string, url?: string): T => ({ id, type: 'mock', title, detail, url });
 
 const WEEKS: WeekDef[] = [
 
@@ -53,214 +60,214 @@ const WEEKS: WeekDef[] = [
   //  PHASE 1 — XÂY NỀN TẢNG (Days 1–35)
   // ════════════════════════════════════════════════════════════
 
-  // ── Week 1: Environment & Climate Change ──────────────────
+  // ── Week 1: Môi trường & CamCore B1-B2 ─────────────────────
   {
-    theme: 'Môi trường & Biến đổi khí hậu', themeEn: 'Environment & Climate Change', phase: 1,
+    theme: 'Môi trường & Từ vựng nền', themeEn: 'Environment & Core Vocab', phase: 1,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng ô nhiễm & hệ sinh thái',     detail:'Học 20 từ: pollution, contamination, ecosystem, biodiversity, habitat, deforestation, erosion, toxic, emissions, greenhouse, fossil fuel, ozone layer, carbon footprint, sustainable, conservation, extinction, acid rain, smog, landfill, pesticide. Đặt 5 câu ví dụ.' },
-        { id:'g', type:'grammar', title:'Câu điều kiện loại 1 & 2',            detail:'Lý thuyết & bài tập: Type 1 – If we reduce emissions, temperatures will fall. Type 2 – If governments invested more, the situation would improve. Viết 5 câu điều kiện về môi trường, kiểm tra tại British Council Grammar.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Cá nhân vs Chính phủ bảo vệ MT', detail:'Đề: "Some people think individuals should be responsible for protecting the environment. Others believe governments should. Discuss both views and give your own opinion." Lập outline (10p) → viết full essay (40p, ≥250 từ).' },
+        r('r','📖 CamCore Batch 1 (001–070)','Học 70 từ Cambridge Core 600 Batch 1. Flashcard trong app. Mục tiêu: nhận mặt chữ + nghĩa 100% trong 60p. Từ tiêu biểu: abandon, abstract, access, accommodate, achieve, acquire, adapt, adequate, adjacent, adjust, advocate, aggregate, aid, allocate, alter...', CAMDICT),
+        l('l','🎧 CamListen BL1 (001–030) + Chép CT 40p','[30p] Học 30 từ CamListen Batch 1 (#001–030). [40p] Nghe BBC 6 Minute English (environment) → chép chính tả không tạm dừng → check transcript, note từ nghe sai.', BBC6),
+        g('g','📝 Ngữ pháp: Điều kiện Type 1 & 2','Type 1: "If we reduce emissions, temperatures will stabilise." Type 2: "If governments invested more, the situation would improve." Viết 5 câu mỗi loại về môi trường.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Collocations môi trường',              detail:'Học 20 cụm: tackle climate change, reduce carbon emissions, combat deforestation, implement green policies, raise awareness, harness solar energy, curb pollution, protect endangered species, preserve habitats, go carbon neutral. Dùng trong câu.' },
-        { id:'r', type:'reading', title:'BBC: Tác động của ô nhiễm không khí',  detail:'Đọc tin tức mới nhất trên BBC Science & Environment về air pollution. Xác định main idea mỗi đoạn, ghi 8 từ học thuật mới, tìm 3 câu passive voice. Tóm tắt bài bằng 3 câu tiếng Anh.', url: BBCENV },
-        { id:'s', type:'speaking',title:'Part 2: Vấn đề môi trường địa phương', detail:'Cue card: "Describe an environmental problem in your local area. Say: what it is, what causes it, what effects it has, what should be done." 1 phút chuẩn bị → 2 phút nói → ghi âm → nghe lại & nhận xét fluency.' },
+        w('w1','✍️ 100 Collocations: Environment (W2T01)','Học 100 collocations môi trường (flashcard bộ W2T01): tackle climate change, reduce carbon emissions, combat deforestation, implement green policies, harness solar energy, curb pollution, protect endangered species, achieve net-zero, address environmental degradation, phase out fossil fuels... (100 colloc đầy đủ trong bộ W2T01).'),
+        w('w2','✍️ Task 2 Essay: Environment','Đề: "Individuals rather than governments should be responsible for protecting the environment. To what extent do you agree?" Outline 5p → Draft 40p → Proofread 5p. Dùng tối đa collocations W2T01.'),
+        v('ck','🔍 Tự chấm essay Environment','Chấm theo 4 tiêu chí: TA (trả lời đủ chưa?), CC (có progression rõ?), LR (dùng được bao nhiêu colloc?), GRA (có lỗi không?). Ghi band tự đánh giá.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng năng lượng tái tạo',           detail:'Học 20 từ: renewable energy, solar power, wind turbine, hydroelectric, geothermal, nuclear energy, carbon neutral, net zero, energy efficiency, biomass, tidal power, photovoltaic, off-grid, sustainability, clean energy, grid, subsidy, incentive, transition, decarbonisation.' },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Climate change',   detail:'Vào BBC 6 Minute English, tìm episode chủ đề climate/environment. Nghe lần 1 không transcript (ghi key words). Nghe lần 2 với transcript. Trả lời câu hỏi mở đầu episode. Ghi 5 cụm từ hữu ích.', url: BBC6 },
-        { id:'w', type:'writing', title:'Task 1: Biểu đồ CO₂ emissions',        detail:'Mô tả line chart: CO₂ emissions (tonnes/capita) của UK, USA, China từ 1990–2020. Tự tra số liệu thực (Our World in Data) hoặc dùng số liệu giả định. Viết 20 phút, focus vào overview + key trends, dùng so sánh.' },
+        s('s1','🗣️ SP01: Hometown (50 từ) + Phát âm','Học 50 từ Speaking Topic 1 Hometown (flashcard SP01): neighbourhood, residential area, outskirts, urban sprawl, community spirit, local amenities, vibrant atmosphere, cosmopolitan, infrastructure, suburban, multicultural... Sau đó phát âm từng từ theo Cambridge Dictionary.', CAMDICT),
+        s('s2','🗣️ Part 2: Hometown Cue Card','Cue card: "Describe your hometown. Say: where it is, what it\'s like, what you like most, and how it has changed." 1p chuẩn bị → 2p nói với AI hoặc ghi âm → nghe lại, note 3 cải thiện.'),
+        v('rv','🔄 Ôn nhanh SP01 (50 từ)','Quiz SP01 Hometown: 50 từ — che nghĩa, đọc từ, nói nghĩa tiếng Anh. Target ≥45/50. Từ sai → đặt vào 1 câu ví dụ.'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Plastic pollution',      detail:'Làm 1 reading passage về plastic pollution trên ieltsonlinetests.com. Tập trung dạng T/F/NG và Matching Information. Tính giờ (20 phút), chấm điểm, phân tích câu sai. Ghi lại từ không biết.', url: IELTS },
-        { id:'g', type:'grammar', title:'Thể bị động học thuật',                 detail:'Passive voice trong IELTS: "Millions of tonnes of CO₂ are released each year." "The Paris Agreement was signed by 195 countries." Chuyển 10 câu active → passive về chủ đề môi trường. Luyện trên British Council Grammar.', url: BCG },
-        { id:'s', type:'speaking',title:'Part 3: Trách nhiệm môi trường',        detail:'Thảo luận 3 câu: (1) Who is more responsible for climate change—individuals, corporations, or governments? (2) Is it too late to reverse environmental damage? (3) What lifestyle changes can reduce carbon footprint? Mỗi câu nói ≥1 phút, dùng hedging: "It seems to me...", "One could argue..."' },
+        r('r','📖 CamCore Batch 2 (071–140)','Học 70 từ CamCore Batch 2 (#071–140). Tiêu biểu: ambiguous, amend, analogous, apparent, appeal, appreciate, appropriate, approximate, arbitrary, area, ascertain, aspect, assemble, assess, assign, assume, attain, attitude, attribute, authority...', CAMDICT),
+        l('l','🎧 CamListen BL2 (031–060) + Chép CT 40p','[30p] Học 30 từ CamListen BL2 (#031–060). [40p] Nghe IELTS Listening S1 (form-filling) → chép chính tả → check, ghi lỗi chính tả số điện thoại, tên riêng.', IELTS),
+        g('g','📝 Ngữ pháp: Điều kiện Type 3 & Mixed','Type 3: "If the policy had been implemented, emissions would have fallen." Mixed: "If we had acted sooner, the planet would be healthier now." Viết 5 câu mỗi loại.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng chính sách môi trường',        detail:'Học 15 từ: regulation, legislation, carbon tax, green subsidy, Paris Agreement, Kyoto Protocol, international cooperation, NGO, activist, environmental impact assessment, remediation, mitigation, adaptation, carbon trading, cap-and-trade. Tìm hiểu nghĩa và ví dụ.' },
-        { id:'l', type:'listening',title:'VOA: Climate change solutions',        detail:'Vào VOA Learning English, tìm story về climate change solutions/renewable energy. Nghe và ghi: 3 giải pháp được đề cập, specific numbers/statistics, tên tổ chức/người được nhắc. Tóm tắt bằng 4 câu.', url: VOA },
-        { id:'s', type:'speaking',title:'Part 1: Thói quen bảo vệ môi trường',  detail:'Luyện 8 Part 1 questions: "Do you recycle?" / "How do you help the environment?" / "Do you think electric cars are important?" / "Is your city polluted?" / "What can individuals do about climate change?" Mỗi câu 2-3 câu trả lời, tự nhiên, ghi âm.' },
+        w('w1','✍️ 100 Collocations: Technology (W2T02)','Học 100 collocations công nghệ (flashcard W2T02): develop cutting-edge technology, harness artificial intelligence, automate repetitive tasks, disrupt traditional industries, enhance productivity, pose ethical concerns, infringe on privacy, revolutionise communication, narrow the digital divide, raise cybersecurity awareness...'),
+        w('w2','✍️ Task 2 Essay: Technology','Đề: "Artificial intelligence is a threat to jobs. To what extent do you agree or disagree?" Outline 5p → Draft 40p → Proofread 5p. Dùng tối đa collocations W2T02.'),
+        v('ck','🔍 Tự chấm essay Technology','Kiểm tra: (1) intro có paraphrase câu hỏi không? (2) mỗi body para có 1 main idea? (3) conclusion có restate opinion? Ghi lỗi để tránh.'),
       ],
       [
-        { id:'r', type:'reading', title:'British Council B2: Environment',       detail:'Làm bài đọc B2 trên British Council LearnEnglish. Ghi chú cách tác giả dùng linking words (however, furthermore, as a result). Xác định thesis + supporting arguments. Tóm tắt structure của bài.', url: BCR },
-        { id:'w', type:'writing', title:'Task 2: Tăng giá xăng dầu',            detail:'Đề: "The only way to solve traffic and pollution problems in cities is to increase the price of petrol. To what extent do you agree?" Viết full essay 40 phút (≥250 từ). Tự chấm: Task Achievement, Coherence & Cohesion, Lexical Resource, Grammar (mỗi tiêu chí 1–9).' },
-        { id:'g', type:'grammar', title:'Relative clauses nâng cao',             detail:'Defining vs non-defining: "The Amazon, which covers 60% of Brazil, is shrinking." / "Countries that fail to meet targets will face penalties." Viết 6 câu về môi trường, 3 defining + 3 non-defining. Kiểm tra dấu phẩy.', url: BCG },
+        s('s1','🗣️ SP02: Work & Career (50 từ) + Phát âm','Học 50 từ SP02 Work/Career (flashcard SP02): occupation, profession, vocation, career prospects, work-life balance, remote working, job satisfaction, competitive salary, promotion, redundancy, entrepreneur, freelancer, internship, collaborate, deadline... Phát âm từng từ.', CAMDICT),
+        s('s2','🗣️ Part 2: Future Job Cue Card','Cue card: "Describe a job you would like to do in the future. Say: what it is, what it involves, what skills are needed, and why." 1p prep → 2p nói → ghi âm.'),
+        w('t1','📊 Task 1: 2 bài Bar Chart','Bài 1 (25p): bar chart số SV đại học theo ngành 2000–2020. Bài 2 (25p): bar chart carbon emissions by sector. Cấu trúc: overview 2 câu + 2 body paragraphs. Tự chấm sau.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Ôn 80 từ tuần 1 – Environment',        detail:'Flashcard quiz không nhìn từ: viết nghĩa tiếng Việt của 80 từ đã học tuần 1. Lọc ra 15 từ khó nhất → học lại. Đặt 3 câu IELTS-style dùng từ bạn thường quên nhất.' },
-        { id:'l', type:'listening',title:'IELTS Listening S4: Môi trường',      detail:'Làm IELTS Listening Section 4 (bài giảng academic về environmental science) trên ieltsonlinetests.com. Tính giờ (30 phút cho 40 câu), chấm điểm, phân tích lỗi sai từng câu.', url: IELTS },
-        { id:'r', type:'reading', title:'Full IELTS Reading passage: Climate',  detail:'Làm 1 full IELTS Reading passage về climate change (13 câu, 20 phút). Tập trung Matching Headings + T/F/NG. Sau khi làm, đọc transcript và highlight paraphrasing (cách đề hỏi khác văn bản).', url: IELTS },
+        v('rev','🔄 Ôn tập: CamCore B1+B2 (140 từ)','Quiz flashcard CamCore B1 (001–070) + B2 (071–140) = 140 từ. Target ≥90%. Từ sai: ghi vào error list, đặt câu ví dụ. Đây là spaced repetition lần 1.'),
+        r('rd','📰 Đọc tin BBC Environment (20p)','Đọc 1 bài BBC Science & Environment. Ghi: main argument, 5 từ academic mới, 3 collocations dùng được trong Writing.', BBCENV),
+        v('pl','💡 Tổng kết tuần 1','Tuần này đã nạp: CamCore 140 từ + CamListen 60 từ + Writing 200 colloc + Speaking 100 từ = 500. Ghi điểm yếu nhất để chú ý tuần 2.'),
       ],
     ],
   },
 
-  // ── Week 2: Technology & Innovation ──────────────────────
+  // ── Week 2: Công nghệ & CamCore B3-B4 ──────────────────────
   {
-    theme: 'Công nghệ & Đổi mới', themeEn: 'Technology & Innovation', phase: 1,
+    theme: 'Công nghệ & Giáo dục', themeEn: 'Technology & Education', phase: 1,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng AI & tự động hóa',             detail:'Học 20 từ: artificial intelligence, machine learning, algorithm, automation, robotics, data analytics, neural network, deep learning, cloud computing, cybersecurity, digital transformation, disruptive technology, innovation, prototype, scalable, interface, coding, software, hardware, app development.' },
-        { id:'g', type:'grammar', title:'Noun clauses & mệnh đề danh ngữ',      detail:'"It is clear that AI will transform employment." / "What concerns many people is the lack of regulation." / "The fact that robots can perform surgery is remarkable." Viết 6 câu noun clauses về công nghệ. Phân biệt: that-clauses, wh-clauses.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: AI và nguy cơ mất việc làm',   detail:'Đề: "Artificial intelligence is a threat to jobs and employment. To what extent do you agree or disagree?" Viết outline (10p) + full essay (40p). Chú ý: dùng conditionals, hedging language, academic vocabulary.' },
+        r('r','📖 CamCore Batch 3 (141–210)','Học 70 từ CamCore B3 (#141–210). Tiêu biểu: available, benefit, category, chapter, circumstance, clarify, clause, coherent, coincide, commence, community, compatible, compensate, compile, complex, comprehensive, comprise, concentrate, confirm, conflict...', CAMDICT),
+        l('l','🎧 CamListen BL3 (061–090) + Chép CT 40p','[30p] Học 30 từ CamListen BL3 (#061–090). [40p] Nghe IELTS Listening S2 (talk/monologue) → chép chính tả → check transcript.', IELTS),
+        g('g','📝 Ngữ pháp: Passive Voice học thuật','It has been argued that... / Research suggests that... / It is widely believed that... Viết 8 câu passive về công nghệ. Tập trung: passive không cần agent khi subject unknown.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Collocations công nghệ',                detail:'Học 20 cụm: develop an app, launch a product, upgrade software, access the internet, store data, hack a system, boost productivity, streamline processes, implement technology, adopt innovation, disrupt an industry, integrate systems, process data, run an algorithm, deploy AI.' },
-        { id:'r', type:'reading', title:'BBC Technology: Tin tức công nghệ',     detail:'Đọc 1 bài mới nhất trên BBC Technology về AI, robotics hoặc social media. Ghi chú: main argument, supporting evidence, author\'s stance. Xác định 5 collocations mới. Đặt 2 câu dùng chúng.', url: BBCTECH },
-        { id:'s', type:'speaking',title:'Part 2: Mô tả thiết bị công nghệ',     detail:'Cue card: "Describe a piece of technology that you find very useful. Say: what it is, how long you have used it, how you use it, and why it is useful to you." Ghi âm 2 phút, chú ý: past tense (how long), present habit, reasons with because/since.' },
+        w('w1','✍️ 100 Collocations: Education (W2T03)','Học 100 colloc giáo dục (W2T03): pursue a degree, foster critical thinking, enhance academic performance, promote lifelong learning, implement student-centred learning, standardise assessment, bridge the skills gap, reform the curriculum, increase access to education, develop vocational training...'),
+        w('w2','✍️ Task 2 Essay: Education','Đề: "Some people believe online education is as valuable as traditional classroom education. To what extent do you agree?" Outline 5p → Draft 40p → Proofread 5p.'),
+        v('ck','🔍 Tự chấm essay Education','Chú ý: bài này yêu cầu "to what extent" → không phải binary agree/disagree, phải có nuance. Kiểm tra: có nêu 2 sides không? Band tự chấm?'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng mạng xã hội & truyền thông',  detail:'Học 20 từ: social media, influencer, viral content, algorithm, echo chamber, digital literacy, misinformation, privacy, cyberbullying, online community, streaming, subscription, platform, engagement, follower, hashtag, filter bubble, fake news, content creator, digital footprint.' },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Technology',        detail:'Tìm BBC 6 Minute English episode về technology/social media/AI. Nghe không transcript lần 1, ghi key arguments. Lần 2 với transcript: highlight hedging phrases (could be, might, seems to), ghi 5 útil expressions.', url: BBC6 },
-        { id:'w', type:'writing', title:'Task 1: Biểu đồ sử dụng internet',     detail:'Mô tả bar chart: % người dùng internet theo độ tuổi ở 3 quốc gia năm 2023. Tự tra hoặc dùng số liệu giả định. Chú ý: so sánh groups, dùng language of proportion (the majority, a minority, nearly half).' },
+        s('s1','🗣️ SP03: Family & Relationships (50 từ)','Học 50 từ SP03 Family (flashcard SP03): extended family, nuclear family, close-knit, generation gap, upbringing, sibling rivalry, parental guidance, domestic responsibilities, filial piety, breadwinner, single-parent, foster care, adopt, cherish, unconditional love... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Important Family Member','Cue card: "Describe a family member who has had a great influence on you. Say: who, what they did, how they influenced you, and how you feel about them." 1p prep → 2p nói.'),
+        v('rv','🔄 Ôn nhanh SP03 (50 từ)','Quiz SP03 Family: 50 từ. Target ≥45/50. Từ sai → đặt câu.'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Social media impact',   detail:'Làm passage IELTS về social media và mental health trên ieltsonlinetests.com. 20 phút, 13 câu. Focus: Matching Information + Short Answer. Sau đó phân tích từ vựng học thuật trong passage.', url: IELTS },
-        { id:'g', type:'grammar', title:'So sánh nâng cao',                      detail:'Comparison structures: "significantly more/less than", "considerably higher/lower", "roughly twice as many as", "the fastest-growing". Viết 8 câu so sánh dùng dữ liệu công nghệ giả định. Dùng trong Task 1 writing.', url: BCG },
-        { id:'s', type:'speaking',title:'Part 3: Tác động xã hội của mạng XH',  detail:'Discuss 3 questions: (1) How has social media changed the way people communicate? (2) Do you think social media does more harm than good? (3) Should governments regulate social media platforms? Dùng: "On the one hand...", "There is a strong case for..."' },
+        r('r','📖 CamCore Batch 4 (211–280)','Học 70 từ CamCore B4 (#211–280). Tiêu biểu: consequent, consist, constitute, construct, contrast, contribute, controversy, convention, coordinate, create, criteria, crucial, data, debate, deduce, define, deny, derive, differentiate, diminish, discharge, dominate...', CAMDICT),
+        l('l','🎧 CamListen BL4 (091–120) + Chép CT 40p','[30p] Học 30 từ CamListen BL4 (#091–120). [40p] Nghe IELTS S3 (discussion) → chép chính tả → note cách phân biệt giọng 2-3 speaker.', IELTS),
+        g('g','📝 Ngữ pháp: Reported Speech học thuật','The study argues that... / Researchers claim that... / It has been demonstrated that... Chuyển 8 câu direct → reported, dùng các reporting verbs: argue, claim, suggest, note, state, propose.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Word forms – Technology',               detail:'Luyện word families: innovate→innovation→innovative→innovator / automate→automation→automated→automatic / digital→digitise→digitisation / communicate→communication→communicative. Viết 8 câu dùng đúng word form, sửa lỗi phổ biến.' },
-        { id:'l', type:'listening',title:'TED-Ed: The future of technology',     detail:'Vào TED-Ed, xem 1 video về AI, robotics hoặc the future of work (mục Science → Technology). Ghi 3 main arguments của speaker, 5 academic expressions, 1 statistic. Viết 100 từ tóm tắt bằng tiếng Anh.', url: TED },
-        { id:'s', type:'speaking',title:'Part 1: Công nghệ trong cuộc sống',    detail:'Luyện: "What technology do you use every day?" / "Do you think children use technology too much?" / "How has technology changed your daily life?" / "Do you prefer reading physical books or e-books?" Mỗi câu mở rộng ít nhất 3 câu.' },
+        w('w1','✍️ 100 Collocations: Health & Medicine (W2T04)','Học 100 colloc sức khỏe (W2T04): promote public health, prevent chronic diseases, reduce obesity rates, implement healthcare reform, expand access to healthcare, address mental health issues, combat antimicrobial resistance, fund medical research, improve health literacy, regulate junk food...'),
+        w('w2','✍️ Task 2 Essay: Health','Đề: "Governments should tax unhealthy food to reduce obesity. To what extent do you agree or disagree?" Outline 5p → Draft 40p → Proofread 5p.'),
+        v('ck','🔍 Tự chấm + ghi lỗi W2','Ghi bảng lỗi riêng: (1) lỗi ngữ pháp hay mắc, (2) từ vựng hay dùng sai, (3) cấu trúc essay cần cải thiện. Đây là bảng lỗi để theo dõi suốt 140 ngày.'),
       ],
       [
-        { id:'r', type:'reading', title:'British Council: Technology B2',        detail:'Đọc bài B2 British Council về technology. Phân tích cấu trúc argument: claim → evidence → example → conclusion. Highlight: opinion phrases (arguably, it can be argued that), concession phrases (although, despite this).', url: BCR },
-        { id:'w', type:'writing', title:'Task 2: Công nghệ và sự riêng tư',     detail:'Đề: "Advances in technology mean that it is becoming increasingly easy for governments to monitor people\'s activities. Is this a positive or negative development?" Viết 40 phút. Dùng passive voice và hedging language.' },
-        { id:'g', type:'grammar', title:'Gerunds vs Infinitives',                detail:'"Using social media can be addictive." vs "It is important to protect your privacy." vs "People tend to spend more time online." Viết 10 câu về technology dùng đúng gerund/infinitive sau: enjoy, avoid, seem, manage, recommend, encourage, refuse, admit.', url: BCG },
+        s('s1','🗣️ SP04: Friends & Social Life (50 từ)','Học 50 từ SP04 Friends (flashcard SP04): acquaintance, companion, mutual interests, peer pressure, social circle, reliable, trustworthy, supportive, long-distance friendship, meaningful connection, socialise, bond, networking, introvert, extrovert... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: A Good Friend','Cue card: "Describe a good friend of yours. Say: how you met, what they are like, what you do together, and explain why they are a good friend." 1p prep → 2p nói.'),
+        w('t1','📊 Task 1: 2 bài Line Graph','Bài 1 (25p): line graph CO₂ emissions 1990–2020 (UK, USA, China). Bài 2 (25p): line graph số lượng SV du học toàn cầu 2000–2015. Overview + 2 body paragraphs. Tự chấm.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Ôn 80 từ tuần 2 – Technology',         detail:'Random quiz: flashcard test 80 từ tech tuần 2. Chia 2 nhóm: từ đã thuộc (xanh) và từ cần học lại (đỏ). Học lại nhóm đỏ, đặt câu ví dụ cho 5 từ khó nhất.' },
-        { id:'l', type:'listening',title:'IELTS Listening S3+S4: Technology',   detail:'Làm IELTS Section 3 (thảo luận sinh viên về tech project) + Section 4 (bài giảng về AI) trên ieltsonlinetests.com. Chú ý: Section 3 – multiple speakers, distinguish opinions. Section 4 – predict from headings.', url: IELTS },
-        { id:'r', type:'reading', title:'Full IELTS Reading: Technology topic',  detail:'Làm 1 IELTS Reading passage về technology innovation (20 phút, 13 câu). Dùng: skim title/headings trước (1 phút), scan cho keywords, đọc câu hỏi trước khi đọc đoạn liên quan.', url: IELTS },
+        v('rev','🔄 Ôn tập: CamCore B3+B4 (140 từ)','Quiz flashcard CamCore B3 (141–210) + B4 (211–280) = 140 từ. Target ≥90%. Ghi error list. Spaced repetition lần 1 cho B3+B4.'),
+        l('lv','🎧 Ôn CamListen BL1+BL2 (60 từ)','Ôn 60 từ CamListen BL1+BL2. Quiz: nghe và viết từ (spelling check). Target ≥55/60. Note từ sai chính tả.'),
+        v('pl','💡 Tổng kết tuần 2','CamCore 280 từ tổng (B1-B4) + CamListen 120 từ (BL1-BL4) + Writing T01-T04 = 400 colloc + Speaking SP01-SP04 = 200 từ. Đang đúng lộ trình!'),
       ],
     ],
   },
 
-  // ── Week 3: Education & Learning ─────────────────────────
+  // ── Week 3: Giáo dục & CamCore B5-B6 ──────────────────────
   {
-    theme: 'Giáo dục & Học tập', themeEn: 'Education & Learning', phase: 1,
+    theme: 'Y tế & Ngữ pháp nâng cao', themeEn: 'Health & Grammar', phase: 1,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng hệ thống giáo dục',            detail:'Học 20 từ: curriculum, pedagogy, tuition, scholarship, literacy, vocational training, higher education, undergraduate, postgraduate, academic achievement, grade, assessment, examination, peer learning, critical thinking, rote learning, extracurricular, dropout, enrolment, faculty.' },
-        { id:'g', type:'grammar', title:'Modal verbs: should, must, ought to',  detail:'"Students should be encouraged to think critically." / "Education must be accessible to all." / "Teachers ought to provide feedback regularly." Phân biệt must (obligation) vs should (recommendation) vs ought to (moral duty). Viết 8 câu về education policy.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Học online vs truyền thống',   detail:'Đề: "Some people believe that online education is as valuable as traditional classroom education. To what extent do you agree?" Outline (10p) + viết (40p). Chú ý: balanced argument với cả 2 mặt, dùng contrast connectors.' },
+        r('r','📖 CamCore Batch 5 (281–350)','Học 70 từ CamCore B5 (#281–350). Tiêu biểu: economic, edit, enhance, environment, establish, evaluate, evident, evolve, exclude, exhibit, expand, explicit, expose, external, facilitate, factor, feature, finite, fluctuate, format, formulate, foundation...', CAMDICT),
+        l('l','🎧 CamListen BL5 (121–150) + Chép CT 40p','[30p] Học 30 từ CamListen BL5 (#121–150). [40p] Nghe IELTS S4 (academic lecture) → chép chính tả → đây là section khó nhất, chú ý predict từ loại trước khi nghe.', IELTS),
+        g('g','📝 Ngữ pháp: Relative Clauses','Defining: "Countries that fail to act will face penalties." Non-defining: "The Amazon, which covers 60% of Brazil, is shrinking." Viết 6 câu (3+3) về health hoặc education. Chú ý dấu phẩy.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Collocations giáo dục',                 detail:'Học 20 cụm: pursue a degree, attend a lecture, sit an exam, pass/fail a test, drop out of school, gain qualifications, foster critical thinking, broaden knowledge, develop skills, lifelong learning, teaching methodology, student-centred learning, standardised testing, tuition fees, student loan.' },
-        { id:'r', type:'reading', title:'BBC/VOA: Hệ thống giáo dục toàn cầu',  detail:'Đọc bài trên BBC hoặc VOA về education systems (PISA rankings, university education, skills gap). Phân tích: what problem is identified? What solution is proposed? Ghi 6 academic phrases.', url: VOA },
-        { id:'s', type:'speaking',title:'Part 2: Người thầy ấn tượng nhất',     detail:'Cue card: "Describe a teacher who has had a great influence on you. Say: who they are, what subject they taught, what made them special, and explain how they influenced you." 1p chuẩn bị → 2p nói. Dùng past tenses, specific examples.' },
+        w('w1','✍️ 100 Collocations: Society (W2T05)','Học 100 colloc xã hội (W2T05): address inequality, promote social cohesion, tackle homelessness, bridge the wealth gap, empower marginalised groups, strengthen community ties, reduce crime rates, implement social welfare, foster civic participation, combat discrimination...'),
+        w('w2','✍️ Task 2 Essay: Society','Đề: "In many countries, the gap between rich and poor is growing. What are the causes, and what can be done?" Cấu trúc: causes para + solutions para. Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm essay Society','Kiểm tra: Problem-solution structure — mỗi cause có linked solution không? CC: có "This is because..." / "Therefore..." / "As a result..." không?'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng tâm lý học tập',               detail:'Học 15 từ: motivation, self-discipline, cognitive development, metacognition, growth mindset, learning style, attention span, concentration, procrastination, reinforcement, feedback, collaboration, constructivism, scaffolding, differentiated instruction. Tìm examples trong thực tế.' },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Education',         detail:'Tìm BBC 6 Min English episode về education (university, learning languages, memory). Nghe và ghi: 3 facts/statistics, 2 expert opinions, 1 question posed to listener. Trả lời câu hỏi đó bằng tiếng Anh.', url: BBC6 },
-        { id:'w', type:'writing', title:'Task 1: Biểu đồ số lượng SV đại học', detail:'Mô tả bar chart: số sinh viên đại học nam/nữ ở UK năm 2000, 2010, 2020. Tự tạo số liệu hợp lý hoặc tra real data. Focus: so sánh gender gap, describe overall trend, use language of change.' },
+        s('s1','🗣️ SP05: Technology & Gadgets (50 từ)','Học 50 từ SP05 Technology (flashcard SP05): smartphone, laptop, tablet, wearable device, artificial intelligence, virtual reality, augmented reality, social media platform, app, gadget, innovation, upgrade, software, hardware, connectivity, bandwidth... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Useful Technology','Cue card: "Describe a piece of technology you find very useful. Say: what it is, how long you have used it, how you use it, and why it is useful." 1p prep → 2p nói.'),
+        v('rv','🔄 Ôn SP01+SP02 (100 từ)','Quiz SP01 Hometown + SP02 Work = 100 từ. Target ≥90%. Đây là lần ôn thứ 2 (spaced repetition tuần 3).'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Education system',       detail:'Làm IELTS Reading passage về education reform hoặc distance learning trên ieltsonlinetests.com. 20 phút. Sau khi làm: đọc explanation của từng câu sai, ghi lý do sai (misread, vocabulary, not found, etc).', url: IELTS },
-        { id:'g', type:'grammar', title:'Articles (a/an/the/zero article)',      detail:'Nguyên tắc: "Education is important" (zero) / "The education system in Vietnam" (specific) / "a university" (first mention). Viết đoạn 100 từ về education, tự check articles. Ghi 5 fixed expressions: "on the whole", "in general", "by and large".', url: BCG },
-        { id:'s', type:'speaking',title:'Part 3: Triết lý giáo dục',            detail:'Discuss: (1) Should university education be free? (2) Do you think exams are the best way to measure students\' ability? (3) How can schools better prepare students for the modern workplace? Dùng cleft: "What I believe is that..." / "It is the role of teachers to..."' },
+        r('r','📖 CamCore Batch 6 (351–420)','Học 70 từ CamCore B6 (#351–420). Tiêu biểu: framework, function, generate, global, guarantee, hypothesis, identify, illustrate, impact, implement, imply, impose, indicate, individual, influence, inherent, integrate, internal, interpret, investigate, justify, label...', CAMDICT),
+        l('l','🎧 CamListen BL6 (151–180) + Chép CT 40p','[30p] Học 30 từ CamListen BL6 (#151–180). [40p] Nghe IELTS S1 map-labelling → chép directional language: opposite, adjacent to, next to, to the left of, turn right at...', IELTS),
+        g('g','📝 Ngữ pháp: Articles (a/an/the/zero)','Rules: "Education is important" (zero) / "The education system in Vietnam" (specific) / "a university" (first mention). Viết đoạn 100 từ về health, tự check articles.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Academic Word List (AWL) – Batch 1',   detail:'Học 20 từ AWL quan trọng nhất: analyse, approach, assess, assume, authority, available, benefit, concept, consist, context, constitute, create, data, define, derive, distribute, economy, environment, establish, evaluate. Tra CollinsDictionary.com cho collocations.' },
-        { id:'l', type:'listening',title:'British Council: Education listening', detail:'Làm bài listening B2 trên British Council LearnEnglish (chủ đề education/school). Sau khi làm: nghe lại và đọc transcript đồng thời, highlight những chỗ bạn nghe sai, phân tích lý do (accent, speed, vocabulary).', url: BCL },
-        { id:'s', type:'speaking',title:'Part 1: Trường học và sở thích',       detail:'Luyện 8 questions: "What was your favourite subject at school?" / "Do you think it\'s important to study a foreign language?" / "Did you enjoy studying as a child?" / "What do you think is the best way to learn a new language?" Expand every answer.' },
+        w('w1','✍️ 100 Collocations: Science (W2T06)','Học 100 colloc khoa học (W2T06): conduct research, carry out experiments, draw conclusions, publish findings, test a hypothesis, peer-review a paper, fund scientific research, challenge conventional wisdom, apply for a grant, replicate results, identify patterns, quantify data...'),
+        w('w2','✍️ Task 2 Essay: Science','Đề: "Governments should invest more in scientific research, even if it means cutting other public services. To what extent do you agree?" Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm + kiểm tra word forms','Sau khi viết: highlight tất cả các từ bạn dùng từ W2T06. Có ít nhất 8 collocations không? Kiểm tra word forms: research (n/v), scientific (adj), researcher (n).'),
       ],
       [
-        { id:'r', type:'reading', title:'British Council: Education B2',         detail:'Làm reading task B2 về education. Phân tích 5 techniques: (1) read question first, (2) skim passage for structure, (3) underline keywords in question, (4) locate answer area, (5) verify with exact words. Viết tóm tắt technique bạn học được.', url: BCR },
-        { id:'w', type:'writing', title:'Task 2: Giáo dục và thị trường lao động', detail:'Đề: "Some people argue that education systems should focus on providing students with the skills they need to find employment. Others believe education should have broader goals. Discuss both views." Viết 40p, dùng parallel structure và transitional phrases.' },
-        { id:'g', type:'grammar', title:'Reported speech trong học thuật',       detail:'"Researchers claim that..." / "The study argues that..." / "Critics suggest that..." Chuyển 8 câu direct speech → reported speech. Lưu ý: backshift tenses, reporting verbs (argue, claim, suggest, maintain, note, state).', url: BCG },
+        s('s1','🗣️ SP06: Social Media & Internet (50 từ)','Học 50 từ SP06 Social Media (flashcard SP06): social media platform, influencer, viral content, online community, digital literacy, misinformation, cyberbullying, echo chamber, filter bubble, privacy settings, algorithm, engagement, hashtag, content creator, digital footprint... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Social Media Experience','Cue card: "Describe a time when social media had a positive effect on you or someone you know. Say: what happened, how social media was involved, and what you learned from it." 1p prep → 2p nói.'),
+        w('t1','📊 Task 1: 2 bài Pie Chart','Bài 1 (25p): pie chart nguồn điện ở 2 quốc gia năm 2020. Bài 2 (25p): pie chart chi tiêu hộ gia đình tại UK. Overview: "Overall, the most notable feature is..." Tự chấm.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Ôn 80 từ tuần 3 – Education',          detail:'Quiz tổng hợp: viết 10 collocations với từ "education", định nghĩa 10 từ AWL, đặt 5 câu IELTS-style dùng từ vựng tuần 3. Kiểm tra bằng cách giải thích từng từ bằng tiếng Anh (monolingual thinking).' },
-        { id:'l', type:'listening',title:'IELTS Listening S3+S4: Education',    detail:'Làm IELTS S3 (thảo luận giữa sinh viên và giáo viên về luận văn) và S4 (bài giảng về learning theories). Sau đó nghe lại và đọc full script, highlight từ/cụm bạn không nghe được.', url: IELTS },
-        { id:'r', type:'reading', title:'IELTS Reading: Learning & memory',     detail:'Làm passage IELTS về how people learn / memory research (20 phút). Xác định: Which paragraph mentions X? (Matching Information). Sau đó: viết 50 từ tóm tắt main argument của bài đọc.', url: IELTS },
+        v('rev','🔄 Ôn CamListen BL1-BL4 (120 từ)','Ôn 4 batch đầu CamListen: BL1 (001-030) + BL2 (031-060) + BL3 (061-090) + BL4 (091-120) = 120 từ. Quiz: nghe và viết (spelling). Target ≥108/120 (90%).'),
+        r('rd','📰 Đọc IELTS Reading 1 passage (20p)','Làm 1 IELTS Reading passage (13 câu, 20 phút) trên ieltsonlinetests.com. Đây là practice nhẹ, không cần tính điểm — chỉ làm quen format.', IELTS),
+        v('pl','💡 Tổng kết tuần 3','CamCore: 420 từ (B1-B6 done!) + CamListen: 180 từ (BL1-BL6 done) + Writing: T01-T06 = 600 colloc + Speaking: SP01-SP06 = 300 từ. Vẫn đúng tiến độ.'),
       ],
     ],
   },
 
-  // ── Week 4: Health & Medicine ─────────────────────────────
+  // ── Week 4: Kinh doanh & CamCore B7-B8 ─────────────────────
   {
-    theme: 'Sức khỏe & Y tế', themeEn: 'Health & Medicine', phase: 1,
+    theme: 'Khoa học & Kinh doanh', themeEn: 'Science & Business', phase: 1,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng bệnh tật & điều trị',          detail:'Học 20 từ: disease, disorder, treatment, prescription, medication, symptoms, diagnosis, surgery, therapy, rehabilitation, chronic illness, acute, contagious, infectious, epidemic, pandemic, vaccination, immunity, fatality rate, mortality. Phân biệt: disease vs illness vs disorder.' },
-        { id:'g', type:'grammar', title:'Cause & effect connectors',             detail:'"Smoking leads to lung disease." / "Due to poor diet, obesity rates are rising." / "As a result of stress, many people suffer insomnia." / "Consequently, healthcare costs increase." Học: because of, due to, as a result (of), therefore, consequently, hence, thus. Viết 8 câu.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Thuế đồ ăn không lành mạnh', detail:'Đề: "Some people think that governments should tax unhealthy food to reduce obesity. To what extent do you agree or disagree?" Viết outline + essay 40 phút. Dùng cause-effect language từ grammar bài hôm nay.' },
+        r('r','📖 CamCore Batch 7 (421–490)','Học 70 từ CamCore B7 (#421–490). Tiêu biểu: legal, maintain, major, mechanism, minimise, modify, monitor, mutual, negate, network, norm, objective, obtain, offset, optimise, orient, paradigm, participant, perceive, persist, phenomenon, pose, predict, predominant, presume...', CAMDICT),
+        l('l','🎧 CamListen BL7 (181–210) + Chép CT 40p','[30p] Học 30 từ CamListen BL7 (#181–210). [40p] Nghe IELTS S4 academic lecture → chép, chú ý: headings/subheadings giúp predict content. Lần này cố gắng không nghe lại lần 2.', IELTS),
+        g('g','📝 Ngữ pháp: Cause & Effect Connectors','because of, due to, as a result of, therefore, consequently, hence, thus. "Smoking leads to lung disease." / "Due to poor diet, obesity rates are rising." Viết 8 câu về health/business.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng sức khỏe tâm thần',            detail:'Học 20 từ: mental health, anxiety, depression, stress, burnout, well-being, therapy, counselling, resilience, mindfulness, disorder, phobia, trauma, stigma, awareness campaign, suicide prevention, self-care, work-life balance, psychological support, emotional intelligence.' },
-        { id:'r', type:'reading', title:'BBC Health: Sức khỏe tâm thần hiện đại', detail:'Đọc bài BBC Health về mental health (stress at work, youth mental health crisis, etc). Ghi: 3 causes, 3 effects, 3 proposed solutions. Xác định mức độ formal của bài (formal/semi-formal) và dẫn chứng.', url: BBCHLTH },
-        { id:'s', type:'speaking',title:'Part 2: Thói quen sức khỏe',           detail:'Cue card: "Describe a healthy habit you have. Say: what the habit is, when you started it, how it has affected you, and explain why you think it is important." 1p prep → 2p speak. Dùng present perfect (I have been doing this for...) + past simple (I started because...).' },
+        w('w1','✍️ 100 Collocations: Business & Economy (W2T07)','Học 100 colloc kinh doanh (W2T07): boost economic growth, stimulate the economy, generate employment, attract foreign investment, enhance competitiveness, streamline operations, launch a startup, disrupt the market, manage cash flow, address income inequality, implement fiscal policy, privatise state assets...'),
+        w('w2','✍️ Task 2 Essay: Business','Đề: "Large multinational companies have too much power in today\'s world. To what extent do you agree?" Outline 5p → Draft 40p. Dùng tối đa W2T07.'),
+        v('ck','🔍 Tự chấm + kiểm tra hedging','Sau khi viết: tìm và highlight tất cả hedging language: "It could be argued that...", "Some might suggest...", "Evidence suggests...". IELTS Band 7+ cần hedging.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng hệ thống y tế',                detail:'Học 15 từ: healthcare system, public health, primary care, specialist, hospital, clinic, GP (general practitioner), NHS, universal healthcare, private sector, health insurance, medical research, pharmaceutical industry, clinical trial, patient, ward, A&E, triage, prescription, over-the-counter.' },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Health topic',     detail:'Nghe BBC 6 Min English về health (diet, exercise, mental health, or medicine). Lần 1: viết 5 key words. Lần 2 với transcript: (1) tìm câu dùng passive, (2) ghi reported speech examples, (3) note how speakers express opinions.', url: BBC6 },
-        { id:'w', type:'writing', title:'Task 1: Biểu đồ béo phì',              detail:'Mô tả line chart về obesity rates (%) ở 4 quốc gia từ 1990–2020. Tập trung: overall trend, significant peaks, comparisons between countries. Dùng: "reached a peak of", "declined steadily", "remained relatively stable".' },
+        s('s1','🗣️ SP07: Environment & Nature (50 từ)','Học 50 từ SP07 Environment (flashcard SP07): biodiversity, ecosystem, habitat destruction, carbon footprint, renewable energy, climate change, global warming, pollution, conservation, sustainability, endangered species, deforestation, natural resources, greenhouse gas, wildlife... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Environmental Problem','Cue card: "Describe an environmental problem in your country. Say: what the problem is, what causes it, how it affects people, and what you think should be done." 1p prep → 2p nói.'),
+        v('rv','🔄 Ôn SP03+SP04 (100 từ)','Quiz SP03 Family + SP04 Friends = 100 từ. Spaced repetition tuần 4. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Modern medicine',        detail:'Làm IELTS Reading passage về modern medicine/clinical research trên ieltsonlinetests.com. Focus: Matching Features (kết hợp người/tổ chức với ý kiến). Ghi 8 từ academic mới sau bài làm.', url: IELTS },
-        { id:'g', type:'grammar', title:'Purpose clauses: so that, in order to', detail:'"Doctors recommend exercise in order to reduce the risk of heart disease." / "Governments invest in healthcare so that citizens can receive treatment." / "The drug was developed so as to combat antibiotic resistance." Viết 8 câu về health.', url: BCG },
-        { id:'s', type:'speaking',title:'Part 3: Chính sách y tế',              detail:'Discuss: (1) Should governments spend more money on preventive healthcare or treating existing conditions? (2) Why do you think stress-related illnesses are increasing in modern society? (3) What role can technology play in improving healthcare? Dùng examples cụ thể.' },
+        r('r','📖 CamCore Batch 8 (491–560)','Học 70 từ CamCore B8 (#491–560). Tiêu biểu: principal, process, promote, proportion, propose, regulate, reinforce, relevant, require, restrict, retain, reveal, scope, sector, sequence, significant, simulate, specify, stabilise, stipulate, strategy, subsidy, substitute, supplement, sustain...', CAMDICT),
+        l('l','🎧 CamListen BL8 (211–240) + Chép CT 40p','[30p] Học 30 từ CamListen BL8 (#211–240). [40p] Nghe IELTS S2 (talk with map/plan) → chép directional + descriptive language. Luyện S2 vì hay bị mất điểm do map labelling.', IELTS),
+        g('g','📝 Ngữ pháp: Purpose Clauses','in order to, so that, so as to, with the aim of. "Doctors recommend exercise in order to reduce heart disease risk." / "Governments invest in healthcare so that citizens receive treatment." Viết 8 câu về business hoặc science.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'AWL – Batch 2 (Health focus)',         detail:'Học 20 từ AWL: factor, finance, focus, formula, function, identify, impact, indicate, interpret, involve, issue, labour, legal, maintain, major, method, occur, policy, procedure, process. Dùng trong câu về healthcare.' },
-        { id:'l', type:'listening',title:'VOA: Healthcare and medicine',         detail:'Nghe VOA Learning English về healthcare (new medical discoveries, disease prevention, public health campaigns). Lấy ra: 1 main claim, 2 supporting examples, specific vocabulary về medicine. Viết 80 từ tóm tắt.', url: VOA },
-        { id:'s', type:'speaking',title:'Part 1: Sức khỏe cá nhân',             detail:'Luyện: "Do you exercise regularly? What kind of exercise?" / "How do you maintain a healthy diet?" / "How do you deal with stress?" / "Have you ever been seriously ill?" / "What do you do to keep fit?" Avoid "Yes/No" answers, always expand with detail.' },
+        w('w1','✍️ 100 Collocations: Government & Politics (W2T08)','Học 100 colloc chính trị (W2T08): implement public policy, enact legislation, regulate the market, enforce the law, fund social programmes, promote democratic values, address corruption, ensure transparency, uphold human rights, strengthen international cooperation, impose sanctions, reform the tax system...'),
+        w('w2','✍️ Task 2 Essay: Government','Đề: "The role of government is to serve the needs of society, not to control individuals. To what extent do you agree?" Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm essay Government','Kiểm tra cấu trúc: Intro (2-3 câu) + Body 1 (pro govt control) + Body 2 (anti) + Conclusion (1-2 câu). Mỗi body có: claim + evidence + example không?'),
       ],
       [
-        { id:'r', type:'reading', title:'British Council: Health B2',            detail:'Làm reading task B2 British Council về health/wellbeing. Sau đó: đọc lại bài và ghi (1) 3 hedging expressions, (2) 3 fact-presenting phrases (According to research..., Studies show..., It has been found that...), (3) 3 opinion phrases.', url: BCR },
-        { id:'w', type:'writing', title:'Task 2: Lối sống lành mạnh',           detail:'Đề: "Many people believe that following a healthy diet and doing regular exercise are sufficient to stay healthy. Others think it is also necessary to avoid stress and get enough sleep. Discuss both views and give your opinion." 40 phút.' },
-        { id:'g', type:'grammar', title:'Mixed conditionals & hypotheticals',   detail:'"If people exercised more, the healthcare system would not be under so much pressure." (Type 2) / "If the vaccine had been developed earlier, thousands of lives would have been saved." (Type 3). Viết 6 câu về health hypotheticals.', url: BCG },
+        s('s1','🗣️ SP08: Transport & Commuting (50 từ)','Học 50 từ SP08 Transport (flashcard SP08): public transport, commute, traffic congestion, infrastructure, pedestrian, cyclist, carpooling, ride-sharing, electric vehicle, carbon emissions, urban planning, road network, subway, tram, ferry, aviation... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Transport in Your City','Cue card: "Describe the transportation system in your city. Say: what options are available, what you use, any problems with it, and how it could be improved." 1p prep → 2p nói.'),
+        w('t1','📊 Task 1: 2 bài Table','Bài 1 (25p): table showing employment rates by sector in 3 countries. Bài 2 (25p): table comparing education spending (% GDP) in 5 countries 2010/2020. Tự chấm: có overview chứa 2 key features không?'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Ôn 80 từ tuần 4 – Health',            detail:'Quiz tổng hợp: test flashcards 80 từ health vocabulary. Focus: word forms (healthy/health/healthily, diagnose/diagnosis/diagnostic). Đặt 5 câu hoàn chỉnh về healthcare system dùng từ vựng tuần này.' },
-        { id:'l', type:'listening',title:'IELTS Listening S3+S4: Health',       detail:'Làm IELTS Section 3 (sinh viên y thảo luận về dissertation về mental health) + S4 (bài giảng về public health campaign). Phân tích: những câu nào bạn sai vì paraphrase? Những câu nào sai vì không nghe kịp?', url: IELTS },
-        { id:'r', type:'reading', title:'IELTS Reading: Healthcare passage',    detail:'Làm 1 IELTS Reading passage về healthcare/medicine (20 phút, 13 câu). Sau đó: tìm tất cả paraphrase trong bài (cách câu hỏi nói khác so với passage), viết 5 cặp paraphrase bạn tìm được.', url: IELTS },
+        v('rev','🔄 Ôn CamCore B5+B6 (140 từ)','Quiz CamCore B5 (281–350) + B6 (351–420) = 140 từ. Spaced repetition lần 1 cho B5+B6. Target ≥90%.'),
+        v('rev2','🔄 Ôn Writing Colloc T01+T02 (key 50)','Ôn 50 collocations quan trọng nhất từ W2T01 (Environment) + W2T02 (Technology). Không cần ôn hết 200 — chỉ 25 colloc hay dùng nhất của mỗi topic.'),
+        v('pl','💡 Tổng kết tuần 4','CamCore: 560 từ (B1-B8 done!) + CamListen: 240 từ (BL1-BL8) + Writing: T01-T08 = 800 colloc + Speaking: SP01-SP08 = 400 từ. 1 tuần nữa xong CamCore 600!'),
       ],
     ],
   },
 
-  // ── Week 5: Society & Community + MILESTONE ──────────────
+  // ── Week 5: Hoàn thành CamCore + Milestone 1 ───────────────
   {
-    theme: 'Xã hội & Cộng đồng', themeEn: 'Society & Community', phase: 1,
-    milestone: '🏆 Mock Test Phase 1',
+    theme: 'Truyền thông & Giao thông + Milestone 1', themeEn: 'Media, Transport & Milestone 1', phase: 1,
+    milestone: '🏆 Mock Test Phase 1 — Đánh giá band điểm đầu tiên',
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng bất bình đẳng xã hội',        detail:'Học 20 từ: inequality, discrimination, poverty, social mobility, exclusion, marginalised groups, welfare state, safety net, social justice, privilege, diversity, inclusion, racism, gender pay gap, homelessness, charitable organisation, solidarity, community cohesion, integration, assimilation.' },
-        { id:'g', type:'grammar', title:'Concession: although, despite, even if', detail:'"Although poverty has declined globally, inequality remains high in many countries." / "Despite significant progress, women are still underrepresented in leadership." / "Even though charities provide support, government intervention is essential." Viết 8 câu về social issues.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Bất bình đẳng xã hội',        detail:'Đề: "In many countries, the gap between rich and poor is growing. What causes this, and what can be done to reduce the problem?" Viết 40 phút. Problem-solution structure: para 1 intro, para 2 causes, para 3 solutions, para 4 conclusion.' },
+        r('r','📖 CamCore Batch 9 (561–600) — DONE! ✅','Học 40 từ cuối CamCore B9 (#561–600). Tiêu biểu: transfer, transform, trend, undergo, undermine, uniform, utilise, valid, variation, verify, whereas, widespread. ĐÃ HOÀN THÀNH Cambridge Core 600! Từ hôm nay chuyển sang Topic Vocab.', CAMDICT),
+        l('l','🎧 CamListen BL9 (241–270) + Chép CT 40p','[30p] Học 30 từ CamListen BL9 (#241–270). [40p] Nghe IELTS S4 — lần này target: viết đúng ≥8/10 câu mà không nghe lại.', IELTS),
+        g('g','📝 Ngữ pháp: Modals (should, must, ought to)','should (recommendation), must (obligation), ought to (moral duty), might (possibility), could (suggestion). Viết 8 câu về media hoặc transport dùng đúng modal.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Collocations xã hội',                   detail:'Học 20 cụm: address inequality, promote diversity, tackle homelessness, reduce crime rates, implement social policy, strengthen community ties, foster social cohesion, empower individuals, break the cycle of poverty, provide social safety nets, raise living standards, bridge the digital divide, engage with the community.' },
-        { id:'r', type:'reading', title:'VOA: Social issues',                    detail:'Đọc bài VOA về social issues (homelessness, immigration, inequality). Phân tích: author\'s position (neutral/biased?), types of evidence used (statistics, expert opinion, anecdote). Ghi 5 discourse markers mới.', url: VOA },
-        { id:'s', type:'speaking',title:'Part 2: Sự kiện cộng đồng',            detail:'Cue card: "Describe a community event you participated in or heard about. Say: what the event was, where and when it took place, what people did, and explain what impact it had." Sử dụng detailed narrative structure với past tenses + adjectives for description.' },
+        w('w1','✍️ 100 Collocations: Media & Communication (W2T09)','Học 100 colloc truyền thông (W2T09): spread misinformation, regulate social media, promote media literacy, censure online content, protect press freedom, combat fake news, influence public opinion, monetise content, broadcast live, conduct interviews, analyse data journalism, ensure editorial independence...'),
+        w('w2','✍️ Task 2 Essay: Media','Đề: "Social media is more harmful than beneficial to society. To what extent do you agree?" Outline 5p → Draft 40p. Dùng W2T09.'),
+        v('ck','🔍 Tự chấm essay Media','Kiểm tra LR đặc biệt: có ít nhất 5 collocations từ W2T09 không? Có dùng academic vocabulary thay vì basic words không? (good→beneficial, say→argue, use→utilise).'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng di cư & nhập cư',               detail:'Học 20 từ: immigration, emigration, refugee, asylum seeker, migrant worker, integration, multiculturalism, host country, cultural identity, diaspora, border control, visa, citizenship, naturalization, xenophobia, social cohesion, brain drain, remittance, displaced persons, humanitarian aid.' },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Society',           detail:'Nghe episode BBC 6 Min English về social issues (migration, social media, volunteering, etc). Ghi: (1) the question posed at the start, (2) 3 main points, (3) the answer to the question. Kiểm tra transcript.', url: BBC6 },
-        { id:'w', type:'writing', title:'Task 2: Ưu nhược điểm của toàn cầu hóa', detail:'Đề: "Globalisation has both benefits and drawbacks. To what extent do the advantages outweigh the disadvantages?" Viết 40 phút. Dùng: "On balance...", "The benefits far outweigh the drawbacks because..."' },
+        s('s1','🗣️ SP09: Food & Cooking (50 từ)','Học 50 từ SP09 Food (flashcard SP09): cuisine, delicacy, ingredient, recipe, flavour, nutritious, processed food, organic, fast food, dietary habit, vegetarian, vegan, culinary tradition, food security, sustainable farming, appetising, portion, feast, snack... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Favourite Food/Meal','Cue card: "Describe a dish from your country that you enjoy. Say: what it is, how it is prepared, when people eat it, and why you like it." 1p prep → 2p nói.'),
+        v('rv','🔄 Ôn SP05+SP06 (100 từ)','Quiz SP05 Technology + SP06 Social Media = 100 từ. Spaced repetition tuần 5.'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Society passage',        detail:'Làm IELTS Reading passage về social issues / urbanisation / migration. 20 phút. Focus: câu hỏi Matching Headings – đọc headings trước, xác định key word của mỗi heading, tìm paragraph nào match.', url: IELTS },
-        { id:'g', type:'grammar', title:'Quantifiers nâng cao',                  detail:'"The vast majority of...", "a significant minority of...", "relatively few...", "hardly any...", "an increasing number of...", "a growing proportion of..." Viết 8 câu về social statistics dùng quantifiers. Khác nhau giữa "much/many", "a lot of/lots of" trong formal writing.', url: BCG },
-        { id:'s', type:'speaking',title:'Part 3: Các vấn đề xã hội',            detail:'Discuss: (1) What can be done to reduce crime in cities? (2) Is it the government\'s responsibility to help people who live in poverty? (3) How has immigration affected your country? Sử dụng specific country examples, statistics nếu có.' },
+        r('r','📖 Topic Reading TR1: Environment (70 từ học thuật)','Học 70 từ academic theo chủ đề Environment (flashcard TR1): anthropogenic, biodegradable, carbon sequestration, deforestation, desertification, ecological footprint, eutrophication, greenhouse effect, hydrocarbon, industrialisation, methane, mitigation, ozone depletion, particulate matter, photosynthesis, remediation, sustainability... (70 từ đầy đủ trong flashcard TR1).', CAMDICT),
+        l('l','🎧 CamListen BL10 (271–300) + Chép CT 40p','[30p] Học 30 từ CamListen BL10 (#271–300). [40p] Nghe IELTS S3 discussion → chép, chú ý: distinguish speakers — ghi "Speaker A says..." / "Speaker B disagrees...".', IELTS),
+        g('g','📝 Ngữ pháp: Concession (although, despite)','Although poverty has declined, inequality remains. / Despite progress, challenges remain. / Even though charities help, government intervention is needed. Viết 8 câu dùng 3 loại concession.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'AWL – Batch 3 + Review Phase 1',      detail:'Học AWL Batch 3: publish, range, region, require, research, respond, role, section, seek, show, significant, similar, source, specific, structure, theory, transfer, vary. Ôn lại AWL Batch 1+2 bằng cách viết 1 paragraph sử dụng 10 từ AWL.' },
-        { id:'l', type:'listening',title:'Full IELTS Listening: Society',       detail:'Làm Full IELTS Listening Test (40 câu, 4 sections, 30 phút) về chủ đề xã hội trên ieltsonlinetests.com. Tính giờ nghiêm túc, không tạm dừng. Chấm điểm và ghi band score dự đoán.', url: IELTS },
-        { id:'s', type:'speaking',title:'Part 1+2+3: Society topics',           detail:'Full Speaking Practice: Part 1 (4p): questions about your hometown, community, neighbours. Part 2 (3p): describe a social problem you are concerned about. Part 3 (4p): discuss government\'s role in social welfare. Ghi âm toàn bộ, nghe lại.' },
+        w('w1','✍️ 100 Collocations: Transport & Urban (W2T10)','Học 100 colloc giao thông (W2T10): alleviate traffic congestion, expand public transportation, introduce congestion charges, promote cycling infrastructure, develop smart cities, implement urban planning, reduce carbon emissions from vehicles, build sustainable housing, enhance road safety, encourage carpooling...'),
+        w('w2','✍️ Task 2 Essay: Transport','Đề: "The only way to solve traffic and pollution problems in cities is to increase the price of petrol. To what extent do you agree?" Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm essay Transport','Essay này cần: (1) acknowledge the claim nhưng (2) argue other solutions also needed. Kiểm tra: có "While it is true that..., there are other equally effective measures such as..." không?'),
       ],
       [
-        { id:'r', type:'reading', title:'Full IELTS Reading: 2 passages',       detail:'Làm 2 IELTS Reading passages liên tiếp (40 phút, 26 câu). Áp dụng chiến lược: mỗi passage 20 phút, ưu tiên câu dễ trước. Ghi điểm, phân tích khu vực yếu nhất (dạng câu nào sai nhiều nhất?).', url: IELTS },
-        { id:'w', type:'writing', title:'Task 1+2 Full Practice',               detail:'Task 1 (20 phút): mô tả pie chart về household expenditure. Task 2 (40 phút): "In many countries, volunteering is becoming more popular. Why is this? Is this a positive development?" Viết không dừng, tự chấm sau.', },
-        { id:'g', type:'grammar', title:'Ôn toàn bộ ngữ pháp Phase 1',         detail:'Review 10 grammar points đã học: conditionals, passive, relative clauses, cause-effect, purpose, modals, articles, reported speech, concession, quantifiers. Với mỗi point: viết 1 câu example về chủ đề khác nhau. Tổng hợp vào 1 cheatsheet.', url: BCG },
+        s('s1','🗣️ SP10: Sport & Exercise (50 từ)','Học 50 từ SP10 Sport (flashcard SP10): physical fitness, competitive sport, amateur, professional athlete, endurance, agility, stamina, team sport, individual sport, tournament, championship, coach, training regimen, injury, sportsmanship, recreation, outdoor activity... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Sport or Physical Activity','Cue card: "Describe a sport or physical activity you enjoy. Say: what it is, how often you do it, how you got into it, and why you enjoy it." 1p prep → 2p nói.'),
+        w('t1','📊 Task 1: Process Diagram + Map','Bài 1 (25p): process diagram — water treatment process. Dùng passive + sequencing words: first, subsequently, following this, finally. Bài 2 (25p): map showing changes to a town centre 1990–2020. Tự chấm.'),
       ],
-      // Day 35: MILESTONE — Phase 1 Mock Test
+      // Day 35 = MILESTONE
       [
-        { id:'m1', type:'mock', title:'Mock Test: Listening (Full – 40 câu)', detail:'Làm Full IELTS Listening Test nghiêm túc (30 phút + 10 phút chuyển đáp án). Dùng đề thật từ Cambridge IELTS Books hoặc ieltsonlinetests.com. Ghi điểm, band score, phân tích sai.', url: IELTS },
-        { id:'m2', type:'mock', title:'Mock Test: Reading (Full – 40 câu)',  detail:'Làm Full IELTS Reading Test (60 phút, 3 passages). Dùng timer nghiêm túc. Sau khi làm: chấm điểm, ghi lỗi sai theo loại câu hỏi (Matching Headings, T/F/NG, MCQ...), estimate band score.', url: IELTS },
-        { id:'m3', type:'mock', title:'Mock Test: Writing + Speaking Review', detail:'Writing: Task 1 (20p) + Task 2 (40p) về bất kỳ chủ đề Phase 1. Speaking: ghi âm Part 1+2+3 hoàn chỉnh (~15p). Tự review hoặc dùng IELTS band descriptor checklist. Ghi notes cải thiện cho Phase 2.' },
+        m('m1','🏆 Mock Test: Listening (Full — 40 câu)','Làm Full IELTS Listening Test (30p nghe + 10p transfer). Dùng ieltsonlinetests.com. Điều kiện nghiêm túc. Chấm điểm → band score → ghi: S1, S2, S3, S4 mỗi section sai bao nhiêu câu.', IELTS),
+        m('m2','🏆 Mock Test: Reading (Full — 40 câu)','Làm Full IELTS Reading Test (60p, 3 passages). Timer nghiêm túc. Sau khi làm: chấm điểm, ghi lỗi sai theo loại câu (Matching Headings, T/F/NG, MCQ...).', IELTS),
+        m('m3','🏆 Mock Test: Writing + Speaking Review','Writing: Task 1 (20p) + Task 2 (40p). Speaking: ghi âm Part 1+2+3 (~14p). Tự review bằng IELTS Band Descriptors. GHI LẠI band score Phase 1 để so sánh với Phase 4!'),
       ],
     ],
   },
@@ -269,214 +276,214 @@ const WEEKS: WeekDef[] = [
   //  PHASE 2 — BỨT PHÁ (Days 36–70)
   // ════════════════════════════════════════════════════════════
 
-  // ── Week 6: Science & Research ───────────────────────────
+  // ── Week 6: Topic TR2-TR3 + CamListen BL11-BL12 ───────────
   {
-    theme: 'Khoa học & Nghiên cứu', themeEn: 'Science & Research', phase: 2,
+    theme: 'Topic Reading: Công nghệ & Giáo dục', themeEn: 'Topic Vocab: Technology & Education', phase: 2,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng phương pháp nghiên cứu',       detail:'Học 20 từ: hypothesis, methodology, empirical, quantitative, qualitative, variable, sample, data, findings, conclusion, peer review, experiment, control group, longitudinal study, randomised trial, correlation, causation, bias, reproducibility, peer-reviewed journal. Phân biệt: theory vs hypothesis vs law.' },
-        { id:'r', type:'reading', title:'IELTS Reading: Scientific research',   detail:'Làm IELTS passage về scientific discovery hoặc research methodology. Focus: câu Summary Completion – phân tích cách từ trong summary paraphrase từ trong passage. Ghi 8 paraphrase pairs.', url: IELTS },
-        { id:'w', type:'writing', title:'Task 2: Đầu tư khoa học',              detail:'Đề: "Governments should invest more money in scientific research, even if this means reducing funding for other public services. To what extent do you agree?" Viết 40p, sử dụng specific examples (space exploration, medical research, etc).' },
+        r('r','📖 Topic TR2: Technology (70 từ học thuật)','Học 70 từ academic chủ đề Technology (flashcard TR2): algorithm, automation, bandwidth, biometrics, cloud computing, cybersecurity, digitalisation, disruptive, encryption, firmware, genomics, hyperconnected, interface, latency, machine learning, nanotechnology, open-source, prototype, scalable, semiconductor...', CAMDICT),
+        l('l','🎧 CamListen BL11 (301–330) + Chép CT 40p','[30p] Học 30 từ CamListen BL11 (#301–330). [40p] Nghe IELTS S4 về công nghệ → chép → target: ≥8/10, không nghe lại lần 2.', IELTS),
+        g('g','📝 Ngữ pháp: Advanced Passive + Impersonal','It has been shown that... / It remains unclear whether... / There is growing evidence to suggest that... / It is increasingly recognised that... Viết 8 impersonal sentences về technology.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng phát minh & khám phá',         detail:'Học 20 từ: discovery, invention, breakthrough, innovation, patent, prototype, develop, pioneer, laboratory, specimen, microscope, telescope, genome, DNA, antibiotic, vaccine, nanotechnology, gene editing, CRISPR, space exploration. Phân biệt: discovery (existing thing found) vs invention (new thing created).' },
-        { id:'l', type:'listening',title:'TED-Ed: Science & discovery',          detail:'Xem TED-Ed video về a scientific breakthrough (biology, physics, chemistry, or space). Ghi: (1) main claim, (2) evidence presented, (3) implications for the future. Viết 100 từ tóm tắt bằng tiếng Anh, dùng academic style.', url: TED },
-        { id:'s', type:'speaking',title:'Part 2: Khám phá khoa học thú vị',    detail:'Cue card: "Describe a scientific discovery or invention that you think is particularly important. Say: what it is, who discovered/invented it, how it changed the world, and whether you think it has had a positive or negative impact." 2 phút nói.' },
+        w('w1','✍️ 100 Collocations: Food & Diet (W2T11)','Học 100 colloc ăn uống (W2T11): adopt a balanced diet, combat malnutrition, promote food security, reduce food waste, regulate junk food advertising, support sustainable agriculture, encourage healthy eating habits, address childhood obesity, ban harmful additives, improve nutritional labelling...'),
+        w('w2','✍️ Task 2 Essay: Food & Diet','Đề: "Junk food is so popular that it is having a detrimental effect on people\'s health. What can governments and individuals do about this?" Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm essay Food','Bài này là "two groups question" (governments + individuals). Kiểm tra: có para riêng cho governments và individuals không? Hoặc trộn hợp lý?'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Collocations khoa học',                 detail:'Học 20 cụm: conduct research, carry out an experiment, draw conclusions, publish findings, analyse data, test a hypothesis, fund research, peer-review a paper, challenge assumptions, replicate results, apply for a grant, report results, identify patterns, establish a theory, question conventional wisdom.' },
-        { id:'g', type:'grammar', title:'Advanced passive & impersonal sentences', detail:'"It has been argued that..." / "It is widely believed that..." / "Research suggests that..." / "It remains unclear whether..." / "There is growing evidence to suggest that..." Viết 10 câu về science dùng impersonal structures.', url: BCG },
-        { id:'w', type:'writing', title:'Task 1: Biểu đồ quy trình khoa học',  detail:'Mô tả a process diagram (flow chart) về water purification hoặc the scientific method. Dùng: passive voice (is filtered, is treated), sequencing words (first, subsequently, following this, finally), precise vocabulary.' },
+        s('s1','🗣️ SP11: Health & Well-being (50 từ)','Học 50 từ SP11 Health (flashcard SP11): well-being, mental health, chronic disease, preventive healthcare, physical fitness, nutrition, immune system, stress management, healthcare system, GP, specialist, medication, therapy, rehabilitation, sedentary lifestyle, obesity, mindfulness... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Healthy Habit','Cue card: "Describe a healthy habit you have. Say: what the habit is, when you started, how it has benefited you, and why you think it is important." 1p prep → 2p nói.'),
+        v('rv','🔄 Ôn SP07+SP08 (100 từ)','Quiz SP07 Environment + SP08 Transport = 100 từ. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'BBC Science: Khoa học đương đại',       detail:'Đọc bài BBC Science/Environment về recent scientific breakthrough (genetics, space, environment). Phân tích: how does the author make the argument credible? (statistics, expert quotes, comparisons). Ghi 6 academic phrases.', url: BBCENV },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Science',           detail:'Nghe BBC 6 Min English về science topic. Chú ý: cách speakers hedge uncertainty ("may", "could", "might", "it seems that"). Ghi 5 hedging expressions và viết 5 câu dùng chúng về scientific topics.', url: BBC6 },
-        { id:'s', type:'speaking',title:'Part 3: Tương lai của khoa học',       detail:'Discuss: (1) Should science be guided by what is useful or by pure curiosity? (2) Is it ethical to conduct experiments on animals? (3) How has technology changed the way scientists work? Dùng: "It could be argued that...", "From a scientific perspective..."' },
+        r('r','📖 Topic TR3: Education (70 từ học thuật)','Học 70 từ academic Education (flashcard TR3): academic achievement, cognitive development, curriculum design, constructivism, differentiated instruction, empirical learning, formative assessment, growth mindset, holistic education, inclusive education, interdisciplinary, learner autonomy, metacognition, pedagogical, peer assessment, scaffolding, self-regulated learning, standardised testing, teacher-centred, vocational...', CAMDICT),
+        l('l','🎧 CamListen BL12 (331–360) + Chép CT 40p','[30p] Học 30 từ CamListen BL12 (#331–360). [40p] Nghe IELTS S3 discussion → chú ý: trong S3 có distractors — speaker đôi khi thay đổi ý kiến. Ghi "initially...then changed to..."', IELTS),
+        g('g','📝 Ngữ pháp: Complex Noun Phrases','A rapidly growing body of evidence... / The latest peer-reviewed studies indicate... / An unprecedented level of collaboration... Viết 8 sentences về education dùng complex NPs.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'AWL – Batch 4 (Science focus)',         detail:'AWL Batch 4: chapter, commission, community, complex, concept, conclude, conduct, consequence, construct, consume, contract, create, culture, define, denote, design, distinct, emerge, emphasis, ensure. Tìm examples trong scientific writing.' },
-        { id:'g', type:'grammar', title:'Complex noun phrases',                  detail:'"A rapidly growing body of evidence suggests..." / "The latest peer-reviewed studies indicate..." / "An unprecedented level of scientific collaboration..." Học cách xây noun phrases phức tạp, thực hành viết 8 sentences về science với complex NPs.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Ethical dilemmas in science',  detail:'Đề: "Some people think that it is acceptable to use animals in scientific research. Others believe this is wrong. Discuss both views and give your opinion." Dùng: "Proponents argue...", "Critics contend...", "A compelling counterargument is..."' },
+        w('w1','✍️ 100 Collocations: Arts & Culture (W2T12)','Học 100 colloc nghệ thuật (W2T12): promote cultural heritage, preserve traditional art forms, support creative industries, fund arts programmes, boost cultural tourism, foster cultural exchange, celebrate diversity, combat cultural appropriation, encourage artistic expression, revitalise historical sites...'),
+        w('w2','✍️ Task 2 Essay: Arts','Đề: "Government money should be spent on science and technology rather than arts. To what extent do you agree?" Outline 5p → Draft 40p. Dùng W2T12.'),
+        v('ck','🔍 Tự chấm essay Arts','Checking LR: có dùng synonyms để tránh lặp "arts" không? (creative industries / cultural sector / the humanities / artistic endeavours)'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Science passage nâng cao', detail:'Làm IELTS Reading passage Band 7 level về science (astronomy, biology, physics). Focus: câu MCQ "Which of the following best describes the author\'s view?" – cần đọc toàn bài để nắm overall argument.', url: IELTS },
-        { id:'l', type:'listening',title:'VOA: Science & technology',            detail:'Nghe VOA Learning English về space exploration, medical science, hoặc environmental research. Ghi: specific names (scientists, organisations, places), key statistics, timeline of events. Tóm tắt 100 từ.', url: VOA },
-        { id:'s', type:'speaking',title:'Part 1+2: Science trong đời thường',   detail:'Part 1: "Are you interested in science? What is your favourite branch of science? Do you read about scientific discoveries?" Part 2 (cue card): "Describe a time when you learned something interesting from science classes or the internet."' },
+        s('s1','🗣️ SP12: Travel & Holidays (50 từ)','Học 50 từ SP12 Travel (flashcard SP12): itinerary, destination, sightseeing, backpacking, eco-tourism, package tour, adventure travel, cultural immersion, jet lag, hostel, accommodation, visa, tourist attraction, souvenir, exchange rate, travel insurance, expedition... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Memorable Trip','Cue card: "Describe a trip or holiday you enjoyed. Say: where you went, who you went with, what you did, and explain why it was memorable." 1p prep → 2p nói.'),
+        w('t1','📊 Task 1: 2 bài Mixed (Bar + Line)','Bài 1 (25p): bar chart về tourist arrivals by region. Bài 2 (25p): line graph về art museum attendance 2010–2020. Tự chấm: overview cho mixed charts cần so sánh 2 datasets.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Ôn 80 từ tuần 6 – Science',           detail:'Tổng quiz: test 80 từ, focus word forms. Đặc biệt: experiment (n/v), analyse (v)/analysis (n)/analytical (adj), research (n/v), hypothesis (singular)/hypotheses (plural). Viết 100 từ đoạn về the importance of scientific research dùng vocabulary tuần này.' },
-        { id:'r', type:'reading', title:'IELTS Reading: Full passage + analysis', detail:'Làm 2 IELTS Reading passages về science (40 phút total). Sau đó: dùng 10 phút phân tích và ghi lại paraphrase patterns (synonym substitution, structural change, active→passive, positive→negative với NOT).', url: IELTS },
-        { id:'w', type:'writing', title:'Review Task 1 + Task 2 science essays', detail:'Đọc lại 2 bài viết về science (tuần 6 ngày 1 và 5). Tự sửa bằng rubric IELTS: Task Achievement, Coherence, Lexical Resource, Grammar. Viết improved version cho đoạn yếu nhất.' },
+        v('rev','🔄 Ôn CamCore B7+B8 (140 từ)','Quiz CamCore B7 (421–490) + B8 (491–560) = 140 từ. Spaced repetition. Target ≥90%. Note: B7+B8 là những từ academic phức tạp nhất.'),
+        v('rev2','🔄 Ôn CamListen BL5+BL6 (60 từ)','Quiz CamListen BL5 + BL6 = 60 từ (spelling check). Target ≥54/60.'),
+        v('pl','💡 Tổng kết tuần 6','Phase 2 bắt đầu tốt! Topic Reading: TR1 (Env) + TR2 (Tech) + TR3 (Edu) done. CamListen: 360 từ (BL1-BL12 done). Writing: T11-T12. Speaking: SP11-12.'),
       ],
     ],
   },
 
-  // ── Week 7: Business & Economics ─────────────────────────
+  // ── Week 7: Topic TR4-TR5 + CamListen BL13-BL14 ───────────
   {
-    theme: 'Kinh doanh & Kinh tế', themeEn: 'Business & Economics', phase: 2,
+    theme: 'Tội phạm & Gia đình', themeEn: 'Crime, Family & Topic Vocab', phase: 2,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng kinh doanh cốt lõi',           detail:'Học 20 từ: entrepreneur, profit, revenue, expenditure, investment, shareholder, merger, acquisition, startup, venture capital, supply chain, market share, brand, stakeholder, CEO, corporation, dividend, bankruptcy, liability, asset. Phân biệt: revenue vs profit vs income vs earnings.' },
-        { id:'g', type:'grammar', title:'Conditionals trong kinh doanh',         detail:'"If the company raises prices, sales will decline." (Type 1) / "Were the government to reduce taxes, businesses would invest more." (Type 2 formal) / "Had the firm diversified earlier, it would not have collapsed." (Type 3). Viết 8 business conditionals.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Globalisation và doanh nghiệp', detail:'Đề: "Large multinational companies are becoming more and more powerful. Some people think this is a positive development. Others disagree. Discuss both views and give your opinion." Viết 40p với balanced discussion structure.' },
+        r('r','📖 Topic TR4: Health & Medicine (70 từ)','Học 70 từ academic Health (flashcard TR4): aetiology, antibody, carcinogen, clinical trial, comorbidity, contraindication, diagnosis, epidemic, epidemiology, euthanasia, genome, immunisation, morbidity, mortality, neuroscience, oncology, palliative care, pathogen, pharmacology, prognosis, psychotherapy, quarantine, rehabilitation, remission, triage...', CAMDICT),
+        l('l','🎧 CamListen BL13 (361–390) + Chép CT 40p','[30p] Học 30 từ CamListen BL13 (#361–390). [40p] Nghe S4 lecture về health → chép, chú ý academic hedging: "may indicate", "appears to suggest", "it is hypothesised that..."', IELTS),
+        g('g','📝 Ngữ pháp: Comparison Structures','significantly more/less than, considerably higher/lower, roughly twice as many as, the fastest-growing, in contrast to, relative to. Viết 8 câu so sánh về health data (làm quen Task 1).', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Collocations kinh doanh',               detail:'Học 20 cụm: launch a product, generate revenue, cut costs, boost productivity, expand into new markets, attract investors, streamline operations, achieve targets, gain competitive advantage, go public, merge with a competitor, outsource work, file for bankruptcy, rebrand a company, enter a joint venture.' },
-        { id:'r', type:'reading', title:'BBC Business: Tin tức kinh tế',         detail:'Đọc 1 bài BBC Business về corporate news, economic policy, hoặc market trends. Ghi: main topic, key stakeholders, economic impact. Xác định 5 economic terms và tra nghĩa. Tóm tắt 3 câu.', url: BBCBIZ },
-        { id:'s', type:'speaking',title:'Part 2: Doanh nhân thành công',        detail:'Cue card: "Describe a successful businessperson you admire. Say: who they are, what business they are in, what they have achieved, and explain what qualities make them successful." Dùng: admire, dedicated, innovative, visionary, persistent.' },
+        w('w1','✍️ 100 Collocations: Crime & Justice (W2T13)','Học 100 colloc tội phạm (W2T13): combat organised crime, reduce recidivism, impose stricter sentencing, rehabilitate offenders, prevent juvenile delinquency, enforce the law, deter criminal behaviour, address root causes of crime, strengthen border controls, combat human trafficking, reform the prison system...'),
+        w('w2','✍️ Task 2 Essay: Crime','Đề: "The best way to reduce crime is to give longer prison sentences. To what extent do you agree?" Outline 5p → Draft 40p. Dùng W2T13.'),
+        v('ck','🔍 Tự chấm essay Crime','Kiểm tra: có alternative solutions không? (education, rehabilitation, community programmes). Essay chỉ say "longer sentences = bad" mà không đề xuất alternatives sẽ thiếu Task Achievement.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng kinh tế vĩ mô',                 detail:'Học 20 từ: GDP, inflation, deflation, interest rate, exchange rate, trade deficit, trade surplus, fiscal policy, monetary policy, recession, economic growth, unemployment, labour market, consumer confidence, export, import, protectionism, free trade, economic inequality, poverty line.' },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Business',          detail:'Nghe BBC 6 Min English episode về business/economics (work, money, career, globalisation). Ghi: how speakers use hedging to discuss economic forecasts ("may", "it is possible that", "analysts predict"). Write 5 forecast sentences about the economy.', url: BBC6 },
-        { id:'w', type:'writing', title:'Task 1: Biểu đồ GDP hoặc trade',       detail:'Mô tả line graph: GDP growth rate (%) của 4 quốc gia từ 2005–2023. Focus: describe fluctuations (peaked, plummeted, recovered), make comparisons, write overview noting the most significant trend.' },
+        s('s1','🗣️ SP13: Education & Studying (50 từ)','Học 50 từ SP13 Education (flashcard SP13): curriculum, scholarship, tuition fees, academic pressure, extracurricular activities, learning outcomes, critical thinking, peer learning, distance education, graduate, undergraduate, dissertation, thesis, lecture, seminar, tutorial, campus life... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Memorable Teacher','Cue card: "Describe a teacher who has had a positive influence on you. Say: who, what subject, what made them special, and how they influenced you." 1p prep → 2p nói.'),
+        v('rv','🔄 Ôn SP09+SP10 (100 từ)','Quiz SP09 Food + SP10 Sport = 100 từ. Spaced repetition tuần 7. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Business strategy',     detail:'Làm IELTS Reading passage về corporate strategy hoặc economic development. Focus: câu hỏi Y/N/NG (Yes = agrees with writer\'s view, No = contradicts, NG = not mentioned). Phân biệt kỹ YES vs NG.', url: IELTS },
-        { id:'l', type:'listening',title:'VOA: Global economy',                  detail:'Nghe VOA về global economic issues (trade wars, inflation, job market). Chú ý: cách speaker organise information (problem → cause → effect → solution). Ghi lại structure này và áp dụng trong speaking Part 3.', url: VOA },
-        { id:'s', type:'speaking',title:'Part 3: Kinh tế và việc làm',          detail:'Discuss: (1) What are the advantages and disadvantages of working for a large corporation versus a small company? (2) Is entrepreneurship encouraged enough in your country? (3) How has globalisation affected employment in your country?' },
+        r('r','📖 Topic TR5: Society & Community (70 từ)','Học 70 từ academic Society (flashcard TR5): assimilation, civil society, collective identity, communitarianism, cosmopolitanism, demographic transition, diaspora, egalitarianism, gentrification, globalisation, hegemony, integration, marginalisation, meritocracy, multiculturalism, nationalism, neoliberalism, patriarchy, pluralism, polarisation, populism, social capital, stratification, xenophobia...', CAMDICT),
+        l('l','🎧 CamListen BL14 (391–420) + Chép CT 40p','[30p] Học 30 từ CamListen BL14 (#391–420). [40p] Nghe IELTS S2 (map + directions) → chép directional language. S2 map là dạng hay bị mất điểm do không quen.', IELTS),
+        g('g','📝 Ngữ pháp: Gerunds vs Infinitives','enjoy/avoid/suggest/recommend + gerund. want/need/decide/manage/fail + infinitive. "It is important to protect privacy." vs "Using social media can be addictive." Viết 10 câu.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng thị trường lao động',           detail:'Học 20 từ: employment, unemployment, labour force, gig economy, freelancer, remote work, job security, minimum wage, trade union, collective bargaining, automation, redundancy, redundancy package, internship, career progression, skills gap, reskilling, upskilling, human capital, productivity.' },
-        { id:'g', type:'grammar', title:'Discourse markers cho writing',          detail:'Học và luyện: "In contrast to this...", "Furthermore, it should be noted that...", "Notwithstanding this...", "With regard to...", "It is worth noting that...", "This is particularly evident in...", "A key argument in favour of this is..." Viết 1 đoạn body paragraph dùng 5 discourse markers.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Automation và việc làm',       detail:'Đề: "Automation and artificial intelligence are taking over many jobs previously done by humans. What are the causes and effects of this trend? What measures could be taken to deal with this situation?" Problem-cause-solution structure.' },
+        w('w1','✍️ 100 Collocations: Family & Children (W2T14)','Học 100 colloc gia đình (W2T14): raise children, instil values, foster independence, build strong family bonds, address family breakdown, support single parents, tackle domestic violence, promote parental involvement, ensure child welfare, reduce teenage pregnancy, provide childcare, balance work and family life...'),
+        w('w2','✍️ Task 2 Essay: Family','Đề: "In many countries, grandparents are often responsible for raising grandchildren. What are the advantages and disadvantages of this?" Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm essay Family','Bài advantages/disadvantages: kiểm tra cân bằng (không được quá thiên về 1 phía). Mỗi point có example cụ thể không (specific country/situation)?'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Economics passage nâng cao', detail:'Làm IELTS Reading passage về economic policy hoặc international trade (Band 7 level). Focus: câu Matching Information – đọc mỗi statement, xác định keyword, scan từng paragraph cho keyword/paraphrase của keyword.', url: IELTS },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Career & work',    detail:'Nghe BBC 6 Min English về career advice, workplace culture, hoặc the future of work. Ghi: 3 main takeaways, 3 phrasal verbs/idioms liên quan đến work, các cách express contrast (on the other hand, however, nevertheless).', url: BBC6 },
-        { id:'s', type:'speaking',title:'Part 1+2+3: Business full practice',   detail:'Full Speaking session: Part 1 (work/career questions), Part 2 (describe your ideal job), Part 3 (job market in your country). Ghi âm toàn bộ 15 phút. Sau đó nghe lại và tự đánh giá: fluency, vocabulary range, grammar accuracy.' },
+        s('s1','🗣️ SP14: Books & Reading (50 từ)','Học 50 từ SP14 Books (flashcard SP14): novel, fiction, non-fiction, bestseller, author, genre, plot, character development, narrative, biography, autobiography, bookstore, e-book, audiobook, literary criticism, reading habit, book club, classic literature, contemporary, publication... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Favourite Book or Film','Cue card: "Describe a book you have read that you found interesting. Say: what it is, what it is about, why you chose to read it, and what you liked about it." 1p prep → 2p nói.'),
+        w('t1','📊 Task 1: 2 bài Mixed (Pie + Table)','Bài 1 (25p): pie charts so sánh household spending 2000 vs 2020. Bài 2 (25p): table về crime rates by type in 3 cities. Tự chấm: với Table — có identify most/least notable features không?'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Ôn 80 từ tuần 7 – Business',          detail:'Flashcard review: 80 từ business vocabulary. Tập trung collocation test: cho từ (investment), liệt kê 5 collocations (attract investment, return on investment, foreign direct investment, make an investment, investment portfolio).' },
-        { id:'r', type:'reading', title:'IELTS Reading: 2 business passages',   detail:'2 passages liên tiếp (40 phút total): 1 về business ethics, 1 về economic development. Analyze: which question types appeared most? Which were hardest? Write 3 lessons learned về Reading strategies.', url: IELTS },
-        { id:'w', type:'writing', title:'Peer review: Business essays',         detail:'Đọc lại tất cả Task 2 essays tuần 7. Kiểm tra mỗi bài: (1) Does intro paraphrase the question? (2) Are there 2-3 supporting points per body paragraph? (3) Are examples specific? (4) Is there a clear conclusion? Viết improved intro cho bài yếu nhất.' },
+        v('rev','🔄 Ôn CamListen BL7+BL8 (60 từ)','Quiz CamListen BL7 + BL8 = 60 từ. Target ≥54/60.'),
+        v('rev2','🔄 Ôn Topic TR1+TR2 (140 từ)','Quiz Topic TR1 Environment + TR2 Technology = 140 từ học thuật. Spaced repetition. Target ≥90%.'),
+        v('pl','💡 Tổng kết tuần 7','Topic Reading: TR4+TR5 done. CamListen: 420 từ (BL1-BL14 done). Writing: T13+T14. Speaking: SP13+14.'),
       ],
     ],
   },
 
-  // ── Week 8: Arts & Culture ────────────────────────────────
+  // ── Week 8: Công việc & Ngôn ngữ ──────────────────────────
   {
-    theme: 'Nghệ thuật & Văn hóa', themeEn: 'Arts & Culture', phase: 2,
+    theme: 'Công việc & Ngôn ngữ', themeEn: 'Work, Language & Topic Vocab', phase: 2,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng nghệ thuật & di sản',          detail:'Học 20 từ: heritage, aesthetics, curator, exhibition, artefact, sculpture, architecture, genre, abstract, contemporary, classical, avant-garde, masterpiece, gallery, museum, conservation, restoration, patronage, cultural identity, intangible heritage. Phân biệt aesthetic (adj) vs aesthetics (n).' },
-        { id:'g', type:'grammar', title:'Câu mệnh đề cleft (Cleft sentences)',  detail:'"It is the government that should fund the arts." / "What I find most striking about modern art is its ambiguity." / "It was not until the Renaissance that art became secular." Viết 8 cleft sentences về arts and culture. Emphasise với cleft sentences.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Chính phủ tài trợ nghệ thuật', detail:'Đề: "Government funding for the arts reduces the need for commercial funding. Some argue this decreases the quality of art. To what extent do you agree?" Viết 40p. Dùng cleft sentences và complex grammar.' },
+        r('r','📖 Topic TR6: Science & Research (70 từ)','Học 70 từ academic Science (flashcard TR6): causality, confounding variable, control group, cross-sectional study, data triangulation, empirical evidence, extrapolation, falsifiability, longitudinal study, meta-analysis, observational study, operationalisation, paradigm shift, peer review, placebo, qualitative, quantitative, randomised controlled trial, replication, sampling bias, statistical significance, systematic review...', CAMDICT),
+        l('l','🎧 CamListen BL15 (421–450) + Chép CT 40p','[30p] Học 30 từ CamListen BL15 (#421–450). [40p] Nghe IELTS S4 → lần này viết đúng ≥9/10 câu. S4 là key section để đạt L Band 7+.', IELTS),
+        g('g','📝 Ngữ pháp: Noun Clauses','It is clear that... / The fact that robots perform surgery is remarkable. / What concerns many is the lack of regulation. Viết 6 noun clause sentences về science.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Collocations nghệ thuật & văn hóa',    detail:'Học 20 cụm: foster creativity, preserve cultural heritage, promote cultural exchange, attend a performance, appreciate fine art, commission a work, exhibit paintings, fund the arts, develop artistic talent, stage a production, mount an exhibition, cultivate a culture, acknowledge cultural diversity, blend cultures.' },
-        { id:'r', type:'reading', title:'IELTS Reading: Art & culture passage', detail:'Làm IELTS Reading passage về the role of art, cultural heritage, hoặc music history. Focus: câu Note/Table/Flow-chart Completion – điền chính xác từ từ passage (không paraphrase), đúng word limit.', url: IELTS },
-        { id:'s', type:'speaking',title:'Part 2: Loại hình nghệ thuật yêu thích', detail:'Cue card: "Describe a type of art or music that you particularly enjoy. Say: what type it is, how long you have been interested in it, how it makes you feel, and explain why you think it is valuable." Dùng: evocative, expressive, moving, thought-provoking.' },
+        w('w1','✍️ 100 Collocations: Work & Employment (W2T15)','Học 100 colloc công việc (W2T15): enhance job security, address unemployment, promote work-life balance, combat workplace discrimination, improve employee well-being, increase minimum wage, foster entrepreneurship, develop vocational skills, reduce gender pay gap, implement flexible working arrangements...'),
+        w('w2','✍️ Task 2 Essay: Work','Đề: "Some people think that it is better to work for yourself or run your own business than to be an employee. To what extent do you agree?" Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm: LR nâng cao','Essay này về Work: dùng bao nhiêu synonyms cho "work": employment, occupation, livelihood, career, vocation. Dùng bao nhiêu synonyms cho "business": enterprise, venture, company, firm, organisation.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng phim ảnh & âm nhạc',           detail:'Học 20 từ: cinematography, soundtrack, screenplay, director, producer, genre (thriller, documentary, romance), plot, protagonist, antagonist, theme, motif, score, composition, lyrics, melody, harmony, rhythm, improvisation, recording, album release.' },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Arts & culture',   detail:'Tìm BBC 6 Min English về arts, culture, music hoặc literature. Nghe và ghi: (1) how do speakers express personal taste (I find it..., I can\'t help but..., There\'s something about...), (2) 3 vocabulary items for evaluating art, (3) the cultural question discussed.', url: BBC6 },
-        { id:'w', type:'writing', title:'Task 2: Vai trò của nghệ thuật trong XH', detail:'Đề: "Art is considered an important part of society. However, many people today consider watching television or playing computer games to be a more valuable use of time. Discuss both views." Viết 40p.' },
+        s('s1','🗣️ SP15: Music & Entertainment (50 từ)','Học 50 từ SP15 Music (flashcard SP15): genre, melody, rhythm, lyrics, composer, orchestra, concert, album, playlist, streaming, live performance, music festival, instrument, folk music, classical, contemporary, pop culture, entertainment industry, celebrity, fandom... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Favourite Music/Singer','Cue card: "Describe a singer or band you enjoy listening to. Say: who they are, what kind of music they make, how you discovered them, and why you like them." 1p prep → 2p nói.'),
+        v('rv','🔄 Ôn SP11+SP12 (100 từ)','Quiz SP11 Health + SP12 Travel = 100 từ. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'BBC: Culture & Arts news',              detail:'Đọc bài BBC Arts về a cultural event, new film/art exhibition, atau cultural controversy. Xác định tone (celebratory, critical, neutral). Ghi 3 evaluative adjectives (groundbreaking, divisive, acclaimed). Viết 3 câu opinion về chủ đề.', url: BBCWRD },
-        { id:'l', type:'listening',title:'VOA: Arts & entertainment',            detail:'Nghe VOA story về arts (film industry, music, cultural festivals). Chú ý: signposting language (moving on to..., turning to..., to illustrate this...). Ghi các cụm này để dùng trong Speaking.', url: VOA },
-        { id:'s', type:'speaking',title:'Part 3: Nghệ thuật và xã hội',         detail:'Discuss: (1) Should governments spend money on arts when there are more pressing social needs? (2) Do you think art is becoming less important in modern society? (3) How has technology affected the way art is created and experienced?' },
+        r('r','📖 Topic TR7: Business & Economics (70 từ)','Học 70 từ academic Business (flashcard TR7): amortisation, arbitrage, bear market, bond, bull market, capital expenditure, cartel, commodity, comparative advantage, depreciation, derivative, diversification, dividend, elasticity, fiscal policy, GDP, hedge fund, inflation, interest rate, liquidity, macroeconomics, monopoly, oligopoly, outsourcing, quantitative easing...', CAMDICT),
+        l('l','🎧 CamListen BL16 (451–480) + Chép CT 40p','[30p] Học 30 từ CamListen BL16 (#451–480). [40p] Nghe IELTS S3 discussion về work/business → chép + ghi speaker opinions riêng biệt.', IELTS),
+        g('g','📝 Ngữ pháp: Cleft Sentences','It is the government that... / What I believe is that... / What the data shows is... / It was in 2020 that... Cleft sentences tạo emphasis — Band 7+ Writing cần dùng.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'AWL – Batch 5 (Arts context)',          detail:'AWL Batch 5: achieve, acquire, administrate, affect, agency, alter, ambiguous, append, appreciate, aspect, attain, attribute, civil, clarify, classic, code, comment, commit, concentrate, confirm. Sử dụng mỗi từ trong 1 câu về arts/culture.' },
-        { id:'g', type:'grammar', title:'Ellipsis & substitution (cohesion)',    detail:'Ellipsis: "Some people love contemporary art; others do not [love it]." Substitution: "Traditional music is popular. So is folk dancing." / "Art is subjective, and so is music appreciation." Viết đoạn 100 từ về cultural diversity dùng ellipsis/substitution cho cohesion.', url: BCG },
-        { id:'w', type:'writing', title:'Task 1: Process diagram – book publishing', detail:'Mô tả flow chart về the process of publishing a book: manuscript → editor → revisions → design → printing → distribution. Dùng passive voice và process sequencing language (is submitted, is reviewed, are made, is sent).' },
+        w('w1','✍️ 100 Collocations: Language & Communication (W2T16)','Học 100 colloc ngôn ngữ (W2T16): achieve fluency, acquire a second language, develop communication skills, overcome language barriers, promote multilingualism, preserve endangered languages, implement language policy, foster intercultural understanding, master pronunciation, expand vocabulary, translate accurately...'),
+        w('w2','✍️ Task 2 Essay: Language','Đề: "Some people think it is better to learn a global language such as English rather than preserve local languages. Discuss both views." Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm: "Discuss both views" structure','Bài Discuss Both Views: para 1 = view A (argue with examples), para 2 = view B (argue with examples), para 3 (optional) = own opinion. Kiểm tra: có trình bày CẢ HAI views công bằng không?'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Culture passage nâng cao', detail:'Làm IELTS Reading passage về cultural globalisation hoặc indigenous cultures (Band 7). Focus: câu List Selection (Choose 3 answers from 7) – đọc câu hỏi kỹ, tìm tất cả relevant parts of text, verify each option.', url: IELTS },
-        { id:'l', type:'listening',title:'Full IELTS Listening: Cultural topics', detail:'Làm IELTS Listening S2 (tour guide về cultural site) + S3 (thảo luận về arts project) + S4 (bài giảng về cultural anthropology). Phân tích: S2 – map labeling; S3 – distinguish 2 speakers\' opinions; S4 – predict headings.', url: IELTS },
-        { id:'s', type:'speaking',title:'Full Speaking Mock: Arts & Culture',   detail:'Full 15-minute mock: Part 1 (do you enjoy going to museums? have you been to any concerts?), Part 2 (describe a memorable cultural experience), Part 3 (discuss the value of cultural exchange). Ghi âm, nghe lại, so sánh với Band 7 criteria.' },
+        s('s1','🗣️ SP16: Art & Design (50 từ)','Học 50 từ SP16 Art (flashcard SP16): painting, sculpture, architecture, photography, digital art, gallery, exhibition, artwork, artistic style, abstract, impressionism, contemporary art, craft, design, aesthetic, creative process, artistic talent, cultural significance, art appreciation, commission... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Artwork or Building','Cue card: "Describe a work of art or a building that you find impressive. Say: what it is, where it is, what it looks like, and explain why you find it impressive." 1p prep → 2p nói.'),
+        w('t1','📊 Task 1: Process Diagram + Bar','Bài 1 (25p): process diagram — how paper is recycled. Bài 2 (25p): bar chart cho Cambridge IELTS (tìm 1 bài từ Cambridge Books 13-17). Tự chấm cả 2.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Ôn 80 từ tuần 8 – Arts & Culture',    detail:'Vocab quiz: flashcard test 80 từ. Focus: synonyms – beautiful (stunning, breathtaking, exquisite), old (ancient, antiquated, time-honoured). Viết 1 đoạn review của 1 bộ phim hoặc bài nhạc bạn thích, dùng 15 từ vựng tuần 8.' },
-        { id:'r', type:'reading', title:'2 IELTS passages: Arts & Culture',     detail:'Làm 2 passages (40 phút): 1 về music history, 1 về digital art. Ghi lại 10 academic collocations từ passages (e.g. "significant cultural impact", "widespread artistic movement"). Dùng 5 trong câu của bạn.', url: IELTS },
-        { id:'w', type:'writing', title:'Review + improve Task 2 essays',       detail:'Đọc lại 3 Task 2 essays tuần 8. Áp dụng checklist: (1) intro paraphrase OK? (2) Each body paragraph has 1 main idea? (3) Used hedging language? (4) Varied sentence structures? (5) Conclusion restates position + broader implication? Cải thiện 1 bài.' },
+        v('rev','🔄 Ôn Topic TR3+TR4 (140 từ)','Quiz TR3 Education + TR4 Health = 140 từ. Spaced repetition. Target ≥90%.'),
+        v('rev2','🔄 Ôn CamListen BL9+BL10 (60 từ)','Quiz CamListen BL9 + BL10 = 60 từ. Target ≥54/60.'),
+        v('pl','💡 Tổng kết tuần 8','TR6+TR7 done. CamListen: 480 từ (BL1-BL16 done — 80% hoàn thành!). Writing: T15+T16. Speaking: SP15+16. Tuần sau BL17-18, tuần 10 BL19-20 là xong 600 từ Listening!'),
       ],
     ],
   },
 
-  // ── Week 9: Transport & Infrastructure ───────────────────
+  // ── Week 9: Du lịch & Nhà ở ────────────────────────────────
   {
-    theme: 'Giao thông & Hạ tầng', themeEn: 'Transport & Infrastructure', phase: 2,
+    theme: 'Du lịch & Nhà ở', themeEn: 'Tourism, Housing & Topic Vocab', phase: 2,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng giao thông đô thị',             detail:'Học 20 từ: congestion, commute, public transport, infrastructure, urban planning, pedestrian, cyclist, traffic flow, mass transit, metro, tram, bus lane, carpooling, road network, flyover, underpass, roundabout, speed limit, vehicle emission, electric vehicle.' },
-        { id:'g', type:'grammar', title:'Inversion cho nhấn mạnh',               detail:'"Not only does congestion increase journey times, but it also raises pollution levels." / "Rarely has a city solved its traffic problems so effectively." / "Under no circumstances should cars be allowed in city centres." Viết 8 inverted sentences về transport.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Phương tiện cá nhân vs công cộng', detail:'Đề: "Car ownership has increased so rapidly over the past thirty years that many cities around the world are now gridlocked. What measures can governments take to improve traffic conditions?" Viết 40p. Problem-solution structure.' },
+        r('r','📖 Topic TR8: Government & Law (70 từ)','Học 70 từ academic Government (flashcard TR8): accountability, bicameral, bureaucracy, civil liberties, constitution, democracy, devolution, due process, egalitarianism, electoral system, federalism, geopolitics, governance, habeas corpus, hegemony, jurisdiction, legislation, lobbyist, meritocracy, parliamentary, referendum, sovereignty, totalitarianism, treaty...', CAMDICT),
+        l('l','🎧 CamListen BL17 (481–510) + Chép CT 40p','[30p] Học 30 từ CamListen BL17 (#481–510). [40p] Nghe IELTS S4 về government/law → target: ≥9/10. Chú ý proper nouns và dates — thường là trap.', IELTS),
+        g('g','📝 Ngữ pháp: Mixed Conditionals','If + past perfect → would/could present (past condition, present result). "If I had studied law, I would be a lawyer now." Viết 6 mixed conditionals về government policies.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng hạ tầng & quy hoạch',           detail:'Học 20 từ: infrastructure, urban development, urban sprawl, zoning, land use, smart city, sustainable development, green space, public amenity, housing density, mixed-use development, pedestrianisation, cycle lane, park-and-ride, congestion charge, toll, bridge, tunnel, high-speed rail, aviation.' },
-        { id:'r', type:'reading', title:'IELTS Reading: Urban transport passage', detail:'Làm IELTS passage về urban transport systems hoặc smart cities. Focus: câu hỏi Diagram Labeling – đọc labels trước, tìm area of text describing diagram, điền từ chính xác từ text.', url: IELTS },
-        { id:'s', type:'speaking',title:'Part 2: Hệ thống giao thông',          detail:'Cue card: "Describe a form of transport that you use regularly. Say: what type of transport it is, when you first started using it, what you find good and bad about it, and explain why you would recommend it to others." Dùng comparison: compared to, unlike, whereas.' },
+        w('w1','✍️ 100 Collocations: Tourism & Travel (W2T17)','Học 100 colloc du lịch (W2T17): boost tourism revenue, develop eco-tourism, protect cultural heritage sites, promote sustainable travel, address overtourism, improve tourist infrastructure, attract foreign visitors, regulate the hospitality industry, foster cultural exchange, enhance the visitor experience...'),
+        w('w2','✍️ Task 2 Essay: Tourism','Đề: "Tourism has both positive and negative effects on local communities. What are these, and how can negative effects be minimised?" Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm essay Tourism','Câu hỏi "what are these AND how can..." = 2 parts! Kiểm tra: có answer BOTH parts không? Task Achievement = answer all parts of question.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Collocations giao thông',               detail:'Học 20 cụm: ease traffic congestion, expand the road network, invest in public transport, reduce carbon emissions from vehicles, improve road safety, build cycling infrastructure, implement congestion pricing, extend the metro line, promote walking, reduce car dependency, introduce park-and-ride schemes, electrify the rail network.' },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Transport',         detail:'Nghe BBC 6 Min English về transport/cities/urban living. Ghi: (1) main argument về transport policy, (2) any statistics mentioned, (3) speakers\' tone (optimistic/pessimistic about solutions). Practice using the same expressions in speaking.', url: BBC6 },
-        { id:'w', type:'writing', title:'Task 1: Sơ đồ bản đồ – Urban development', detail:'Mô tả 2 maps của một thị trấn: năm 2000 và năm 2023 sau khi phát triển. Dùng: "A road has been built...", "The park was replaced by...", "Where there was once a field, there is now...", language of change và comparison.' },
+        s('s1','🗣️ SP17: Fashion & Clothing (50 từ)','Học 50 từ SP17 Fashion (flashcard SP17): wardrobe, outfit, trend, designer, haute couture, fast fashion, sustainable fashion, accessories, textile, fabric, brand, retail, style, minimalist, vintage, second-hand, fashion industry, model, runway, dress code... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Clothing/Fashion Topic','Cue card: "Describe a piece of clothing you own that is important to you. Say: what it is, where you got it, when you wear it, and why it is important to you." 1p prep → 2p nói.'),
+        v('rv','🔄 Ôn SP13+SP14 (100 từ)','Quiz SP13 Education + SP14 Books = 100 từ. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'BBC: Smart cities & transport',         detail:'Đọc bài BBC về smart city transport innovations (autonomous vehicles, congestion charging, electric buses). Phân tích: Is the author in favour or against the innovation? What evidence is given? Đặt 3 IELTS-style questions về bài đọc.', url: BBCWRD },
-        { id:'l', type:'listening',title:'VOA: Transport & environment',         detail:'Nghe VOA về electric vehicles, aviation emissions, hoặc sustainable transport. Ghi: numbers and statistics (%, km, dollars), names of programmes or policies, expert opinions. Create 3 MCQ questions from the audio.', url: VOA },
-        { id:'s', type:'speaking',title:'Part 3: Giao thông và môi trường',     detail:'Discuss: (1) What are the main challenges facing public transport in your city? (2) Do you think self-driving cars will be common in the near future? (3) How can governments encourage people to use public transport instead of private cars? Use specific examples.' },
+        r('r','📖 Topic TR9: Media & Communication (70 từ)','Học 70 từ academic Media (flashcard TR9): algorithm, broadcast, censorship, clickbait, convergence, crowdsourcing, cyberbullying, disinformation, editorial, framing, gatekeeping, hashtag, hyperlink, infographic, journalism, livestream, misinformation, monetisation, podcast, propaganda, sensationalism, social network, streaming, surveillance capitalism, viral...', CAMDICT),
+        l('l','🎧 CamListen BL18 (511–540) + Chép CT 40p','[30p] Học 30 từ CamListen BL18 (#511–540). [40p] Nghe IELTS S1 (telephone conversation) → chép numbers, names, email addresses chính xác. S1 spelling errors = hay mất điểm.', IELTS),
+        g('g','📝 Ngữ pháp: Discourse Markers','Adding: furthermore, moreover, in addition. Contrasting: however, nevertheless, on the other hand. Concluding: therefore, consequently, as a result. Exemplifying: for instance, to illustrate. Viết paragraph 150 từ dùng 6 discourse markers.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'AWL – Batch 6 (Transport context)',     detail:'AWL Batch 6: constitute, context, contract, contribute, convene, coordinate, correspond, criteria, deduce, demonstrate, denote, derive, design, devise, differentiate, distinct, document, domain, dynamic, eliminate. Viết 10 câu về transport infrastructure.' },
-        { id:'g', type:'grammar', title:'Expressing cause & effect nâng cao',   detail:'Advanced causal language: "One contributing factor to congestion is..." / "Traffic gridlock stems from a failure to invest in public transport." / "Poor infrastructure has the knock-on effect of..." / "The consequences of urban sprawl are far-reaching." Viết 8 sentences.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Xe hơi cá nhân trong đô thị',  detail:'Đề: "Some people think that the best way to solve global warming is to stop using cars. To what extent do you agree or disagree?" Viết 40p. Dùng: concession structure (While it is true that..., it is also important to consider...).' },
+        w('w1','✍️ 100 Collocations: Housing & Urban Dev. (W2T18)','Học 100 colloc nhà ở (W2T18): address the housing shortage, build affordable housing, regulate property prices, tackle homelessness, improve urban infrastructure, develop smart cities, promote mixed-use development, reduce urban sprawl, revitalise city centres, increase housing density, implement planning regulations...'),
+        w('w2','✍️ Task 2 Essay: Housing','Đề: "In many cities, the cost of housing is becoming unaffordable for ordinary people. What are the causes and what measures could be taken?" Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm essay Housing','Causes & Measures: kiểm tra link giữa cause và measure (cause: land shortage → measure: increase urban density). Có ít nhất 2 causes + 2 measures với examples không?'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Infrastructure passage', detail:'Làm IELTS passage về infrastructure development (Band 7 level). Focus: Matching Headings – mỗi heading cần match với 1 paragraph\'s main idea (không nhất thiết phải là câu đầu). Test 8 headings cho 6 paragraphs (có 2 headings dư).', url: IELTS },
-        { id:'l', type:'listening',title:'IELTS Listening: Transport S2+S4',    detail:'Làm S2 (tour guide giới thiệu hệ thống giao thông thành phố) + S4 (bài giảng về urban planning). S2: Map labeling challenge. S4: Note completion từ bài giảng học thuật. Chấm điểm, phân tích.', url: IELTS },
-        { id:'s', type:'speaking',title:'Full Speaking Mock: Transport',         detail:'Full 15-minute mock: Part 1 (how do you travel to work/school? Do you drive?), Part 2 (describe a long journey you have made), Part 3 (discuss the future of transport). Self-evaluate using IELTS criteria: Fluency, Vocabulary, Grammar, Pronunciation.' },
+        s('s1','🗣️ SP18: Festivals & Celebrations (50 từ)','Học 50 từ SP18 Festivals (flashcard SP18): tradition, ceremony, ritual, parade, fireworks, commemorate, cultural heritage, public holiday, religious festival, festive season, gathering, costumes, folklore, customary, ancestor worship, lunar calendar, national day, thanksgiving, carnival, decoration... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Festival or Celebration','Cue card: "Describe a festival or celebration that is important in your culture. Say: what it is, how it is celebrated, who participates, and explain why it is important." 1p prep → 2p nói.'),
+        w('t1','📊 Task 1: Cambridge IELTS T1 Practice','Làm 1 Task 1 từ Cambridge IELTS Books (tìm bài chưa làm). 20 phút tính giờ. Sau đó: so sánh với model answer — học 5 expressions bạn chưa dùng.', IELTS),
       ],
       [
-        { id:'v', type:'vocab',   title:'Ôn 80 từ tuần 9 – Transport',         detail:'Rapid-fire quiz: viết 1 sentence cho mỗi trong 20 từ khó nhất tuần 9. Focus: prepositions with transport words (travel by car, on foot, via public transport, by air). Viết paragraph 120 từ về ideal transport system.' },
-        { id:'r', type:'reading', title:'2 IELTS passages: Transport',           detail:'Làm 2 IELTS passages về transport và urban planning (40 phút). Focus trên tốc độ: target ≥11/13 mỗi passage. Sau đó: ghi 5 academic expressions từ passages và dùng trong viết.', url: IELTS },
-        { id:'w', type:'writing', title:'Task 1 + Task 2: Transport topic',     detail:'Task 1 (20p): bar chart về passenger transport usage (car/bus/train/plane %) ở các năm. Task 2 (40p): "The best way to reduce traffic congestion is for governments to provide free public transport." Discuss.' },
+        v('rev','🔄 Ôn Topic TR5+TR6 (140 từ)','Quiz TR5 Society + TR6 Science = 140 từ. Target ≥90%.'),
+        v('rev2','🔄 Ôn CamListen BL11+BL12 (60 từ)','Quiz CamListen BL11 + BL12 = 60 từ. Target ≥54/60.'),
+        v('pl','💡 Tổng kết tuần 9','TR8+TR9 done. CamListen: 540 từ (BL1-BL18 done — 90%!). Writing: T17+T18. Speaking: SP17+18. Tuần 10: 2 batch listening cuối cùng → XONG Cambridge 600!'),
       ],
     ],
   },
 
-  // ── Week 10: Law & Crime + MILESTONE ─────────────────────
+  // ── Week 10: Toàn cầu hóa + Milestone 2 ───────────────────
   {
-    theme: 'Pháp luật & Tội phạm', themeEn: 'Law & Crime', phase: 2,
-    milestone: '🏆 Mock Test Phase 2',
+    theme: 'Toàn cầu hoá & Milestone 2', themeEn: 'Globalisation & Milestone 2', phase: 2,
+    milestone: '🏆 Mock Test Phase 2 — Đánh giá tiến bộ',
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng tội phạm học',                  detail:'Học 20 từ: crime, offence, criminal, victim, perpetrator, suspect, witness, evidence, motive, alibi, arrest, charge, prosecution, defence, verdict, sentence, imprisonment, fine, parole, rehabilitation. Phân biệt: crime (act) vs criminal (person) vs criminality (phenomenon).' },
-        { id:'g', type:'grammar', title:'Adverb clauses of concession & contrast', detail:'"Although crime rates have fallen, public fear of crime remains high." / "While some offenders rehabilitate successfully, others reoffend." / "Notwithstanding stricter laws, drug trafficking continues." / "However severe the punishment, deterrence is not guaranteed." 8 sentences.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Phạt tù vs cải tạo',            detail:'Đề: "Prisons are overcrowded with non-violent offenders. Many experts believe that rehabilitation is more effective than punishment. To what extent do you agree?" Viết 40p. Dùng: "Proponents of this view argue...", "Critics, however, contend..."' },
+        r('r','📖 Topic TR10: Transport & Urban (70 từ)','Học 70 từ academic Transport (flashcard TR10): autonomous vehicle, carbon-neutral, congestion charge, decarbonisation, electrification, flyover, gentrification, high-speed rail, hyperloop, infrastructure, intermodal, light rail, logistics, mass transit, mobility-as-a-service, pedestrianisation, smart grid, sustainable mobility, traffic management, urban density, walkability, zero-emission...', CAMDICT),
+        l('l','🎧 CamListen BL19 (541–570) + Chép CT 40p','[30p] Học 30 từ CamListen BL19 (#541–570). [40p] Nghe IELTS S4 về transport/urban planning → target ≥9/10. Gần xong 600 từ Listening rồi!', IELTS),
+        g('g','📝 Ngữ pháp: Quantifiers học thuật','the vast majority of, a significant minority, relatively few, an increasing proportion of, a growing number of, hardly any. Viết 8 câu về globalisation dùng quantifiers. Khác nhau formal/informal.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng hệ thống tư pháp',              detail:'Học 20 từ: judiciary, legislature, constitution, court, magistrate, jury, barrister, solicitor, judge, prosecution, defendant, plaintiff, appeal, acquittal, conviction, damages, injunction, due process, rule of law, civil rights, human rights.' },
-        { id:'r', type:'reading', title:'IELTS Reading: Criminal justice',       detail:'Làm IELTS passage về criminal justice reform hoặc crime statistics. Focus: câu Short Answer Questions – câu hỏi bắt đầu bằng How many/much/long/often → phải tìm number hoặc quantity từ text. Đọc kỹ word limit (e.g. NO MORE THAN TWO WORDS).', url: IELTS },
-        { id:'s', type:'speaking',title:'Part 2: Tin tức tội phạm',             detail:'Cue card: "Describe a story about a crime you heard about or read in the news. Say: what happened, where and when it took place, what was the outcome, and explain how you felt about this story." Dùng past tenses, crime vocabulary, hedging ("allegedly", "reportedly").' },
+        w('w1','✍️ 100 Collocations: Globalisation (W2T19)','Học 100 colloc toàn cầu hóa (W2T19): drive economic integration, promote free trade, reduce trade barriers, foster international cooperation, address global inequality, regulate multinational corporations, protect local industries, encourage cultural exchange, tackle climate change collectively, harmonise international standards...'),
+        w('w2','✍️ Task 2 Essay: Globalisation','Đề: "Globalisation has more advantages than disadvantages. To what extent do you agree?" Outline 5p → Draft 40p. Dùng W2T19.'),
+        v('ck','🔍 Tự chấm: "Outweigh" structure','Outweigh essay: nhất thiết phải have clear position. Nếu agree: body 1+2 = advantages (strong) + body 3 = acknowledge disadvantage nhưng refute. Kiểm tra position của mình có consistent không?'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng tội phạm mạng & hiện đại',     detail:'Học 20 từ: cybercrime, fraud, identity theft, hacking, ransomware, phishing, money laundering, corruption, bribery, terrorism, organised crime, drug trafficking, human trafficking, white-collar crime, financial crime, surveillance, data breach, digital forensics, dark web, extortion.' },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Law & crime',      detail:'Nghe BBC 6 Min English về crime, law, justice hoặc punishment. Ghi: (1) the main argument presented, (2) opposing view mentioned, (3) speaker\'s conclusion. Practice: present both sides of an argument about crime prevention in speaking.', url: BBC6 },
-        { id:'w', type:'writing', title:'Task 2: Nguyên nhân tội phạm',         detail:'Đề: "Many people believe that poverty is the root cause of crime. Others argue that crime results from individual moral failings. Discuss both views and give your own opinion." Viết 40p. Dùng: "Arguably...", "It is often contended that..."' },
+        s('s1','🗣️ SP19: Shopping & Consumerism (50 từ)','Học 50 từ SP19 Shopping (flashcard SP19): consumer, retail, purchase, brand loyalty, impulse buying, online shopping, e-commerce, discount, bargain, second-hand, sustainable consumption, advertising, marketing, luxury goods, materialism, quality, refund, customer service... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Shopping Experience','Cue card: "Describe a shopping centre or market you enjoy visiting. Say: where it is, what it sells, how often you go, and why you enjoy going there." 1p prep → 2p nói.'),
+        v('rv','🔄 Ôn SP15+SP16 (100 từ)','Quiz SP15 Music + SP16 Art = 100 từ. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'BBC/VOA: Crime & justice',              detail:'Đọc bài BBC hoặc VOA về a criminal case, prison reform, hoặc crime prevention. Phân tích: cách bài báo maintain balance (presenting facts vs opinions). Ghi 6 phrases for presenting evidence (statistics show, research indicates, experts argue, according to...).' , url: BBCWRD },
-        { id:'l', type:'listening',title:'VOA: Law enforcement',                 detail:'Nghe VOA về policing, criminal justice, hoặc international law. Ghi: proper nouns (case names, organisations, countries), specific outcomes (sentences, verdicts, fines), expert quotes. Create 3 T/F/NG statements from the listening.', url: VOA },
-        { id:'s', type:'speaking',title:'Part 3: Hệ thống pháp luật',          detail:'Discuss: (1) What do you think are the most effective ways to prevent crime? (2) Is it fair for criminals to receive the same punishment regardless of their background? (3) Do you think the media portrays crime accurately? Develop each answer for 1 full minute.' },
+        r('r','📖 Topic TR11: Food & Agriculture (70 từ)','Học 70 từ academic Food (flashcard TR11): agrochemicals, agroecology, aquaculture, biofortification, crop yield, deforestation-linked agriculture, food security, genetically modified organisms, hydroponics, intensive farming, irrigation, livestock, malnutrition, monoculture, organic farming, permaculture, pesticide, plant-based protein, precision agriculture, soil degradation, subsistence farming, supply chain...', CAMDICT),
+        l('l','🎧 CamListen BL20 (571–600) + Chép CT 40p 🎉','[30p] Học 30 từ CamListen BL20 (#571–600). ĐÃ HOÀN THÀNH Cambridge Listening 600 từ! [40p] Final dictation: Nghe 1 IELTS S4 lecture → target ≥9/10. Từ tuần 11: KHÔNG học vocab mới cho Listening — chỉ luyện nghe thuần.', IELTS),
+        g('g','📝 Ngữ pháp: Phase 2 Grammar Review','Ôn lại 5 grammar points Phase 2: (1) Advanced Passive, (2) Complex Noun Phrases, (3) Gerunds/Infinitives, (4) Cleft Sentences, (5) Mixed Conditionals. Viết 1 câu example cho mỗi type.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'AWL – Batch 7 + Review Phase 2',       detail:'AWL Batch 7: equate, evaluate, evident, evolve, expand, expose, external, facilitate, factor, feature, final, focus, framework, function, generate, global, goal, grade, guarantee, identify. Review Phase 2 vocabulary: write 1 paragraph using 10 AWL words from any topic.' },
-        { id:'g', type:'grammar', title:'Grammar review Phase 2',               detail:'Review Phase 2 grammar: (1) advanced passives, (2) complex noun phrases, (3) inversion, (4) concession clauses, (5) cause-effect language, (6) ellipsis, (7) cleft sentences. Viết 7 sentences, mỗi câu dùng 1 structure từ Phase 2.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: CCTV và quyền riêng tư',       detail:'Đề: "Some people think that the government should install CCTV cameras in all public spaces in order to reduce crime. Others are concerned about the invasion of privacy this would cause. Discuss both views and give your opinion." Viết 40p.' },
+        w('w1','✍️ 100 Collocations: Immigration (W2T20)','Học 100 colloc di cư (W2T20): integrate immigrants, promote cultural diversity, address illegal immigration, grant asylum, process visa applications, reduce discrimination, facilitate language learning, recognise foreign qualifications, combat human trafficking, strengthen border control, support refugee resettlement...'),
+        w('w2','✍️ Task 2 Essay: Immigration','Đề: "Some countries have large numbers of immigrants. Is this a positive or negative development?" Outline 5p → Draft 40p. Dùng W2T20.'),
+        v('ck','🔍 Tự chấm essay Immigration','Balanced essay — kiểm tra: có represent BOTH sides fairly không? "Positive or negative" = usually both, then overall position. GRA: có subject-verb agreement errors không?'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: 2 Law/Crime passages',  detail:'Làm 2 passages (40 phút): 1 về criminal psychology, 1 về international law. Analyze: what percentage did you get right? Which question type was hardest? Set a specific target for Phase 3 (e.g., improve Matching Headings by practicing 2 per week).', url: IELTS },
-        { id:'l', type:'listening',title:'Full IELTS Listening: Phase 2 review', detail:'Làm Full IELTS Listening test (30+10 phút). Compare score with Phase 1 mock. Ghi: (1) sections improved, (2) sections still weak, (3) 1 specific strategy to implement in Phase 3 (e.g., "predict answers from question keywords before listening").', url: IELTS },
-        { id:'s', type:'speaking',title:'Full Speaking: Phase 2 Review',        detail:'Full mock Part 1+2+3 về any Phase 2 topic (law/crime, business, science, etc). Ghi âm. Compare with Phase 1 recording: Is fluency better? More sophisticated vocabulary? Fewer grammar errors? Write 3 specific improvements for Phase 3.' },
+        s('s1','🗣️ SP20: Accommodation & Living (50 từ)','Học 50 từ SP20 Accommodation (flashcard SP20): apartment, detached house, furnished, unfurnished, rent, lease, mortgage, landlord, tenant, utilities, neighbourhood, amenities, commute, urban area, suburb, shared house, dormitory, studio, compact living, high-rise... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Ideal Home','Cue card: "Describe the type of home you would like to live in. Say: where it would be, what it would look like, who you would live with, and explain why you would like to live there." 1p prep → 2p nói.'),
+        w('t1','📊 Task 1: Cambridge T1 (timed practice)','Làm 1 Task 1 từ Cambridge IELTS (chưa làm). 20 phút tính giờ nghiêm túc. Sau đó: so sánh với sample answer, ghi 5 expressions hay dùng.', IELTS),
       ],
-      // Day 70: MILESTONE Phase 2 Mock Test
+      // Day 70 = MILESTONE
       [
-        { id:'m1', type:'mock', title:'Mock Test: Full Listening (Band 7 target)', detail:'Làm Full IELTS Listening test (Cambridge IELTS Books 13-16 hoặc recent tests). Nghiêm túc: 30p listening + 10p transfer. Target: ≥30/40 (Band 7). Chấm điểm, phân tích câu sai theo section.', url: IELTS },
-        { id:'m2', type:'mock', title:'Mock Test: Full Reading (Band 7 target)', detail:'Full Reading test 60 phút, 3 passages. Target: ≥30/40 (Band 7). Sau khi làm: ghi lại câu sai và lý do sai. Nếu T/F/NG sai – xem lại text để hiểu tại sao. Nếu MH sai – đọc lại paragraph main idea.', url: IELTS },
-        { id:'m3', type:'mock', title:'Mock Test: Writing + Speaking Band 7',  detail:'Writing: Full Task 1 (20p) + Task 2 (40p) nghiêm túc không tra internet. Speaking: Full Part 1+2+3 (ghi âm 15p). Tự chấm hoặc nhờ người chấm. Ghi target score band cho Phase 3: R, L, W, S.' },
+        m('m1','🏆 Phase 2 Mock: Listening (Full)','Full IELTS Listening (40 câu, 40p). Điều kiện thi nghiêm túc. Chấm điểm → compare với Day 35 score. CamListen 600 hoàn thành — kết quả phải cải thiện!', IELTS),
+        m('m2','🏆 Phase 2 Mock: Reading (Full)','Full IELTS Reading (60p, 3 passages). Điều kiện thi nghiêm túc. Chấm điểm → compare với Day 35. Topic vocab đã làm phong phú hơn nhiều.', IELTS),
+        m('m3','🏆 Phase 2 Mock: Writing + Speaking','Writing: T1+T2 (60p). Speaking: ghi âm Part 1+2+3 (14p). So sánh với Phase 1. Ghi band score Phase 2. Xem xét: kỹ năng nào improve nhiều nhất?'),
       ],
     ],
   },
@@ -485,214 +492,214 @@ const WEEKS: WeekDef[] = [
   //  PHASE 3 — ĐÀO SÂU (Days 71–105)
   // ════════════════════════════════════════════════════════════
 
-  // ── Week 11: Food & Agriculture ──────────────────────────
+  // ── Week 11: TR12-TR13 (Reading vocab DONE!) ───────────────
   {
-    theme: 'Thực phẩm & Nông nghiệp', themeEn: 'Food & Agriculture', phase: 3,
+    theme: 'Nghèo đói & Bình đẳng + Hoàn thành Topic Vocab', themeEn: 'Poverty, Equality & Topic Vocab Complete', phase: 3,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng nông nghiệp bền vững',         detail:'Học 20 từ: pesticide, fertiliser, irrigation, livestock, crop yield, harvest, organic farming, genetically modified (GM), food security, arable land, deforestation for agriculture, monoculture, biodiversity loss, soil erosion, subsistence farming, commercial farming, food chain, food sovereignty, agroforestry, permaculture.' },
-        { id:'r', type:'reading', title:'IELTS Reading: Food security',          detail:'Làm IELTS passage về global food security hoặc agricultural innovation. Focus: câu Yes/No/Not Given – distinguish: Yes (writer explicitly agrees), No (writer explicitly disagrees), NG (writer doesn\'t comment on this). Test 8 YNG statements.', url: IELTS },
-        { id:'w', type:'writing', title:'Task 2: An ninh lương thực toàn cầu',  detail:'Đề: "The world has enough food to feed everyone, yet millions suffer from hunger. What are the main reasons for this, and what measures could help solve the problem?" Viết 40p. Dùng precise vocabulary và specific examples (regions, statistics if known).' },
+        r('r','📖 Topic TR12: Arts & Culture (70 từ)','Học 70 từ academic Arts (flashcard TR12): aesthetics, avant-garde, baroque, cinematic, contemporary, cultural imperialism, cultural patrimony, dramaturgy, ethnomusicology, heritage, iconography, impressionism, indigenous, intangible heritage, linguistics, modernism, musicology, narrative, neoclassicism, oral tradition, postmodernism, renaissance, semiotics, surrealism, symbolism...', CAMDICT),
+        l('l','🎧 Dictation: IELTS S4 × 2 (không học vocab mới)','CamListen 600 hoàn thành! Từ hôm nay: KHÔNG học vocab mới cho Listening. Chỉ luyện nghe. [80p] Nghe 2 IELTS Section 4 liên tiếp → chép chính tả → check transcript. Target: ≥9/10 cho mỗi S4.', IELTS),
+        g('g','📝 Ngữ pháp: Fronting & Inversion','Inversion after negative adverbials: "Never have I seen such...", "Not only did they...", "Rarely is it the case that..." Fronting: "Particularly concerning is the rise of..." Viết 6 câu về poverty/inequality.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng văn hóa ẩm thực',              detail:'Học 20 từ: cuisine, culinary tradition, gastronomy, staple food, processed food, fast food, junk food, dietary habits, nutrition, micronutrient deficiency, obesity, food labelling, food miles, farm-to-table, veganism, vegetarianism, food allergy, intolerances, fermentation, artisan food.' },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Food & diet',      detail:'Nghe episode về food, diet, nutrition, hoặc farming. Ghi: (1) how does the presenter use examples to support arguments? (2) 3 topic-specific idioms or expressions (e.g. food for thought, a bitter pill to swallow). Mimic the speaker\'s intonation.', url: BBC6 },
-        { id:'s', type:'speaking',title:'Part 2+3: Food & culture',             detail:'Part 2: "Describe a traditional dish from your country that you particularly enjoy. Say: what it contains, how it is prepared, when people usually eat it, and explain why you like it." Part 3: "How have eating habits changed in your country over the past 50 years?"' },
+        w('w1','✍️ 100 Collocations: Poverty & Inequality (W2T21)','Học 100 colloc nghèo đói (W2T21): reduce poverty rates, address income inequality, implement social safety nets, eradicate extreme poverty, promote economic empowerment, provide access to education, combat social exclusion, ensure food security, strengthen welfare systems, break the cycle of poverty...'),
+        w('w2','✍️ Task 2 Essay: Poverty','Đề: "In many countries, there is a growing gap between the rich and the poor. What factors contribute to this, and what can be done to reduce the gap?" Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm: Phase 3 Writing Standard','Phase 3 target: Band 7.0 writing. Checklist: (1) Complex sentences (relative clauses, conditionals)? (2) Wide vocab range (no repetition)? (3) Clear progression (each paragraph builds on previous)? (4) Error-free grammar?'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Collocations thực phẩm & nông nghiệp', detail:'Học 20 cụm: grow crops, rear livestock, implement crop rotation, apply fertiliser, use irrigation systems, combat food waste, ensure food safety, address nutritional deficiencies, promote sustainable agriculture, adopt GM crops, reduce food miles, increase crop yield, maintain soil quality, fight world hunger, develop food policy.' },
-        { id:'g', type:'grammar', title:'Nominalization (danh từ hóa) học thuật', detail:'"Farmers produce food" → "The production of food by farmers..." / "Scientists discovered..." → "The discovery of..." / "The government failed..." → "The government\'s failure to..." Nominalization makes writing more formal. Chuyển 10 câu về food/farming sang nominalized form.', url: BCG },
-        { id:'w', type:'writing', title:'Task 1: Quy trình sản xuất thực phẩm', detail:'Mô tả process diagram: how bread is made (from wheat grain to packaged loaf). Dùng passive voice, sequencing, precise process verbs (is harvested, is milled, is mixed, is baked, is packaged). Viết ≥150 từ trong 20 phút.' },
+        s('s1','🗣️ SP21: Weather & Climate (50 từ)','Học 50 từ SP21 Weather (flashcard SP21): temperature, humidity, precipitation, drought, flood, heatwave, blizzard, forecast, climate change, seasons, monsoon, tropical, temperate, arid, maritime, continental, meteorology, extreme weather, storm, natural disaster... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Favourite Season or Weather','Cue card: "Describe the type of weather you like best. Say: what weather it is, when it usually occurs, what you like to do in this weather, and why you prefer it." 1p prep → 2p nói.'),
+        v('rv','🔄 Ôn SP17+SP18 (100 từ)','Quiz SP17 Fashion + SP18 Festivals = 100 từ. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'VOA/BBC: Modern farming technology',   detail:'Đọc bài về precision agriculture, vertical farming, hoặc lab-grown meat. Phân tích argument structure: (1) introduce problem, (2) propose solution, (3) address counterarguments, (4) conclusion. Outline argument structure bằng 5 bullet points.', url: VOA },
-        { id:'l', type:'listening',title:'VOA: Global food issues',              detail:'Nghe VOA về world hunger, food prices, hoặc agricultural policy. Ghi specific data: regions affected, percentage changes, time frames, named organisations. Practice: use this data in a speaking Part 3 discussion.', url: VOA },
-        { id:'s', type:'speaking',title:'Part 3: Thực phẩm và xã hội',         detail:'Discuss: (1) What factors influence people\'s food choices? (2) Should governments do more to promote healthy eating? (3) How has the globalisation of food chains affected local food cultures? Sử dụng sophisticated vocabulary và structures.' },
+        r('r','📖 Topic TR13: Global Issues (70 từ) — READING VOCAB DONE! ✅','Học 70 từ cuối: Global Issues (flashcard TR13): arms proliferation, climate refugee, cyber warfare, demographic dividend, disinformation, geopolitics, humanitarian crisis, inequality, international law, pandemics, peace negotiation, populism, protectionism, sanction, terrorism, transnational, UN, war crime, xenophobia... ĐÃ HOÀN THÀNH 1500 từ học thuật (600 CamCore + 900 Topic)! Từ tuần 12: Reading = Cambridge IELTS practice!', CAMDICT),
+        l('l','🎧 Dictation: IELTS S3 × 2 intensive','[80p] Nghe 2 IELTS Section 3 (discussion between speakers) → chép chính tả → check → note: phân biệt opinions của từng speaker như thế nào? S3 thường có distractors.', IELTS),
+        g('g','📝 Ngữ pháp: Hedging Language','may, might, could, tend to, appear to, seem to, it is possible that, evidence suggests, arguably. "This may indicate..." / "It could be argued that..." / "The data suggests...". Viết 8 hedging sentences về global issues.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'AWL – Batch 8 (Academic precision)',   detail:'AWL Batch 8: impact, implement, imply, impose, indicate, individual, inevitable, infrastructure, initial, instance, integrate, internal, interpret, intervene, involve, isolate, issue, justify, label, layer. Write 10 sentences using these words in academic contexts.' },
-        { id:'g', type:'grammar', title:'Advanced sentence structure variety',   detail:'Practice: (1) compound-complex sentences, (2) fronted adverbials ("Despite rising costs, demand for organic food continues to grow."), (3) embedded clauses, (4) parallel structure ("Organic farming preserves soil quality, reduces chemical use, and supports biodiversity."). Write paragraph mixing 4 structures.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Nên ăn ít thịt hơn không?',   detail:'Đề: "Many nutritionists and environmentalists argue that people in developed countries should eat much less meat. How far do you agree with this view?" Viết 40p. Dùng nominalization, fronted adverbials và parallel structures từ bài grammar hôm nay.' },
+        w('w1','✍️ 100 Collocations: Gender & Equality (W2T22)','Học 100 colloc bình đẳng (W2T22): promote gender equality, close the gender pay gap, empower women, challenge gender stereotypes, combat sexual harassment, increase female representation, support LGBTQ+ rights, address gender-based violence, implement equal opportunity policies, foster inclusive workplaces...'),
+        w('w2','✍️ Task 2 Essay: Gender Equality','Đề: "In many societies, men are still given more opportunities than women in the workplace. What are the causes and what can be done to address this?" Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm: GRA tiêu chí Band 7','Band 7 Grammar: "uses a variety of complex structures with some flexibility and accuracy." Kiểm tra: (1) có ít nhất 3 loại complex structure không? (2) Lỗi ngữ pháp có ảnh hưởng đến meaning không?'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Agriculture Band 7',    detail:'Làm IELTS passage về agricultural innovation hoặc global food trade (Band 7 difficulty). Focus: Summary Completion (choose from a box of words, not from text) – read full list of options first, eliminate clearly wrong ones, look for grammatical fit.', url: IELTS },
-        { id:'l', type:'listening',title:'TED-Ed: Food & sustainability',       detail:'Xem TED-Ed về food systems, food waste, hoặc sustainable eating. Ghi: (1) shocking statistic, (2) counter-intuitive finding, (3) call to action. Then: give a 2-minute Speaking Part 3-style response about the topic.', url: TED },
-        { id:'s', type:'speaking',title:'Full Speaking Mock: Food & Agriculture', detail:'Full 15-minute mock: Part 1 (cooking habits, favourite food, diet), Part 2 (describe a meal you ate at a restaurant), Part 3 (food security, sustainable eating, global food distribution). Target: Band 7 – use sophisticated vocabulary without pausing to search for words.' },
+        s('s1','🗣️ SP22: Language Learning (50 từ)','Học 50 từ SP22 Language Learning (flashcard SP22): bilingual, multilingual, fluency, proficiency, vocabulary, grammar, syntax, pronunciation, accent, mother tongue, second language, immersion, language exchange, translation, interpretation, linguistic, dialect, idiomatic expression, language acquisition, polyglot... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Learning a Language','Cue card: "Describe your experience of learning a foreign language. Say: what language, how you learned it, what challenges you faced, and whether you think it has been worth the effort." 1p prep → 2p nói.'),
+        w('t1','📊 Task 1: All 4 chart types practice','Làm 4 mini-Task 1 (10p each) với 4 chart types khác nhau: bar, line, pie, table. Chỉ viết 2 đoạn cho mỗi bài (overview + 1 body). Luyện tốc độ và versatility.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Ôn 80 từ tuần 11 – Food & Agriculture', detail:'Quiz: test all 80 words. Advanced challenge: for 10 random words, produce a collocation AND a sentence in an IELTS writing style (e.g. "crop yield": "Rising crop yields in Southeast Asia have contributed to regional food security.")' },
-        { id:'r', type:'reading', title:'2 IELTS passages: Food & farming',     detail:'2 passages (40 phút): 1 về food culture, 1 về agricultural policy. Practice time management: each passage = 20 mins (13 questions = ~90 seconds per question). If stuck, move on and come back.', url: IELTS },
-        { id:'w', type:'writing', title:'Review Task 1 process + Task 2 essays', detail:'Review bài writing tuần 11. Specific focus: (1) Is Task 1 process accurately described with correct sequencing? (2) Task 2: is there a clear thesis statement in the introduction? (3) Does each body paragraph begin with a topic sentence? Rewrite weakest paragraph.' },
+        v('rev','🔄 Ôn Topic TR7+TR8 (140 từ)','Quiz TR7 Business + TR8 Government = 140 từ. Spaced repetition Phase 3. Target ≥90%.'),
+        v('rev2','🔄 Ôn CamListen BL13+BL14 (60 từ)','Quiz CamListen BL13 + BL14 = 60 từ (spelling). Target ≥54/60.'),
+        v('pl','💡 Tổng kết tuần 11 — MILESTONE vocab!','ĐÃ HOÀN THÀNH: ✅ CamCore 600 (tuần 5) ✅ CamListen 600 (tuần 10) ✅ Topic Reading 900 (tuần 11). Tổng 1500 từ học thuật! Từ tuần 12: Reading = Cambridge IELTS practice thực chiến.'),
       ],
     ],
   },
 
-  // ── Week 12: Government & Politics ───────────────────────
+  // ── Week 12: Cambridge IELTS Reading Practice ──────────────
   {
-    theme: 'Chính phủ & Chính trị', themeEn: 'Government & Politics', phase: 3,
+    theme: 'Youth & Energy + Cambridge Reading Practice', themeEn: 'Youth, Energy & Cambridge Reading', phase: 3,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng hệ thống chính trị',            detail:'Học 20 từ: democracy, dictatorship, monarchy, republic, parliament, senate, constitution, legislation, policy, coalition, opposition, referendum, election, ballot, constituency, electoral system, proportional representation, majority vote, political party, manifesto.' },
-        { id:'g', type:'grammar', title:'Abstract noun phrases (advanced)',      detail:'"The lack of political transparency undermines public trust." / "The failure of governments to address inequality has led to widespread discontent." / "An increasing tendency towards populism has emerged in many democracies." Write 8 abstract noun phrase sentences about politics.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Vai trò chính phủ trong kinh tế', detail:'Đề: "Some people believe that the government should control major industries and public services. Others argue that private companies should manage these areas. Discuss both views and give your opinion." Dùng abstract noun phrases và hedging language.' },
+        r('r','📖 Cambridge IELTS Reading Practice (90p) — Bắt đầu!','Làm 1 bộ Cambridge IELTS Academic Reading test (3 passages, 40 câu, 60p tính giờ). Sau khi làm: chấm điểm, phân tích từng câu sai, ghi error type (vocab/paraphrase/inference/time). Target Phase 3 cuối: ≥34/40.', IELTS),
+        l('l','🎧 Dictation: IELTS S4 intensive (40p)','Nghe IELTS Section 4 → chép chính tả không nghe lại → check → phân loại lỗi: (a) không nghe kịp, (b) từ vựng không biết, (c) spelling sai. Lỗi nào nhiều nhất? Plan cải thiện.', IELTS),
+        g('g','📝 Ngữ pháp: Advanced Comparison','significantly more/less, considerably higher, roughly twice, the highest proportion of, compared with/to, relative to, in contrast. Viết 6 câu so sánh dùng data về youth/energy.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng tham nhũng & quản trị',         detail:'Học 20 từ: corruption, accountability, transparency, governance, bureaucracy, red tape, lobbying, civil servant, public sector, nepotism, bribery, whistleblower, oversight, checks and balances, rule of law, independent judiciary, freedom of press, civil liberties, human rights, geopolitics.' },
-        { id:'r', type:'reading', title:'BBC World: Political news',              detail:'Đọc bài BBC World về a political issue (election, government policy, international relations). Identify: (1) the political actors mentioned, (2) their stated positions, (3) potential consequences mentioned. Write 3 IELTS Y/N/NG statements from this article.', url: BBCWRD },
-        { id:'s', type:'speaking',title:'Part 2: Nhà lãnh đạo bạn ngưỡng mộ',  detail:'Cue card: "Describe a leader you admire. Say: who they are, what their achievements are, what qualities they possess, and explain why you think they are an effective leader." Use: visionary, principled, decisive, empathetic, perseverant. 2 minutes.' },
+        w('w1','✍️ 100 Collocations: Youth & Elderly (W2T23)','Học 100 colloc thanh niên (W2T23): empower young people, address youth unemployment, tackle ageing population, support elderly care, bridge the generation gap, promote intergenerational dialogue, reduce youth crime, provide mentorship programmes, address digital divide among elderly, create age-friendly communities...'),
+        w('w2','✍️ Task 2 Essay: Youth','Đề: "Young people today are more concerned with their own careers and personal success than with contributing to society as a whole. To what extent do you agree?" Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm: Band 7 TA Checklist','TA Band 7: "addresses all parts of the task, presents a clear position throughout, presents, extends and supports main ideas." Mỗi body paragraph: có 1 clear claim + 2 supporting sentences + 1 example không?'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng chính sách công',               detail:'Học 20 từ: implement policy, draft legislation, pass a bill, repeal a law, enforce regulations, allocate budget, introduce tax reform, cut public spending, subsidise industries, regulate markets, address social inequality, promote social welfare, fund public services, decriminalise activities, ban substances.' },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Politics',          detail:'Tìm BBC 6 Min English về politics, democracy, voting, or government policy. Ghi: (1) how speakers express opinions about politics (diplomatically, using hedging), (2) 3 political vocabulary items used, (3) what question the episode asks. Answer it in 1 minute.', url: BBC6 },
-        { id:'w', type:'writing', title:'Task 2: Bỏ phiếu có nên bắt buộc?',   detail:'Đề: "Voting in elections should be compulsory. To what extent do you agree or disagree?" Viết 40p. Challenge: use at least 1 nominalization, 1 inversion, 1 cleft sentence, and 1 concession clause. Mark them with [N], [I], [C], [CC] in your essay.' },
+        s('s1','🗣️ SP23: Volunteering & Community (50 từ)','Học 50 từ SP23 Volunteering (flashcard SP23): volunteer, charity, community service, non-profit organisation, fundraising, donation, social responsibility, humanitarian aid, grassroots movement, civic engagement, altruism, philanthropy, social enterprise, mentoring, outreach programme, environmental cleanup... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Volunteering Experience','Cue card: "Describe a time when you volunteered or helped others without payment. Say: what you did, who you helped, how long for, and explain how you felt about it." 1p prep → 2p nói.'),
+        v('rv','🔄 Ôn SP19+SP20 (100 từ)','Quiz SP19 Shopping + SP20 Accommodation = 100 từ. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Political science',      detail:'Làm IELTS passage về political science hoặc international relations (Band 7.5). Focus: Matching Information with paragraphs. Strategy: read each information statement, identify 2-3 keywords, scan paragraphs quickly for those keywords or paraphrases.', url: IELTS },
-        { id:'l', type:'listening',title:'VOA: Government & society',           detail:'Nghe VOA về government policy, political reform, hoặc civic engagement. Ghi: policy names, % or statistics, countries/organisations involved, outcomes. Practice restating these facts in your own words (paraphrase for Speaking Part 3).', url: VOA },
-        { id:'s', type:'speaking',title:'Part 3: Nền dân chủ & chính trị',     detail:'Discuss: (1) To what extent do you think politicians can be trusted? (2) Why do you think voter turnout is declining in many countries? (3) How important is it for ordinary citizens to be involved in politics? Aim for Band 7+ vocabulary: accountability, civic engagement, transparency.' },
+        r('r','📖 Cambridge IELTS Reading Practice (90p)','Làm Cambridge IELTS Reading test mới (3 passages, 40 câu, 60p). Focus tuần này: Matching Headings — đọc only first + last sentence của mỗi paragraph để identify umbrella concept. Check score + analyse.', IELTS),
+        l('l','🎧 Dictation: IELTS S3 × 2 (80p)','Nghe 2 IELTS S3 liên tiếp → chép → check. S3 key skill: identify "distractor" — speaker mentions A but then changes mind to B. Phân tích: câu nào bị distractor lừa?', IELTS),
+        g('g','📝 Ngữ pháp: Parallel Structures','Both X and Y, either X or Y, not only X but also Y, neither X nor Y. "Both renewable energy AND energy efficiency are essential." Viết 8 sentences với parallel structures về youth/energy.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'AWL – Batch 9 (Government & policy)',  detail:'AWL Batch 9: legislate, liberal, likely, link, locate, major, maintain, manifest, mature, mediate, method, minimise, monitor, motive, mutual, network, notwithstanding, obtain, oppose, orient. Write 10 sentences in political contexts.' },
-        { id:'g', type:'grammar', title:'Hypothetical & speculative language',   detail:'"Were the government to invest more in education, long-term productivity would increase." / "It could be speculated that corruption undermines economic growth." / "One might argue that..." / "It seems plausible that..." Practice: write 6 speculative sentences about political issues.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Sức mạnh của chính phủ',       detail:'Đề: "Some people think that governments should do more to control the activities of large corporations. Others argue that businesses should be allowed to operate as freely as possible. Discuss both views." Viết 40p. Aim for Band 7 in all 4 criteria.' },
+        w('w1','✍️ 100 Collocations: Energy & Sustainability (W2T24)','Học 100 colloc năng lượng (W2T24): harness renewable energy, transition to clean energy, achieve net-zero emissions, decarbonise industry, invest in solar infrastructure, phase out coal, develop green hydrogen, improve energy efficiency, promote energy storage, combat energy poverty, implement carbon pricing...'),
+        w('w2','✍️ Task 2 Essay: Energy','Đề: "Nuclear power is the most practical solution to the world\'s energy needs. To what extent do you agree?" Outline 5p → Draft 40p. Dùng W2T24.'),
+        v('ck','🔍 Tự chấm: LR Band 7 standard','LR Band 7: "uses a sufficient range of vocabulary to allow flexibility and precision." Kiểm tra: có ít nhất 8 collocations từ W2T24? Có dùng nominalisation (use→utilisation, grow→growth)?'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Full practice Band 7.5', detail:'Làm 2 IELTS passages (40 phút): topics including government/politics. Trước khi làm: time yourself (20 min per passage). Sau khi làm: for each wrong answer, write a 1-sentence explanation of why the right answer is correct.', url: IELTS },
-        { id:'l', type:'listening',title:'Full IELTS Listening: Political topics', detail:'Làm Full IELTS Listening test về social/political topics. Challenge: predict the type of word needed for each blank before you listen (noun/verb/number/adjective). Check how many predictions were correct.', url: IELTS },
-        { id:'s', type:'speaking',title:'Full Speaking Mock: Politics',         detail:'Full 15-minute mock about politics: Part 1 (interest in politics, voting), Part 2 (describe a political event you followed in the news), Part 3 (role of government, democracy, international politics). Focus: use sophisticated vocabulary without hesitation.' },
+        s('s1','🗣️ SP24: Future Plans & Ambitions (50 từ)','Học 50 từ SP24 Future (flashcard SP24): ambition, aspiration, career goal, personal development, long-term plan, short-term goal, milestone, achievement, opportunity, challenge, determination, perseverance, optimistic, realistic, pursue, accomplish, prioritise, sacrifice, compromise, envision... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Future Plan or Dream','Cue card: "Describe something you hope to do in the future. Say: what it is, when you plan to do it, what steps you are taking, and why this is important to you." 1p prep → 2p nói.'),
+        w('t1','📊 Task 1: Cambridge IELTS T1 timed','Làm Cambridge IELTS Task 1 thật (20p tính giờ). Sau khi làm: so sánh với model answer, ghi 3 structures bạn không dùng nhưng model answer dùng. Học và apply lần sau.', IELTS),
       ],
       [
-        { id:'v', type:'vocab',   title:'Ôn 80 từ tuần 12 – Government',       detail:'Advanced review: For 15 key words from week 12, write: (1) definition in English, (2) 1 collocation, (3) 1 antonym or related word. E.g. "corruption: the abuse of power for private gain; widespread/endemic corruption; transparency (antonym)."' },
-        { id:'r', type:'reading', title:'2 passages: Government & policy',      detail:'2 passages (40 phút) về political and policy topics. This week\'s challenge: attempt Matching Headings passages without reading the passage first—just read headings and first sentence of each paragraph. Compare score with full-reading strategy.', url: IELTS },
-        { id:'w', type:'writing', title:'Task 1+2: Government topics',          detail:'Task 1 (20p): pie charts về government spending distribution in 2 countries. Task 2 (40p): "International cooperation is essential to solving global problems. To what extent do you agree?" Aim for essay with no grammar errors.' },
+        v('rev','🔄 Ôn Topic TR9+TR10 (140 từ)','Quiz TR9 Media + TR10 Transport = 140 từ. Target ≥90%.'),
+        v('rev2','🔄 Ôn CamListen BL15+BL16 (60 từ)','Quiz CamListen BL15 + BL16 = 60 từ. Target ≥54/60.'),
+        v('pl','💡 Tổng kết tuần 12','Cambridge Reading practice started! Writing: T23+T24. Speaking: SP23+24. Đang Phase 3 — cần tăng tốc để đạt Band 7 writing.'),
       ],
     ],
   },
 
-  // ── Week 13: Media & Journalism ──────────────────────────
+  // ── Week 13: Animal Rights & Freedom ──────────────────────
   {
-    theme: 'Truyền thông & Báo chí', themeEn: 'Media & Journalism', phase: 3,
+    theme: 'Động vật & Tự do', themeEn: 'Animal Rights & Freedom', phase: 3,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng báo chí & truyền thông',       detail:'Học 20 từ: journalism, broadcast, censorship, propaganda, editorial, subscription, click-bait, algorithm, misinformation, disinformation, fact-checking, media bias, echo chamber, filter bubble, freedom of press, independent media, tabloid, broadsheet, investigative journalism, press release.' },
-        { id:'g', type:'grammar', title:'Hedging language cho học thuật',        detail:'"It could be argued that media bias distorts public understanding." / "There is some evidence to suggest that social media exacerbates polarisation." / "This claim appears to be supported by..." / "It remains unclear to what extent...". Write 8 hedged sentences about media.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Fake news và trách nhiệm',     detail:'Đề: "The rise of fake news is the most serious problem affecting journalism today. To what extent do you agree?" Viết 40p. Dùng hedging language và evidence-based arguments.' },
+        r('r','📖 Cambridge IELTS Reading (90p) — Matching Headings focus','Làm Cambridge Reading test (60p). Focus: T/F/NG — "NOT GIVEN" có nghĩa là KHÔNG được confirm NOR deny bởi passage (không phải "text doesn\'t mention it"). Chấm + analyse câu T/F/NG sai.', IELTS),
+        l('l','🎧 Dictation: S4 × 2 — Band 8 Target (≥9/10)','Nghe 2 IELTS S4 liên tiếp → chép → target: ≥9/10 cho MỖI section. Nếu không đạt: nghe lại đoạn sai và phân tích tại sao miss.', IELTS),
+        g('g','📝 Ngữ pháp: Grammar for Speaking Fluency','Connected speech: "used to" /juːstə/, "going to" /ɡənə/, "want to" /wɒnə/. Linking words in speaking: "As I was saying...", "Building on that...", "What I mean is...". Luyện nói 5 câu dùng natural connected speech.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng digital media & social media', detail:'Học 20 từ: content creator, influencer, viral content, engagement rate, monetisation, algorithm, digital platform, streaming, podcast, vlog, user-generated content, data analytics, targeted advertising, online community, hashtag trend, fact-checker, digital literacy, media consumption, news feed, paywall.' },
-        { id:'r', type:'reading', title:'IELTS Reading: Media & communication',  detail:'Làm IELTS passage về media influence, journalism ethics, hoặc social media impact. Focus: flow-chart completion. Strategy: headings/labels in diagram show the sequence; find relevant text section and read for detailed information to fill blanks.', url: IELTS },
-        { id:'s', type:'speaking',title:'Part 2+3: Chương trình TV yêu thích', detail:'Part 2: "Describe a TV show, podcast, or online channel you enjoy watching/listening to. Say: what it is about, how you discovered it, why you enjoy it, and whether you would recommend it." Part 3: "How has digital media changed the way people consume news?"' },
+        w('w1','✍️ 100 Collocations: Animal Rights (W2T25)','Học 100 colloc động vật (W2T25): protect animal rights, ban animal testing, combat illegal wildlife trade, preserve biodiversity, prevent species extinction, regulate factory farming, promote veganism, raise awareness of animal cruelty, enforce wildlife protection laws, support conservation programmes...'),
+        w('w2','✍️ Task 2 Essay: Animal Rights','Đề: "Some people argue that it is acceptable to use animals in medical research. Others strongly disagree. Discuss both views and give your own opinion." Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm: "Discuss Both Views + Opinion" format','Cấu trúc: intro (both views + your position) + body 1 (view A) + body 2 (view B) + body 3 (own opinion/evaluation) + conclusion. Kiểm tra: opinion ở body 3 có trùng với intro không (phải nhất quán!)?'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Collocations truyền thông',             detail:'Học 20 cụm: spread misinformation, consume news, access information, publish an article, edit content, regulate social media, monitor online activity, produce investigative reports, combat fake news, ensure press freedom, challenge media bias, engage with content, share a post, go viral, gain followers.' },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Media',             detail:'Nghe episode về media, journalism, hoặc social media. Ghi: (1) how speakers evaluate sources of information, (2) any examples of fake news or media bias mentioned, (3) what solutions are discussed. Practice critical analysis of media in speaking.', url: BBC6 },
-        { id:'w', type:'writing', title:'Task 2: Mạng xã hội: có lợi hay có hại?', detail:'Đề: "Social media has had more negative effects on society than positive ones. To what extent do you agree or disagree?" Viết 40p. Aim: varied sentence openers (Every paragraph starts differently: one with concession, one with statistics, one with example, one with question).' },
+        s('s1','🗣️ SP25: Memories & Past Events (50 từ)','Học 50 từ SP25 Memories (flashcard SP25): childhood, nostalgia, recollection, memorable, unforgettable, significant, turning point, milestone, anniversary, reminisce, flashback, souvenir, keepsake, photograph, diary, reunion, tradition, legacy, generation, bittersweet... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Memorable Childhood Memory','Cue card: "Describe a happy memory from your childhood. Say: what happened, where you were, who was with you, and explain why this memory is important to you." 1p prep → 2p nói.'),
+        v('rv','🔄 Ôn SP21+SP22 (100 từ)','Quiz SP21 Weather + SP22 Language Learning = 100 từ. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'VOA/BBC: Media industry changes',      detail:'Đọc bài về the decline of print media, rise of podcasts, hoặc social media regulation. Identify: (1) main problem described, (2) causes given, (3) solutions proposed. Compare: how does the author\'s tone differ from an IELTS passage (more journalistic vs more academic)?', url: BBCTECH },
-        { id:'l', type:'listening',title:'VOA: Journalism & media',              detail:'Nghe VOA về press freedom, journalism in crisis countries, hoặc media regulation. Ghi: countries mentioned + their media situation, any laws or policies named, expert opinions. Use this info in a Part 3 discussion about press freedom.', url: VOA },
-        { id:'s', type:'speaking',title:'Part 3: Tự do báo chí & truyền thông', detail:'Discuss: (1) Should governments be allowed to control what media publishes? (2) Are social media companies responsible for the content posted on their platforms? (3) How can people identify fake news? Use: "From a journalistic perspective...", "In a democratic society..."' },
+        r('r','📖 Cambridge IELTS Reading (90p) — MCQ focus','Làm Cambridge Reading test (60p). Focus: Multiple Choice — eliminate wrong options one by one before selecting. "Option A is wrong because..." technique. Chấm + analyse.', IELTS),
+        l('l','🎧 Dictation: S1+S2+S3+S4 full (80p)','Full IELTS Listening dictation (tất cả 4 sections). Target: S1=10/10, S2=9/10, S3=8/10, S4=8/10. Phân tích section nào yếu nhất sau đó.', IELTS),
+        g('g','📝 Ngữ pháp: Grammar for Writing Precision','Zero-error rule: viết 150 từ về animal rights. Sau đó: kiểm tra (1) subject-verb agreement, (2) article errors, (3) preposition errors, (4) word form errors. Sửa từng lỗi. Target: ≤2 errors.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'AWL – Batch 10 (Communication focus)', detail:'AWL Batch 10: output, overall, parallel, participate, perceive, positive, potential, previous, primary, principle, prior, professional, prohibit, proportion, publish, purchase, range, ratio, react, remove. Practice in sentences about media and communication.' },
-        { id:'g', type:'grammar', title:'Advanced grammar: sentence variety audit', detail:'Take your last 3 Task 2 essays. Analyse: (1) How many sentence types? (simple/compound/complex/compound-complex) (2) Do all sentences start the same way? (3) Any grammar errors? Mark errors, categorize (tense/agreement/article/punctuation), count each type. Set a grammar goal for remainder of Phase 3.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Ảnh hưởng của TV với trẻ em',  detail:'Đề: "Watching television is bad for children. To what extent do you agree or disagree?" Advanced challenge: Aim for Band 7.5 – use at least 2 nominalisations, 1 inversion, sophisticated cohesive devices (as a result of which, in light of which).' },
+        w('w1','✍️ 100 Collocations: Freedom & Human Rights (W2T26)','Học 100 colloc tự do (W2T26): protect civil liberties, uphold human rights, combat censorship, promote freedom of expression, ensure due process, fight discrimination, safeguard privacy, challenge authoritarian regimes, support democracy, strengthen rule of law, protect whistleblowers...'),
+        w('w2','✍️ Task 2 Essay: Freedom','Đề: "In some countries, governments are increasingly monitoring their citizens\' activities. Is this a positive or negative development?" Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm: Band 7+ checklist tổng hợp','Band 7 Writing: (1) TA: fully addressed; (2) CC: clear progression; (3) LR: wide range, few errors; (4) GRA: variety of complex structures, few errors. Tự rate mỗi tiêu chí 1-9 và ghi.'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Media passage Band 7.5', detail:'Làm IELTS Reading passage về media studies (Band 7.5 difficulty). After completing: analyse the passage itself—identify the author\'s argument, find the topic sentence of each paragraph, notice how evidence is introduced (According to..., Research by X shows...).', url: IELTS },
-        { id:'l', type:'listening',title:'IELTS Listening: Media S3+S4',        detail:'Làm S3 (thảo luận về media project) + S4 (bài giảng về history of communication). S3: listen for agreement/disagreement between speakers. S4: predict academic vocabulary that might be used based on section headings.', url: IELTS },
-        { id:'s', type:'speaking',title:'Full Speaking Mock: Media',             detail:'Full 15-min mock: Part 1 (news consumption habits, social media use), Part 2 (describe a news story that interested you), Part 3 (media influence, journalism ethics, social media regulation). Record, self-assess, specifically target: Are you using hedging language? Academic vocabulary?' },
+        s('s1','🗣️ SP26: Animals & Pets (50 từ)','Học 50 từ SP26 Animals (flashcard SP26): domestic animal, wild animal, endangered species, habitat, instinct, prey, predator, breeding, veterinarian, pet ownership, companion animal, wildlife conservation, zoo, aquarium, migration, nocturnal, hibernation, biodiversity, ecosystem... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Pet or Animal You Like','Cue card: "Describe an animal you find interesting. Say: what it is, where you saw it or learned about it, what is special about it, and why you find it interesting." 1p prep → 2p nói.'),
+        w('t1','📊 Task 1: Full IELTS T1 mock + review','Làm 1 Task 1 Cambridge IELTS (20p nghiêm túc). Sau đó: viết lại bài hoặc edit dựa trên model answer. "Re-write" strategy: học expressions từ model answer, integrate vào bài của mình.', IELTS),
       ],
       [
-        { id:'v', type:'vocab',   title:'Ôn 80 từ tuần 13 – Media',            detail:'Advanced quiz: define 20 terms in English (no Vietnamese). Then: write 3 IELTS-level sentences using words from Week 13 that you frequently misuse or forget. Practise saying sentences aloud.' },
-        { id:'r', type:'reading', title:'2 IELTS passages: Media',              detail:'2 passages about media and communication (40 minutes). New challenge: after completing, re-read each passage and write a 50-word summary of the author\'s main argument. This improves both reading comprehension and academic writing.', url: IELTS },
-        { id:'w', type:'writing', title:'Task 1+2: Media statistics',           detail:'Task 1 (20p): tables showing news source usage (%) by age group in 2015 and 2023. Task 2 (40p): "Freedom of the press is essential to a healthy democracy. Do you agree?" Review your essay against Band 7 descriptors.' },
+        v('rev','🔄 Ôn Topic TR11+TR12 (140 từ)','Quiz TR11 Food + TR12 Arts = 140 từ. Target ≥90%.'),
+        v('rev2','🔄 Ôn CamListen BL17+BL18 (60 từ)','Quiz CamListen BL17 + BL18 = 60 từ. Target ≥54/60.'),
+        v('pl','💡 Tổng kết tuần 13','Writing: T25+T26 done. Speaking: SP25+26 done. Cambridge Reading tiến triển tốt. Listening dictation: check band estimate (số câu đúng TB / 40 × 9 ≈ band score).'),
       ],
     ],
   },
 
-  // ── Week 14: Psychology & Behaviour ──────────────────────
+  // ── Week 14: Space & Climate ───────────────────────────────
   {
-    theme: 'Tâm lý & Hành vi', themeEn: 'Psychology & Behaviour', phase: 3,
+    theme: 'Không gian & Chính sách khí hậu', themeEn: 'Space, Climate Policy', phase: 3,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng tâm lý học nhận thức',         detail:'Học 20 từ: cognition, perception, stimulus, motivation, behaviour, attitude, personality, resilience, empathy, bias, subconscious, consciousness, memory, attention, emotion, intelligence (EQ/IQ), self-esteem, identity, intrinsic motivation, extrinsic motivation.' },
-        { id:'g', type:'grammar', title:'Advanced grammar: mixed conditionals', detail:'"If he had studied psychology, he would understand human behaviour better." (past condition, present result). / "If she were more empathetic, she would have dealt with the conflict differently." (present condition, past result). Write 6 mixed conditionals about psychology/behaviour.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Hành vi của con người có thay đổi?', detail:'Đề: "Human nature is fixed and cannot be changed. Therefore, we should not try to improve people through education or rehabilitation. To what extent do you agree?" Viết 40p. Dùng mixed conditionals để express hypotheticals.' },
+        r('r','📖 Cambridge IELTS Reading (Band 7.5 target: ≥32/40)','Làm Cambridge IELTS Reading (60p). Target hôm nay: ≥32/40. Nếu không đạt: dành 30p phân tích tất cả câu sai — paraphrase technique hoặc vocabulary vấn đề?', IELTS),
+        l('l','🎧 Dictation: S4 × 2 (Band 8: ≥9/10 mỗi section)','Nghe 2 IELTS S4 → chép → target: ≥9/10 mỗi. S4 Band 8 yêu cầu nghe đúng cả những chi tiết nhỏ (dates, percentages, technical terms). Ghi error log chi tiết.', IELTS),
+        g('g','📝 Ngữ pháp: Error Analysis — Top 5 lỗi của bạn','Mở error log từ tuần 1-13. Xác định 5 lỗi ngữ pháp hay mắc nhất. Viết 5 câu đúng cho từng loại lỗi. Đây là "personal grammar checklist" để đọc trước ngày thi.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng hành vi xã hội',               detail:'Học 20 từ: conformity, peer pressure, groupthink, social norm, deviance, altruism, competition, cooperation, conflict, negotiation, leadership, authority, obedience, persuasion, propaganda, manipulation, social influence, bystander effect, herd mentality, in-group/out-group.' },
-        { id:'r', type:'reading', title:'IELTS Reading: Psychology research',   detail:'Làm IELTS passage về psychological research (e.g. famous experiments: Milgram, Zimbardo, Bandura). Focus: matching features (people with their research findings). Write a 3-sentence explanation of each psychological concept encountered.', url: IELTS },
-        { id:'s', type:'speaking',title:'Part 2+3: Thói quen muốn thay đổi',  detail:'Part 2: "Describe a habit you would like to change. Say: what it is, when it started, how it affects you, and explain what you could do to change it." Part 3: (1) Why is it so difficult for people to change their behaviour? (2) What role does society play in shaping individual behaviour?' },
+        w('w1','✍️ 100 Collocations: Space & Technology (W2T27)','Học 100 colloc không gian (W2T27): explore outer space, launch a satellite, conduct space research, develop space technology, colonise Mars, address space debris, privatise space exploration, fund astronomical research, achieve a Moon landing, advance scientific understanding of the universe...'),
+        w('w2','✍️ Task 2 Essay: Space','Đề: "Space exploration is a waste of money. The vast amounts of funding should be spent on tackling problems on Earth. To what extent do you agree?" Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm: Prioritisation argument structure','"Waste of money" argument: cần (1) acknowledge benefits of space, (2) BUT argue prioritising earth problems is MORE important, (3) counter-argue: space research HAS earth benefits. Kiểm tra structure phức tạp này.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Collocations tâm lý học',               detail:'Học 20 cụm: conduct a psychological study, observe behaviour, measure cognitive ability, apply behavioural theory, understand mental processes, influence decision-making, reinforce positive behaviour, challenge negative assumptions, develop emotional intelligence, overcome psychological barriers, improve self-awareness, manage stress effectively.' },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Mind & psychology', detail:'Nghe BBC 6 Min English về psychology, brain science, hoặc human behaviour. Ghi: (1) any psychological research mentioned, (2) surprising finding, (3) practical application. Then: give a 90-second speaking response about whether you agree with the findings.', url: BBC6 },
-        { id:'w', type:'writing', title:'Task 2: Áp lực đồng trang lứa',        detail:'Đề: "Young people\'s behaviour is influenced more by peer pressure than by their parents. To what extent do you agree?" Viết 40p. Dùng: psychological terminology, academic hedging, complex sentence structures. Focus on cohesion (no repetition of ideas).' },
+        s('s1','🗣️ SP27: News & Current Affairs (50 từ)','Học 50 từ SP27 News (flashcard SP27): headline, breaking news, journalist, reporter, correspondent, editorial, opinion piece, feature, investigative journalism, press release, media bias, censorship, freedom of press, social media, viral news, fake news, source, credibility, broadcast... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: News Story','Cue card: "Describe a news story that interested you recently. Say: what the story was about, how you found out about it, why it interested you, and what you think about it." 1p prep → 2p nói.'),
+        v('rv','🔄 Ôn SP23+SP24 (100 từ)','Quiz SP23 Volunteering + SP24 Future Plans = 100 từ. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'TED-Ed: Psychology & decision-making', detail:'Xem TED-Ed về cognitive biases, decision-making, hoặc social psychology. Ghi: (1) the bias/phenomenon described, (2) the research evidence, (3) how it affects everyday life. Write 100 words summarising in academic style.', url: TED },
-        { id:'l', type:'listening',title:'VOA: Mental health & wellbeing',      detail:'Nghe VOA về mental health awareness, stress management, hoặc psychological research. Ghi: specific conditions mentioned, treatment approaches, statistics about mental health globally. Discuss: How has mental health awareness changed in your country?', url: VOA },
-        { id:'s', type:'speaking',title:'Part 3: Sức khỏe tâm thần & XH',     detail:'Discuss: (1) Why do you think mental health problems are becoming more common? (2) Should employers be responsible for their employees\' mental health? (3) How can communities better support people with mental health issues? Aim for 90 seconds+ per answer.' },
+        r('r','📖 Cambridge IELTS Reading — Matching Headings Mastery','Làm Cambridge Reading test (60p). Focus: Matching Headings — heading phải cover ALL content of paragraph (umbrella concept), không chỉ một điểm. Làm xong: viết note về technique cho loại câu này.', IELTS),
+        l('l','🎧 Full IELTS Listening dictation (80p)','Full 4 sections IELTS Listening → chép → check. Ghi điểm từng section. So sánh với tuần 13: có improve không? S4 target: ≥8/10.', IELTS),
+        g('g','📝 Ngữ pháp: Band 7 Grammar Checklist','Tự tạo checklist ngữ pháp cá nhân: (1) tenses tôi hay sai, (2) articles tôi hay quên, (3) prepositions tôi hay nhầm. Viết checklist lên giấy và đặt cạnh bàn viết essay.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'AWL – Batch 11 (Academic breadth)',    detail:'AWL Batch 11: release, relevant, reluctance, remove, require, research, resolve, resource, response, restrict, retain, reveal, revise, role, route, scenario, section, seek, select, sequence. Write sentences about psychology or human behaviour.' },
-        { id:'g', type:'grammar', title:'Sophisticated grammar: full review',   detail:'Comprehensive Phase 3 grammar audit: Choose your best essay from Phase 3. Mark: [1] each use of advanced grammar (inversion, cleft, nominalisation, mixed conditional), [2] any remaining errors. Count score. Target: ≥5 advanced structures and 0 basic errors.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Hạnh phúc và thành công',      detail:'Đề: "People today spend too much time worrying about the future and not enough time enjoying the present. Do you agree?" Advanced target: write introduction with a challenging/provocative opening, not just paraphrase the question.' },
+        w('w1','✍️ 100 Collocations: Climate Action (W2T28)','Học 100 colloc khí hậu (W2T28): implement the Paris Agreement, achieve net-zero targets, transition to renewable energy, adopt carbon pricing, increase climate finance, adapt to climate change impacts, strengthen international cooperation, hold polluters accountable, protect vulnerable communities, phase out fossil fuel subsidies...'),
+        w('w2','✍️ Task 2 Essay: Climate Policy','Đề: "International cooperation is the only effective way to tackle climate change. To what extent do you agree?" Outline 5p → Draft 40p. Dùng W2T28.'),
+        v('ck','🔍 Tự chấm: Cohesion & Coherence Band 7','CC Band 7: "uses cohesive devices effectively, but there may be some inconsistency." Kiểm tra: có overused "however" và "furthermore" không? Vary connectors (nevertheless, that said, by contrast, not only...but also).'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: Psychology Band 7.5',  detail:'Làm 2 IELTS passages about psychology and human behaviour (40 min). Advanced practice: for each question you get wrong, write not just the right answer but WHY the other options were wrong (eliminate each distractor). This is the key to reaching Band 8 in Reading.', url: IELTS },
-        { id:'l', type:'listening',title:'IELTS Listening: Psychology S4',     detail:'Làm IELTS Section 4 (bài giảng về a branch of psychology). Strategy: before listening, read all questions carefully and predict topic, terminology, and types of answers needed. Check how many correct. Aim: S4 ≥8/10.', url: IELTS },
-        { id:'s', type:'speaking',title:'Full Speaking Mock: Psychology',       detail:'Full 15-min mock: Part 1 (stress, how you relax, interests), Part 2 (describe a challenging experience and how you dealt with it), Part 3 (psychology of motivation, peer pressure, societal influence on behaviour). Push yourself: no filler words like "um" or "uh"—replace with "Well...", "That\'s an interesting question...", "It seems to me that..."' },
+        s('s1','🗣️ SP28: Happiness & Success (50 từ)','Học 50 từ SP28 Happiness (flashcard SP28): well-being, contentment, fulfillment, satisfaction, joy, positivity, optimism, resilience, gratitude, mindfulness, work-life balance, achievement, purpose, meaningful, prosperity, flourish, thrive, mental health, inner peace, social connection... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Happy Memory or Event','Cue card: "Describe something that has made you particularly happy recently. Say: what it was, when it happened, who was involved, and explain why it made you happy." 1p prep → 2p nói.'),
+        w('t1','📊 Task 1: Band 7 target practice','Làm Cambridge IELTS Task 1 (20p). Target: tự chấm ≥7 cho mỗi tiêu chí. Focus đặc biệt: LR — có dùng at least 4 different ways để describe trends (rose sharply, surged, grew significantly, increased dramatically)?', IELTS),
       ],
       [
-        { id:'v', type:'vocab',   title:'Ôn 80 từ tuần 14 – Psychology',       detail:'Advanced quiz: for 20 psychology terms, write: word, definition (English), related word (e.g. motivate/motivation/motivational), and 1 collocation. E.g. "resilience: the ability to recover from difficulties; psychological resilience; build/develop resilience".' },
-        { id:'r', type:'reading', title:'Full Reading practice + analysis',     detail:'Làm 3 IELTS Reading passages (60 phút, full exam simulation). After: detailed analysis—(1) which passage was hardest? (2) which question type was weakest? (3) how much time did you spend per passage? Set specific Phase 4 reading strategy.', url: IELTS },
-        { id:'w', type:'writing', title:'Full Writing practice: timed',         detail:'Full Writing simulation (60 min total): Task 1 (20p): bar chart về workplace stress levels. Task 2 (40p): "The increase in work-related stress is largely due to the introduction of technology into the workplace. To what extent do you agree?" Write, then self-mark all 4 criteria.' },
+        v('rev','🔄 Ôn CamListen BL19+BL20 (60 từ)','Quiz CamListen BL19 + BL20 = 60 từ. Final Cambridge Listening vocab review! Target ≥54/60.'),
+        v('rev2','🔄 Ôn Topic TR13 + CamCore B9 (110 từ)','Quiz TR13 Global Issues (70 từ) + CamCore B9 (40 từ) = 110 từ. Target ≥99/110 (90%).'),
+        v('pl','💡 Tổng kết tuần 14','Writing: T27+T28 done. Speaking: SP27+28 done. 28/30 speaking topics hoàn thành! Tuần tới: SP29+SP30 = SPEAKING VOCAB DONE! Chỉ còn 1 tuần Phase 3 nữa.'),
       ],
     ],
   },
 
-  // ── Week 15: Urban & Rural Life + MILESTONE ──────────────
+  // ── Week 15: Digital & Milestone 3 ─────────────────────────
   {
-    theme: 'Đô thị & Nông thôn', themeEn: 'Urban & Rural Life', phase: 3,
-    milestone: '🏆 Mock Test Phase 3',
+    theme: 'Digital & Tiêu dùng + Milestone 3', themeEn: 'Digital World & Milestone 3', phase: 3,
+    milestone: '🏆 Mock Test Phase 3 — Đánh giá Band 7 target',
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng quy hoạch đô thị',             detail:'Học 20 từ: urbanisation, metropolis, suburb, urban sprawl, gentrification, smart city, public amenities, green space, housing density, affordable housing, homelessness, commuter belt, city centre, mixed-use development, zoning, regeneration, infrastructure, population density, social mobility, urban decay.' },
-        { id:'g', type:'grammar', title:'Extended writing: thesis + evidence + analysis', detail:'Academic paragraph formula: TEEL – Topic sentence → Explanation → Evidence (with hedging) → Link back. Practice: write 2 body paragraphs about urbanisation using TEEL structure. Each paragraph: 80-100 words, 1 complex grammar structure.', url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Đô thị hóa và môi trường',    detail:'Đề: "As cities expand, the surrounding countryside is increasingly being built upon. What problems does this cause and what can be done about it?" Viết 40p using TEEL structure for each body paragraph.' },
+        r('r','📖 Cambridge IELTS Reading — 3 passages timed (60p strict)','Làm full Cambridge Reading test, điều kiện thi thật. Target Phase 3: ≥34/40. Sau khi làm: phân tích kỹ mỗi câu sai. Ghi: câu sai vì (a) vocab, (b) paraphrase, (c) inference, (d) time. Đây là benchmark Phase 3.', IELTS),
+        l('l','🎧 Dictation: 2×S4 (Band 8 benchmark)','Nghe 2 IELTS S4 → chép → target: ≥9/10 cho cả 2. Đây là Phase 3 benchmark cho Listening. Ghi band estimate.', IELTS),
+        g('g','📝 Ngữ pháp: Phase 3 Review','Ôn tất cả grammar points Phase 3: Fronting/Inversion, Hedging, Comparison, Parallel Structures. Viết 1 paragraph 150 từ dùng ít nhất 1 example của mỗi type. Kiểm tra zero errors.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng nông thôn & di cư',            detail:'Học 20 từ: rural area, countryside, village, agricultural community, depopulation, brain drain, migration, urbanisation, rural infrastructure, isolation, community spirit, tradition, sustainable farming, eco-tourism, countryside regeneration, rural poverty, lack of amenities, work opportunity, quality of life, cultural identity.' },
-        { id:'r', type:'reading', title:'IELTS Reading: Urban planning',         detail:'Làm IELTS passage về urban planning, smart cities, hoặc rural development. Focus: List Selection questions (Choose 2/3 from 6/7 options) – read options first, eliminate clearly wrong, verify remaining options with text evidence. Mark text for each answer.', url: IELTS },
-        { id:'s', type:'speaking',title:'Part 2+3: Sống ở thành phố vs nông thôn', detail:'Part 2: "Describe the town or village where you grew up. Say: where it is, what it looks like, what there is to do, and explain how you feel about it." Part 3: (1) What are the advantages and disadvantages of living in a big city? (2) Why do many young people move from rural to urban areas?' },
+        w('w1','✍️ 100 Collocations: Digital World & Privacy (W2T29)','Học 100 colloc thế giới số (W2T29): protect personal data, regulate digital platforms, combat cybercrime, ensure digital privacy, address the digital divide, promote digital inclusion, tackle online misinformation, develop digital literacy, implement data protection laws, monetise user data, enable contactless payment...'),
+        w('w2','✍️ Task 2 Essay: Digital World','Đề: "Governments should collect data on their citizens to protect them from crime and terrorism. To what extent do you agree?" Outline 5p → Draft 40p. Dùng W2T29.'),
+        v('ck','🔍 Tự chấm: Phase 3 Writing standard','Phase 3 target: Band 7.0 writing. Checklist cuối Phase 3: (1) TA ≥7, (2) CC ≥7, (3) LR ≥7, (4) GRA ≥7. Ghi band tự chấm. Nếu bất kỳ tiêu chí nào <7: Phase 4 phải tập trung vào tiêu chí đó.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Collocations đô thị/nông thôn',        detail:'Học 20 cụm: tackle urban sprawl, promote sustainable development, revitalise urban areas, preserve green spaces, improve public transport links, combat gentrification, attract investment to rural areas, bridge the urban-rural divide, develop affordable housing, enhance quality of life, reduce social inequality, build community centres, encourage rural tourism.' },
-        { id:'l', type:'listening',title:'BBC 6 Min English: Urban life',       detail:'Nghe BBC 6 Min English về cities, housing, urban problems hoặc countryside. Ghi: specific urban/rural issues mentioned, proposed solutions, any surprising statistics. Apply: use 3 expressions from episode in speaking Part 3 discussion about cities.', url: BBC6 },
-        { id:'w', type:'writing', title:'Task 1: Sơ đồ thay đổi thị trấn',    detail:'Mô tả 2 maps: a small town in 1995 and 2025. Changes: new road built, shops replaced by apartments, park removed, new school added. Viết 20 phút. Focus: spatial language (to the north of, adjacent to, where the X once stood, the area formerly known as...).' },
+        s('s1','🗣️ SP29: Culture & Traditions (50 từ)','Học 50 từ SP29 Culture (flashcard SP29): cultural heritage, tradition, custom, ritual, folklore, indigenous culture, cultural identity, multiculturalism, globalisation, modernisation, preservation, generation, ceremony, artifact, costume, cuisine, language, belief, values, social norms... Phát âm.', CAMDICT),
+        s('s2','🗣️ Part 2: Cultural Tradition','Cue card: "Describe a tradition or custom from your country that you think is interesting. Say: what it is, how it is practised, who participates, and explain why you think it is important to preserve." 1p prep → 2p nói.'),
+        v('rv','🔄 Ôn SP25+SP26 (100 từ)','Quiz SP25 Memories + SP26 Animals = 100 từ. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'VOA/BBC: Urbanisation challenges',     detail:'Đọc bài về rapid urbanisation in developing countries hoặc housing crisis in major cities. Analyse: what evidence does the author use? Are all claims supported? Identify 1 unsupported claim. Write a 50-word critical response.', url: BBCWRD },
-        { id:'l', type:'listening',title:'IELTS Listening: Urban planning',     detail:'Làm IELTS S2 (guide talking about new city development plan) + S4 (lecture về consequences of urbanisation). S2: Map labeling—listen for directional language (opposite, next to, adjacent to, behind, to the east). S4: Notes completion from lecture.', url: IELTS },
-        { id:'s', type:'speaking',title:'Part 3: Tương lai của đô thị',        detail:'Discuss: (1) How might cities look different in 50 years? (2) Is it the government\'s responsibility to control urban growth? (3) What can individuals do to make cities more sustainable? Use future speculation: "It seems likely that...", "Cities could potentially..."' },
+        r('r','📖 Cambridge IELTS Reading — MCQ intensive (Band 8 prep)','Làm Cambridge Reading test (60p). Focus: MCQ — eliminate wrong options với reason: "Option A incorrect because text says X, not Y." Technique này tăng accuracy từ 70% lên 90%+.', IELTS),
+        l('l','🎧 Dictation: S3 × 2 intensive','Nghe 2 IELTS S3 (multi-speaker discussions) → chép → check. S3 key: phân biệt giọng speakers + note khi speaker CHANGES opinion. Band 8 Listening = ≥35/40 tổng.', IELTS),
+        g('g','📝 Ngữ pháp: Grammar Exam Practice','Làm 20 grammar multiple choice questions (British Council Grammar / IELTS Grammar Practice). Sau đó: xem lại tất cả câu sai. Những loại câu sai nhiều nhất = weakest grammar area cần tập trung Phase 4.', BCG),
       ],
       [
-        { id:'v', type:'vocab',   title:'Comprehensive Phase 3 vocabulary review', detail:'Phase 3 mega-review: from weeks 11-15, select your 30 most difficult words. Test yourself: definition, collocation, sentence. For any you get wrong: write 3 different sentences using the word in different contexts.' },
-        { id:'g', type:'grammar', title:'Grammar: final Phase 3 mastery check', detail:'Write a 200-word academic paragraph about urban development. Include: 1 inversion, 1 cleft sentence, 1 nominalization, 1 hedging phrase, 1 fronted adverbial, 1 mixed conditional. Review for errors. This should feel natural by Phase 4.', url: BCG },
-        { id:'w', type:'writing', title:'Full Writing: timed pre-mock',         detail:'Full 60-minute Writing simulation: Task 1 (20p) pie charts on urban/rural population distribution. Task 2 (40p): "Governments should encourage businesses and individuals to move out of cities to reduce overcrowding and the pressure on urban services. Do you agree?" Aim: Band 7 across all criteria.' },
+        w('w1','✍️ 100 Collocations: Consumerism (W2T30)','Học 100 colloc tiêu dùng (W2T30): promote sustainable consumption, combat overconsumption, reduce planned obsolescence, encourage ethical purchasing, support fair trade, address advertising manipulation, limit single-use plastics, develop a circular economy, shift towards minimalism, counter materialism...'),
+        w('w2','✍️ Task 2 Essay: Consumerism','Đề: "Advertising encourages people to buy things they do not need and has a negative impact on society. To what extent do you agree?" Outline 5p → Draft 40p.'),
+        v('ck','🔍 Tự chấm: Phase 3 final essay assessment','Đây là essay cuối Phase 3. Chấm nghiêm túc theo Band Descriptors. Ghi band tự đánh giá. So sánh với essay đầu tiên (Tuần 1 W2T01). Đã cải thiện bao nhiêu?'),
       ],
       [
-        { id:'r', type:'reading', title:'Reading: Phase 3 full strategy review', detail:'Làm 3 IELTS Reading passages (60 min) mixed topics from Phase 3. After: Write a 100-word "Reading Strategy Review"—what works for you, what doesn\'t. Create your personal checklist for Phase 4: specific things to do in each of the 3 passages.', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: Full Phase 3 review',      detail:'Làm Full IELTS Listening test. After: identify and categorise all wrong answers: (1) distractor (wrong word chosen), (2) spelling error, (3) vocabulary not known, (4) too slow to write. For each category, plan a specific improvement strategy for Phase 4.', url: IELTS },
-        { id:'s', type:'speaking',title:'Phase 3 Speaking: self-analysis',      detail:'Listen back to your speaking recordings from Phase 3 (at least 3 recordings). Compare with Band 7 criteria: (1) Fluency: fewer pauses? (2) Vocabulary: more sophisticated words? (3) Grammar: more complex structures? (4) Pronunciation: clearer? Write 3 specific Phase 4 targets.' },
+        s('s1','🗣️ SP30: Urban & Rural Life (50 từ) — SP DONE! ✅','Học 50 từ SP30 Urban/Rural (flashcard SP30): urban sprawl, gentrification, commute, infrastructure, amenities, rural community, agricultural, isolated, migration, urbanisation, density, neighbourhood, metropolitan, suburb, village, countryside, green space, public transport, housing shortage, community spirit... ĐÃ HOÀN THÀNH 30 Speaking Topics!', CAMDICT),
+        s('s2','🗣️ Part 2: City vs Countryside','Cue card: "Describe a place in the countryside you have visited. Say: where it is, how you got there, what you did, and explain why you enjoyed it or not." 1p prep → 2p nói.'),
+        w('t1','📊 Task 1: Phase 3 Mock T1 + review','Làm Cambridge Task 1 (20p). Sau đó: viết detailed self-assessment: TA, CC, LR, GRA — mỗi tiêu chí ghi band tự đánh giá VÀ 1 điều cần cải thiện. Đây là baseline cho Phase 4.', IELTS),
       ],
-      // Day 105: MILESTONE Phase 3 Mock Test
+      // Day 105 = MILESTONE
       [
-        { id:'m1', type:'mock', title:'Mock Test: Full Listening (Band 7.5 target)', detail:'Full IELTS Listening (30+10 min). Use a Cambridge 15/16/17 test. Target: ≥33/40 (Band 7.5). After: analyse each wrong answer. Identify: is the problem vocabulary, speed of speech, or not recognising paraphrase? Plan solution for each.', url: IELTS },
-        { id:'m2', type:'mock', title:'Mock Test: Full Reading (Band 7.5 target)', detail:'Full IELTS Reading (60 min, 3 passages). Target: ≥33/40. Strict timing: 20 min per passage. After: full analysis—which passage type was hardest? Which question type failed most? Write your "Reading attack plan" for Phase 4.', url: IELTS },
-        { id:'m3', type:'mock', title:'Mock Test: Writing + Speaking Phase 3',  detail:'Full Writing (60 min) + Full Speaking (15 min, recorded). Get your writing assessed (use IELTS band descriptor or ask a teacher). Compare speaking to previous mocks: has your vocabulary sophistication improved? Document current band scores for W and S.' },
+        m('m1','🏆 Phase 3 Mock: Listening (Full Band 8 target)','Full IELTS Listening (40 câu, 40p). Target: ≥35/40. Nếu đạt: đang đúng hướng Band 8! Nếu chưa: note specific sections cần tập trung Phase 4.', IELTS),
+        m('m2','🏆 Phase 3 Mock: Reading (Band 8 target: ≥34/40)','Full IELTS Reading (60p). Target: ≥34/40. Chấm điểm + compare với Day 35 và Day 70. Visualise: R6→R8 progression.', IELTS),
+        m('m3','🏆 Phase 3 Mock: Writing + Speaking','Writing T1+T2 (60p). Speaking Part 1+2+3 (14p ghi âm). Tự chấm. Ghi band Phase 3. ĐÃ HOÀN THÀNH: ✅ Reading vocab 1500 từ ✅ Listening vocab 600 từ ✅ Writing 30 topics ✅ Speaking 30 topics. Phase 4: THỰC CHIẾN!'),
       ],
     ],
   },
@@ -701,224 +708,231 @@ const WEEKS: WeekDef[] = [
   //  PHASE 4 — THỰC CHIẾN (Days 106–140)
   // ════════════════════════════════════════════════════════════
 
-  // ── Week 16: Energy & Sustainability ─────────────────────
+  // ── Week 16: Hạnh phúc & Đạo đức ──────────────────────────
   {
-    theme: 'Năng lượng & Bền vững', themeEn: 'Energy & Sustainability', phase: 4,
+    theme: 'Hạnh phúc & Đạo đức', themeEn: 'Happiness, Ethics & Phase 4 Start', phase: 4,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng năng lượng tái tạo nâng cao', detail:'Học 20 từ: carbon footprint, fossil fuel, solar energy, wind power, tidal energy, nuclear fission, energy grid, off-peak hours, smart meter, peak demand, energy storage, battery technology, hydrogen fuel cell, carbon capture, net-zero emissions, decarbonisation, renewable portfolio, energy transition, feed-in tariff, green bond.' },
-        { id:'r', type:'reading', title:'IELTS Reading: Energy transition',     detail:'Làm IELTS passage về energy policy hoặc renewable energy transition (Band 7.5-8). Practice: timing 20 minutes strictly. If you don\'t know an answer, write your best guess and mark it. After: compare guesses vs answers to understand your uncertainty handling.', url: IELTS },
-        { id:'w', type:'writing', title:'Task 2: Năng lượng hạt nhân',          detail:'Đề: "Nuclear power is a clean, safe, and reliable source of energy. Therefore, it should be developed and used more. To what extent do you agree or disagree?" Aim for a Band 7.5 essay. Self-mark each criterion 1-9.' },
+        r('r','📖 Cambridge IELTS Reading (Band 8: ≥34/40)','Làm Cambridge Reading test (60p). Phase 4 target: ≥34/40. Sau khi làm: 20p phân tích TỪNG câu sai chi tiết. Key question: "What paraphrase did I miss?"', IELTS),
+        l('l','🎧 Full IELTS Listening (Band 8: ≥35/40)','Full 40-câu IELTS Listening (40p). Target: ≥35/40. Sau khi làm: nghe lại với transcript, highlight từng chỗ nghe sai. Phân loại lỗi.', IELTS),
+        v('rev','🔄 Ôn Writing T01-T05 key colloc (100 from)','Ôn 100 colloc quan trọng nhất từ W2T01-T05 (Env, Tech, Edu, Health, Society). Rapid-fire: nói colloc không nhìn sách. Target: ≥90/100 nhớ được.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Collocations energy & environment',    detail:'Học 20 cụm: harness renewable energy, reduce carbon footprint, implement green policy, transition to clean energy, achieve net zero, invest in solar infrastructure, phase out fossil fuels, adopt sustainable practices, promote energy efficiency, combat climate change, deploy wind turbines, introduce carbon pricing, develop green hydrogen, retrofit buildings, decarbonise industry.' },
-        { id:'l', type:'listening',title:'Full IELTS Listening: Energy',        detail:'Full 40-question IELTS Listening about energy topics. Phase 4 strategy: for each section, read questions (30 seconds). During listening: don\'t panic if you miss one—move to next. After: score, analyse, specifically note if you are making spelling errors (deduct marks for these).', url: IELTS },
-        { id:'s', type:'speaking',title:'Part 2+3: Energy & environment',       detail:'Part 2: "Describe an environmental initiative or green project you have heard about." Part 3: (1) Do you think renewable energy can fully replace fossil fuels? (2) What should governments prioritise: economic growth or environmental protection? (3) How can individuals reduce their energy consumption?' },
+        w('w1','✍️ 100 Collocations: Happiness & Well-being (W2T31)','Học 100 colloc hạnh phúc (W2T31): promote mental well-being, achieve work-life balance, foster personal growth, cultivate meaningful relationships, address mental health stigma, encourage mindfulness, reduce stress, improve quality of life, pursue passions, develop emotional resilience, prioritise self-care...'),
+        w('w2','✍️ Task 2 Essay: Happiness','Đề: "Many people believe that happiness is the most important thing in life. However, others think that duty and obligation are more important. Discuss both views and give your own opinion." Outline 5p → Draft 40p. Phase 4 target: Band 7.5.'),
+        v('ea','🔍 Error Analysis: Writing log review','Mở error log từ Phase 1-3. Xác định TOP 3 recurring Writing errors. Viết 3 "anti-patterns": "Instead of [wrong] → Write [correct]." Đọc lại trước mỗi essay Phase 4.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'AWL – Final Batch + exam vocabulary',  detail:'Final AWL review: Batch 12 – schedule, sector, significant, similar, source, specific, strategy, structure, style, sufficient, summary, text, theme, theory, traditional, transfer, volume. Review all 12 batches—rapid-fire: say collocation + sentence for each. Focus on any still uncertain.' },
-        { id:'g', type:'grammar', title:'Grammar: precision and error-free',    detail:'Phase 4 goal: ZERO grammar errors. Write 200 words about energy sustainability. Check: (1) article usage (a/an/the/zero), (2) verb tenses consistent, (3) subject-verb agreement, (4) prepositions correct, (5) uncountable nouns correctly used. Any error = rewrite that sentence.', url: BCG },
-        { id:'w', type:'writing', title:'Task 1+2: Energy statistics',          detail:'Task 1 (20p): mixed chart (bar + line) showing electricity generation by source (%) and total consumption (GW) from 2005–2020. Task 2 (40p): "The world\'s increasing demand for energy can only be met through nuclear power." Discuss both sides. Aim for Band 7.5.' },
+        s('s1','🗣️ Speaking Mock: Full Part 1+2+3 (14p ghi âm)','SP vocab đã hoàn thành! Từ nay Speaking = Mock practice. Full mock: Part 1 (4p: personal questions), Part 2 (3p: cue card về urban/rural hoặc happiness), Part 3 (4p: societal questions). Ghi âm → nghe lại → tự chấm 4 tiêu chí.'),
+        s('s2','🗣️ Pronunciation intensive: Band 7 target','Nghe lại recording vừa xong. Identify 5 từ phát âm chưa đúng → tra Cambridge Dictionary → luyện lại. Kiểm tra: (1) word stress, (2) weak forms (/ə/ sound), (3) connected speech. Band 7 Pronunciation = "uses a range of pronunciation features with some lapses."', CAMDICT),
+        v('rv','🔄 Ôn Speaking SP01-SP10 rapid-fire (50 từ key)','Quiz nhanh: 5 từ key nhất của mỗi SP01-SP10. Chỉ cần nói từ và 1 collocation trong 5 giây. Mục đích: đảm bảo vocab accessible khi speaking.'),
       ],
       [
-        { id:'r', type:'reading', title:'IELTS Reading: 2 energy passages',    detail:'Làm 2 IELTS passages (40 min): energy + environment. Phase 4 strategy: for Matching Headings, use the "umbrella concept" – the heading must cover ALL the content of the paragraph, not just mention one point. Test with 8-heading passage.', url: IELTS },
-        { id:'l', type:'listening',title:'IELTS Listening: Energy S3+S4',      detail:'S3: discussion about a renewable energy project between students. S4: academic lecture about carbon capture technology. Focus: S4 – use headings/subheadings on question paper to predict the structure of the lecture before it starts.', url: IELTS },
-        { id:'s', type:'speaking',title:'Full Speaking: Energy & environment',  detail:'Full 15-min mock. Phase 4 focus: eliminate these common errors—(1) saying "I think" repeatedly (vary with "In my view", "It seems to me", "I would argue"), (2) starting every sentence with "It" or "The", (3) using basic vocabulary when sophisticated terms exist (not "good" but "beneficial", "advantageous").' },
+        r('r','📖 Cambridge IELTS Reading — S.Reading Inference drill','Làm Cambridge Reading (60p). Focus: inference questions — answer không stated directly trong text, phải infer từ context. Đây là dạng câu phân biệt Band 7 và Band 8.', IELTS),
+        l('l','🎧 IELTS S4 × 2 intensive (Band 8 drill)','Nghe 2 IELTS S4 → chép → target ≥9/10. S4 là key section cho L Band 8. Nếu chưa đạt: nghe lại đoạn sai, phân tích exactly tại sao miss.', IELTS),
+        v('rev2','🔄 Ôn Topic TR1-TR3 (150 từ — max)','Quiz TR1 Environment + TR2 Technology + TR3 Education = 210 từ... quá 150. Chỉ ôn TR1+TR2 = 140 từ hôm nay. TR3 ôn ngày khác. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'Reading: Phase 4 speed training',     detail:'Reading speed drill: Take an IELTS passage. Read once (10 min) and answer Matching Headings. Then re-read (5 min) and answer T/F/NG. Total: 15 min for 2 question sets (faster than usual). Check if accuracy drops—balance speed vs accuracy.', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: Accent exposure training', detail:'Listen to IELTS listening with non-British accents (Australian, North American). Note: which words did you miss due to accent? Look for IELTS tests featuring different accents and practice with them. Aim: no score drop between different accent types.', url: IELTS },
-        { id:'w', type:'writing', title:'Task 2: Sustainability Band 7.5 target', detail:'Write a Band 7.5 essay about sustainability. After writing: compare against the IELTS Band 7 Writing descriptors. For each descriptor, mark whether you met it: TA (addressed all parts?), CC (clear progression?), LR (wide range, few errors?), GRA (variety, few errors?).' },
+        w('w1','✍️ 100 Collocations: Ethics & Philosophy (W2T32)','Học 100 colloc đạo đức (W2T32): address ethical dilemmas, uphold moral principles, debate philosophical questions, challenge moral relativism, promote social justice, ensure accountability, combat corruption, protect individual rights, balance competing interests, foster ethical decision-making...'),
+        w('w2','✍️ Task 2 Essay: Ethics','Đề: "Technology is making ethical decisions easier because it removes human bias. To what extent do you agree?" Outline 5p → Draft 40p. Target: Band 7.5 self-assessment.'),
+        v('ck','🔍 Tự chấm Band 7.5 target','Band 7.5 = mid-point Band 7 và 8. LR 7.5: không repetition, collocations natural and appropriate. GRA 7.5: <2 grammar errors per 250 words. TA 7.5: fully addressed với clear position. CC 7.5: seamless cohesion.'),
       ],
       [
-        { id:'r', type:'reading', title:'Full Reading: 3 passages timed',      detail:'Full IELTS Reading exam simulation (60 min). Use a Cambridge IELTS 17/18 test you haven\'t seen before. Strict conditions: no stopping, no checking. After: detailed score analysis. Note: are you stronger on passages 1, 2, or 3? This affects time strategy on exam day.', url: IELTS },
-        { id:'l', type:'listening',title:'Full Listening: exam conditions',    detail:'Full IELTS Listening exam simulation. Strict conditions. After: score, note any section where you missed ≥3 questions (this is your weak section). For that section: do additional practice sets this week.', url: IELTS },
-        { id:'w', type:'writing', title:'Full Writing: timed + self-mark',    detail:'Full Writing sim (60 min). After: use IELTS Band descriptors to self-mark. Write your estimated band for each criterion. Identify: what is your lowest criterion? Focus practice on that in Week 17-18.' },
+        s('s3','🗣️ Speaking: Part 3 intensive drill (10 questions)','Do 10 Part 3 questions (2 per topic: happiness, ethics, technology, society, environment). Each answer ≥60 seconds. Record. Listen back: developing ideas fully? Using collocations? Varying openers ("That\'s an interesting point...", "I would argue that...", "In my experience...").'),
+        w('t1','📊 Task 1: Cambridge T1 (Band 7 target — tự chấm ≥7)','Làm Cambridge Task 1 (20p tính giờ). Tự chấm ≥7 cho mỗi tiêu chí. Nếu LR chưa ≥7: viết thêm 5 synonyms cho "increase/decrease". Nếu GRA chưa ≥7: check article/preposition errors cụ thể.', IELTS),
+        v('rev3','🔄 Ôn TR4+TR5 (140 từ)','Quiz TR4 Health + TR5 Society = 140 từ. Target ≥90%.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Vocabulary consolidation: Phase 4 W1', detail:'Phase 4 vocabulary audit: From all 16 weeks, what are your 20 "most improved" words? (Words you struggled with but now use easily.) And your 10 "still uncertain" words? Deep-dive the uncertain ones: find 3 real-world examples of each being used.' },
-        { id:'r', type:'reading', title:'Reading: analyse past mistakes',       detail:'Review all wrong answers from your Phase 4 reading practices this week. Categorise: (1) vocabulary problem, (2) misread paraphrase, (3) time pressure, (4) question type weakness. For each category: write 1 specific fix you will apply in exam.', url: IELTS },
-        { id:'s', type:'speaking',title:'Speaking: vocabulary upgrade drills', detail:'Choose 20 "basic" words you still use in speaking (good, bad, important, get, make, use). For each: find 2-3 sophisticated replacements. (good → beneficial, advantageous, worthwhile). Practice speaking 5 minutes using ONLY upgraded vocabulary.' },
+        v('rev','🔄 Ôn CamListen BL1-BL4 (120 từ)','Quiz CamListen BL1 (001-030) + BL2 (031-060) + BL3 (061-090) + BL4 (091-120) = 120 từ. Phần này có nhớ không sau nhiều tuần? Spelling check.'),
+        r('rd','📖 Reading: Tự phân tích điểm yếu','Review tất cả Cambridge Reading tests đã làm Phase 4. Categorise câu sai: (1) vocab/paraphrase, (2) inference, (3) Matching Headings error, (4) T/F/NG confusion. Loại nào nhiều nhất → chiến lược specific.', IELTS),
+        v('pl','💡 Tổng kết tuần 16','Phase 4 Week 1 done. Writing: T31+T32 (38/40 topics done!). Speaking: Full mock mode. Chỉ còn 2 tuần nữa là T33-T40. Tập trung Band 8 Listening + Band 7.5 Writing.'),
       ],
     ],
   },
 
-  // ── Week 17: Language & Communication ────────────────────
+  // ── Week 17: Thể thao & Sức khỏe tâm thần ─────────────────
   {
-    theme: 'Ngôn ngữ & Giao tiếp', themeEn: 'Language & Communication', phase: 4,
+    theme: 'Thể thao & Sức khoẻ tâm thần', themeEn: 'Sport, Mental Health & Mock Drill', phase: 4,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng ngôn ngữ học',                 detail:'Học 20 từ: bilingual, multilingual, lingua franca, dialect, accent, fluency, proficiency, syntax, grammar, semantics, pragmatics, language acquisition, native speaker, second language, mother tongue, code-switching, language policy, linguistic diversity, endangered language, translation.' },
-        { id:'r', type:'reading', title:'IELTS Reading: Language & communication', detail:'Làm IELTS passage về language acquisition, multilingualism, hoặc the role of English globally (Band 7.5-8). New strategy to practice: for Short Answer questions, the answer appears in the same order as the questions—use this to locate answers faster.', url: IELTS },
-        { id:'w', type:'writing', title:'Task 2: Tiếng Anh như ngôn ngữ quốc tế', detail:'Đề: "It would be better if the world had one language. To what extent do you agree?" Aim: Band 7.5+ essay with perfect task achievement (directly address prompt), clear paragraph structure, sophisticated vocabulary (lingua franca, cultural identity, linguistic homogenisation).' },
+        r('r','📖 Full IELTS Reading (60p) — ≥35/40 target','Làm Full Cambridge Reading. Target: ≥35/40 (Band 8). Sau khi làm: 20p analyse câu sai. Ghi cumulative error log: so sánh với tuần 16 — có giảm số lỗi không?', IELTS),
+        l('l','🎧 Full IELTS Listening (40p) — ≥36/40 target','Full IELTS Listening. Target: ≥36/40. Sau khi làm: nghe lại với transcript. Note specific moments where you missed. Pattern analysis.', IELTS),
+        v('rev','🔄 Ôn Writing T06-T10 key colloc (100)','Ôn 100 colloc quan trọng nhất từ W2T06-T10 (Science, Business, Govt, Media, Transport). Rapid-fire không nhìn sách. Target ≥90/100.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Advanced vocabulary: idioms & formal equivalents', detail:'Học các cặp idiom/formal: "bite the bullet" = endure a painful situation; "at the end of the day" = ultimately; "think outside the box" = approach creatively. Note: NEVER use idioms in IELTS writing—always use formal equivalents. Practice identifying and replacing idioms in essay drafts.' },
-        { id:'l', type:'listening',title:'Full IELTS Listening: Language topics', detail:'Full IELTS Listening 40 questions. Phase 4 focus: listen for paraphrase—when a word in the question appears in the audio as a synonym. E.g. question says "benefit" and audio says "advantage". Practice identifying paraphrase pairs in 3 S4 answers.', url: IELTS },
-        { id:'s', type:'speaking',title:'Part 3: Role of language in identity', detail:'Discuss: (1) Do you think it is possible to fully understand a culture without speaking its language? (2) Should minority languages be preserved even if it is expensive to do so? (3) Is the spread of English a threat to other languages? Aim for 90 seconds per answer.' },
+        w('w1','✍️ 100 Collocations: Sport & Health (W2T33)','Học 100 colloc thể thao (W2T33): promote physical activity, combat sedentary lifestyle, improve athletic performance, develop team spirit, host international competitions, address doping in sport, encourage grassroots sports, invest in sports infrastructure, foster healthy competition, prevent sports injuries...'),
+        w('w2','✍️ Task 2 Essay: Sport','Đề: "Competitive sport teaches people valuable lessons and should be compulsory in schools. To what extent do you agree?" Outline 5p → Draft 40p. Phase 4 target: zero grammar errors.'),
+        v('ea2','🔍 Writing error log Phase 4','Sau khi viết: check 5 personal grammar errors từ error log. Có mắc phải không? Ghi progress: tuần này đã reduce errors từ N xuống M.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Vocabulary: precision – avoid vague words', detail:'Banned words in IELTS writing this week: very, a lot, big, small, good, bad, many, few. For each: find 3 precise replacements. E.g. very → considerably, remarkably, substantially. Write 10 sentences that previously used vague words, now using precise vocabulary.' },
-        { id:'g', type:'grammar', title:'Writing: sentence openings variety',   detail:'Challenge: write a 250-word essay where every sentence starts differently. No two sentences can begin the same way. Try: infinitive ("To address this..."), present participle ("Considering the evidence..."), adverb ("Interestingly, ..."), cleft ("It is this tendency that...").' , url: BCG },
-        { id:'w', type:'writing', title:'Task 2: Non-native speakers & global English', detail:'Đề: "Some people argue that in order to be an effective global language, English needs to change to accommodate non-native speakers. To what extent do you agree?" Aim: every sentence opens differently (practice from grammar exercise).' },
+        s('s1','🗣️ Speaking Full Mock + Video Analysis','Full Speaking mock 15 phút (ghi video nếu có thể). Xem lại: (1) Eye contact/posture ảnh hưởng confidence, (2) Filler words ("um", "like", "you know") — replace với "Well...", "Let me think...", "That\'s an interesting question...", (3) Vocabulary upgrade: any "basic" words to replace?'),
+        s('s2','🗣️ Speaking: Vocabulary Upgrade Drill','20 "basic" words bạn still dùng trong speaking. For each: tìm 2-3 sophisticated replacements. (important→crucial/pivotal/fundamental, good→beneficial/advantageous, people→individuals/the public/society). Practice: nói 5 phút chỉ dùng upgraded vocab.'),
+        v('rev','🔄 Ôn TR6+TR7 (140 từ)','Quiz TR6 Science + TR7 Business = 140 từ. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'Reading: advanced speed + accuracy',  detail:'3 IELTS passages (60 min) but with a twist: For passage 1, spend only 15 min. For passage 2, spend 20 min. For passage 3, spend 25 min (hardest). Note if this timing strategy helps compared to equal 20 min per passage.', url: IELTS },
-        { id:'l', type:'listening',title:'IELTS Listening: intensive review',  detail:'Do 4 IELTS S4 sections (one each day Mon-Thu). For each: (1) listen without pause, (2) check answers, (3) listen again with transcript, (4) mark every word you missed (underline in transcript), (5) practise saying those sentences aloud. Target: S4 ≥9/10.', url: IELTS },
-        { id:'s', type:'speaking',title:'Speaking: Part 2 intensive practice', detail:'Do 5 Part 2 cue cards from different topics (one per day this week). Time: exactly 2 minutes each. After each: listen back and count: (1) filler words used, (2) grammar errors, (3) vocabulary sophistication (boring vs interesting words). Improve systematically.' },
+        r('r','📖 Cambridge Reading — Band 8 MCQ Elimination','Làm Cambridge Reading (60p). Focus: MCQ elimination technique — before selecting, ELIMINATE all wrong options with written reasons. "A is wrong because...", "B is wrong because...". Target: ≥35/40.', IELTS),
+        l('l','🎧 IELTS S4 × 2 — Band 8 streak (≥9/10 both)','Nghe 2 IELTS S4 → target: ≥9/10 CẢ HAI. S4 ≥9/10 consistently = L Band 8 territory. Ghi error log: sau 2+ tuần Phase 4, pattern câu sai đã thay đổi chưa?', IELTS),
+        v('rev2','🔄 Ôn TR8+TR9 (140 từ)','Quiz TR8 Government + TR9 Media = 140 từ. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'Reading: mock under pressure',        detail:'IELTS Reading practice with added pressure: timer alarmed every 20 min (strict passage switch). If you haven\'t finished a passage, move on. Note: does pressure affect accuracy? If yes: practice more timed drills. Target: consistent ≥34/40 (Band 8 range).', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: distractor analysis',     detail:'Redo 1 full IELTS Listening test you\'ve done before. Focus on: why each wrong answer seemed correct (the IELTS distractor technique—they often mention the wrong option clearly BEFORE giving the right answer). Write 5 distractor examples you identified.', url: IELTS },
-        { id:'w', type:'writing', title:'Writing review: all Phase 4 essays',  detail:'Review all Task 2 essays from Phase 4 (Weeks 16-17). Create a personal error log: list your most common errors by type (article, verb tense, subject-verb agreement, word form, spelling). Write 10 sentences specifically practising your top 3 error types.' },
+        w('w1','✍️ 100 Collocations: Mental Health (W2T34)','Học 100 colloc sức khỏe tâm thần (W2T34): address mental health stigma, promote psychological well-being, provide counselling services, tackle depression and anxiety, improve mental health literacy, ensure access to therapy, support trauma survivors, implement workplace mental health policies, reduce burnout, foster emotional resilience...'),
+        w('w2','✍️ Task 2 Essay: Mental Health','Đề: "Mental health problems are increasing in modern society. What are the main causes and what can be done to address them?" Outline 5p → Draft 40p. Self-mark: aim TA≥7, CC≥7, LR≥7, GRA≥7.'),
+        v('ck','🔍 Band 7+ checklist final review','Band 7+ requires: (1) No basic errors, (2) Academic collocations natural, (3) Clear position maintained throughout, (4) Seamless paragraph transitions. Score yourself 0/1 for each. 4/4 = Band 7+.'),
       ],
       [
-        { id:'r', type:'reading', title:'Reading: full simulation Band 8 target', detail:'Full IELTS Reading (60 min). Target: ≥36/40 (Band 8). After: for each wrong answer, spend 2 minutes understanding exactly why the correct answer is correct and all others are wrong. This analytical approach is essential for Band 8.', url: IELTS },
-        { id:'l', type:'listening',title:'Full Listening: Band 7.5-8 target',  detail:'Full IELTS Listening (40 min). Target: ≥35/40 (Band 8). After: if score is below target, identify: which Section (1-4) has most errors? That section is your focus for Week 18 intensive practice.', url: IELTS },
-        { id:'s', type:'speaking',title:'Full Speaking Mock: assess Band level', detail:'Full 15-min Speaking mock. Record. Self-assess using IELTS Speaking criteria. Then: have someone (teacher or native speaker) assess it, or compare your performance with YouTube examples of Band 7 speaking. Target: solid Band 7 in all 4 criteria.' },
+        s('s3','🗣️ Speaking Part 3: 5 topic deep-dive','Chọn 5 topics yêu thích (từ SP01-SP30). Mỗi topic: trả lời 2 Part 3 questions (min 60 seconds each). Record. Review: (1) Developing ideas — có give concrete example không? (2) Cohesion — có linking words không? (3) Sophisticated vocab?'),
+        w('t1','📊 Task 1: Full mock all chart types review','Làm 4 mini-Task 1 (10p each): bar, line, pie, process. Sau đó: review lần lượt, cho mỗi bài ghi 1 điểm cần improve. Đây là "Task 1 audit" trước ngày thi.'),
+        v('rev3','🔄 Ôn CamListen BL5-BL8 (120 từ)','Quiz CamListen BL5+BL6+BL7+BL8 = 120 từ. Spelling check. Target ≥108/120.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Vocabulary: final gaps identification', detail:'From all 17 weeks of vocabulary study: identify the 3 themes where you feel least confident. For each theme: write 20 words from memory, check against original list, re-learn the ones you missed. This targeted review is more effective than general review.' },
-        { id:'r', type:'reading', title:'Reading: question type mastery review', detail:'This week: only practice your 2 weakest question types. Do 10 sets of those question types specifically. (e.g. if Matching Headings and Y/N/NG are weakest: do 10 passages focusing only on these types.) Track accuracy improvement.', url: IELTS },
-        { id:'w', type:'writing', title:'Writing: Task 1 speed and precision',  detail:'Task 1 intensive: do 5 different Task 1 types this week (bar chart, line graph, table, pie chart, process diagram). Each one: maximum 20 minutes. Focus: does your overview paragraph capture the 2 most significant features? Is every number accurately referenced?' },
+        v('rev','🔄 Ôn TR10+TR11 (140 từ)','Quiz TR10 Transport + TR11 Food = 140 từ. Target ≥90%.'),
+        r('rd','📖 Reading: paraphrase practice','Lấy 1 IELTS Reading passage đã làm. Đọc lại và tìm TẤT CẢ paraphrase pairs (câu hỏi nói khác thế nào so với passage). Viết 10 cặp paraphrase. Đây là kỹ năng chốt cho Reading Band 8.', IELTS),
+        v('pl','💡 Tổng kết tuần 17','Writing: T33+T34 (40 topics — DONE sau tuần 20!). Listening: tracking Band 8 progress. Reading: targeting ≥35/40. 3 tuần cuối: full mock mode.'),
       ],
     ],
   },
 
-  // ── Week 18: Globalisation & Migration ───────────────────
+  // ── Week 18: Nước & Đa dạng sinh học ──────────────────────
   {
-    theme: 'Toàn cầu hóa & Di dân', themeEn: 'Globalisation & Migration', phase: 4,
+    theme: 'Nước & Đa dạng sinh học', themeEn: 'Water, Biodiversity & Intensive Mock', phase: 4,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Từ vựng toàn cầu hóa',                 detail:'Học 20 từ: globalisation, free trade, protectionism, tariff, trade agreement, multinational corporation, supply chain, outsourcing, offshoring, cultural homogenisation, consumerism, global village, interdependence, economic integration, foreign direct investment, currency exchange, economic bloc (EU, ASEAN), diaspora, brain gain, soft power.' },
-        { id:'r', type:'reading', title:'IELTS Reading: Globalisation',         detail:'Làm IELTS passage về globalisation (Band 7.5-8). Challenge: attempt without reading the passage first. Read only questions. Then scan passage for answers. Compare score with your usual method. Determine which method is faster and more accurate for you.', url: IELTS },
-        { id:'w', type:'writing', title:'Task 2: Globalisation và văn hóa',    detail:'Đề: "The spread of international businesses and multinational companies is having a negative impact on local culture. To what extent do you agree?" This is a classic IELTS globalisation topic. Aim: no errors, Band 7.5+ in all criteria. Write, pause, review.' },
+        r('r','📖 Full Cambridge IELTS Reading (≥35/40)','Full Reading test (60p strict). Target: ≥35/40. Sau đó: compare với tuần 16 và 17. Tracking progress. Nếu score plateau: xác định specific question type còn yếu.', IELTS),
+        l('l','🎧 Full IELTS Listening (≥36/40)','Full Listening (40p). Target: ≥36/40. Ghi score. So sánh với tuần 16,17. Consistent improvement?', IELTS),
+        v('rev','🔄 Ôn Writing T11-T15 key colloc (100)','Ôn 100 colloc từ W2T11-T15 (Food, Arts, Crime, Family, Work). Rapid-fire. Target ≥90/100.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Từ vựng di cư & nhập cư (nâng cao)',  detail:'Học 20 từ: migration, immigration, emigration, refugee, asylum seeker, undocumented migrant, economic migrant, host country, source country, integration, multiculturalism, xenophobia, brain drain, remittance, social cohesion, deportation, human trafficking, border control, cultural assimilation, multicultural society.' },
-        { id:'l', type:'listening',title:'Full IELTS Listening: Globalisation', detail:'Full 40-question test about globalisation/migration topics. Focus particularly on S1 form filling (most students miss spelling). Write answers, then check: did you spell all names/addresses correctly? Did you write the right type of word (number vs word)?', url: IELTS },
-        { id:'s', type:'speaking',title:'Part 3: Globalisation & migration',    detail:'Discuss: (1) Is globalisation ultimately beneficial for developing countries? (2) What are the challenges that immigrants face when settling in a new country? (3) How has globalisation changed your own life or culture? Aim: sophisticated vocabulary, no basic words.' },
+        w('w1','✍️ 100 Collocations: Water & Resources (W2T35)','Học 100 colloc nước (W2T35): address water scarcity, ensure access to clean water, combat water pollution, implement water management strategies, promote water conservation, desalinate seawater, recycle wastewater, reduce water consumption, protect aquifers, develop sustainable irrigation...'),
+        w('w2','✍️ Task 2 Essay: Water Resources','Đề: "Water scarcity is a growing problem that threatens the future of humanity. What are the main causes, and what can be done?" Outline 5p → Draft 40p. Target: Band 7.5.'),
+        v('ea','🔍 Phase 4 Error Log Review','Review ALL writing errors so far Phase 4. Top 3 persistent errors: đã giảm chưa? Nếu vẫn mắc: viết 10 câu luyện đặc biệt cho loại lỗi đó. Đây là "error elimination sprint."'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Vocabulary: collocations for exam day', detail:'Final collocation review for the most common IELTS topics: environment, technology, education, health, society, business. For each topic: 5 essential collocations (e.g. environment: tackle climate change, reduce carbon emissions, protect biodiversity, combat deforestation, promote sustainability). MEMORISE these for exam day.' },
-        { id:'g', type:'grammar', title:'Grammar: final exam-day checklist',   detail:'Create your personal grammar checklist for exam day. Include: (1) my most common error type + example of correct form, (2) 3 complex structures I will use in Task 2, (3) 3 structures I will use in Task 1. Write this checklist on paper—refer to it on exam day.', url: BCG },
-        { id:'w', type:'writing', title:'Task 1+2: Globalisation statistics',  detail:'Task 1 (20p): line graph showing global trade volume growth 1970-2020. Task 2 (40p): "International cooperation between countries is more important now than ever before. To what extent do you agree?" Final target: above 7.0 in all Writing criteria.' },
+        s('s1','🗣️ Speaking: Full Mock (fluency + accuracy focus)','Full Speaking mock 15p. Sau khi ghi âm: đánh giá riêng FLUENCY (có dừng dài >2 giây không?) vs ACCURACY (có lỗi ngữ pháp lớn không?). Phase 4 target: fluency không bị interrupt, accuracy ≤2 lỗi/phút.'),
+        s('s2','🗣️ Pronunciation: Connected Speech intensive','Luyện 10 phút connected speech: "I used to do it" /aɪ juːstə duːɪt/, "I want to go" /aɪ wɒnə ɡəʊ/, "What do you think?" /wɒdəjə θɪŋk/. Sau đó: đọc 1 paragraph IELTS Model Answer với natural connected speech. Record.'),
+        v('rv','🔄 Ôn TR12+TR13 (140 từ)','Quiz TR12 Arts + TR13 Global Issues = 140 từ. Đây là spaced repetition lần cuối cho Topic vocab. Target ≥90%.'),
       ],
       [
-        { id:'r', type:'reading', title:'Reading: Band 8 target drills',       detail:'Do IELTS Reading Passage 3 (hardest passage, abstract academic text) × 3 repetitions. Each time: time yourself, note score. Passage 3 should be attempted with 25 minutes (not 20) because of difficulty. Identify specific patterns in Band 8 passages (more inference questions).', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: S1 & S2 accuracy boost', detail:'Focus this session on S1 and S2 (often underestimated). Do 5 S1+S2 sections. In S1: practice writing while listening without stopping to think (the audio won\'t wait). In S2: map/diagram labeling—listen for exactly which direction the speaker says.', url: IELTS },
-        { id:'s', type:'speaking',title:'Speaking: pronunciation intensive',   detail:'Record yourself speaking for 5 minutes about globalisation. Listen back: (1) identify 5 words you mispronounced, look up correct pronunciation on Cambridge Dictionary, (2) identify 3 intonation patterns that sound unnatural, (3) note where you paused unnecessarily. Repeat.' },
+        r('r','📖 Cambridge Reading — Matching Headings mastery final','Làm Cambridge Reading (60p). Focus hôm nay: TẤT CẢ câu hỏi Matching Headings phải dùng "umbrella concept technique" — heading = covers ALL ideas in paragraph, not just 1 detail. Target ≥35/40.', IELTS),
+        l('l','🎧 IELTS S3 × 4 intensive (120p total)','Nghe 4 IELTS S3 liên tiếp (mỗi S3 ~5-8p). Sau mỗi S3: ghi speaker opinions riêng biệt. Phân tích: có bị distractor nào lừa không? S3 Band 8 yêu cầu: phân biệt subtle opinion changes.', IELTS),
+        v('rev2','🔄 Ôn CamListen BL9-BL12 (120 từ)','Quiz CamListen BL9+BL10+BL11+BL12 = 120 từ. Target ≥108/120.'),
       ],
       [
-        { id:'r', type:'reading', title:'Reading: final weakest areas',        detail:'Identify your 2 weakest Reading question types from all Phase 4 practice. This session: only practice those types. Do 3 sets of 6 questions each. After: what % did you get right? Has it improved since you started focused practice? Set exam-day expectation.', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: exam-day simulation',     detail:'Full Listening exam (40 min, strict exam conditions). After: calculate band score. If below target: identify which section(s) to improve in Week 19. If on target: focus on maintaining consistency in Week 19-20. Write your exam-day listening strategy in 5 bullet points.', url: IELTS },
-        { id:'w', type:'writing', title:'Writing: pre-exam final essay',       detail:'Write your single best Task 2 essay yet. Choose any topic you feel most confident with. Spend 5 minutes planning, 35 minutes writing. Aim: Band 7.5+ that you are proud of. Keep this essay as your "reference essay" to remind yourself of what you can achieve.' },
+        w('w1','✍️ 100 Collocations: Biodiversity (W2T36)','Học 100 colloc đa dạng sinh học (W2T36): preserve biodiversity, combat habitat destruction, protect endangered species, establish nature reserves, restore degraded ecosystems, promote reforestation, address invasive species, implement conservation strategies, regulate wildlife trade, support indigenous land rights...'),
+        w('w2','✍️ Task 2 Essay: Biodiversity','Đề: "Biodiversity is being lost at an alarming rate. Why is this, and what are the consequences?" Outline 5p → Draft 40p. Zero grammar errors goal.'),
+        v('ck','🔍 Tự chấm: Zero-error grammar drill','Sau khi viết: đọc LẠI chỉ để check grammar (không check content). Từng câu: kiểm tra (1) S-V agreement, (2) tense consistency, (3) articles, (4) prepositions, (5) word forms. Target: ZERO errors.'),
       ],
       [
-        { id:'r', type:'reading', title:'Full Reading: final Band assessment',  detail:'Full IELTS Reading (60 min, strict). Use Cambridge IELTS 18 or 19 (very recent). Note your score. Compare with Phase 1 mock (Day 35). Calculate improvement. Write 3 "Reading lessons learned" that you would tell yourself at the start of the course.', url: IELTS },
-        { id:'l', type:'listening',title:'Full Listening: final Band assessment', detail:'Full IELTS Listening (40 min). Use Cambridge IELTS 18 or 19. Score and compare with Phase 1. Calculate improvement in each section (S1, S2, S3, S4). Write specific exam-day notes: "In S1 I will... In S4 I will..."', url: IELTS },
-        { id:'s', type:'speaking',title:'Speaking: final mock + self-analysis',detail:'Final 15-min Speaking mock. Record. This time: assess yourself on ALL 4 criteria (Fluency, Vocabulary, Grammar, Pronunciation) using IELTS descriptors. Assign a band (6.0-7.5) for each. Write: "On exam day, I will specifically focus on improving [weakest criterion] by [specific action]."' },
+        s('s3','🗣️ Speaking: Part 2 rapid-fire (6 cue cards, 45p)','Làm 6 cue cards trong 45p (1p prep + 2p speak + 4.5p review mỗi cue card). Topics: person who inspires you, place you visited, skill you want to learn, challenging experience, book/film that influenced you, technology you find useful. Record tất cả. Focus: no filler words.'),
+        w('t1','📊 Task 1 full mock + model answer comparison','Làm Cambridge Task 1 (20p strict). Sau khi làm: đọc model answer và ghi CỤ THỂ 5 expressions bạn không dùng nhưng model answer dùng. Integrate vào bài tiếp theo.', IELTS),
+        v('rev3','🔄 Ôn CamCore B1+B2 (140 từ) — final spaced rep','Quiz CamCore B1+B2 = 140 từ. Đây là spaced repetition lần cuối cùng. Target ≥130/140 (93%). Từ sai: đặt câu và commit to memory.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Vocabulary: exam-day mental rehearsal', detail:'Read through your collocation cheat sheets from each of the 20 themes. Don\'t learn new words. Just refresh and confirm you can access them quickly. Time yourself: can you produce 3 collocations for any given IELTS topic within 10 seconds? That\'s exam-ready.' },
-        { id:'r', type:'reading', title:'Reading: Review + mental strategy prep', detail:'Re-read your Reading strategy notes from all phases. Write your final "IELTS Reading attack plan" in 5 steps: (1) skim titles/headings, (2) read questions first, (3) [your specific strategy for weak question type], (4) timing per passage, (5) what to do if stuck. Memorise this plan.', url: IELTS },
-        { id:'w', type:'writing', title:'Writing: Task 1 & 2 rapid practice',  detail:'Write: 1 Task 1 (20p) and 1 Task 2 outline only (5p). Task 1: describe a pie chart. Task 2 outline: "Some countries have experienced rapid population ageing. What problems might this cause and what measures could be taken?" Evaluate outline quality without writing full essay.' },
+        v('rev','🔄 Ôn Writing T16-T20 key colloc (100)','Ôn 100 colloc từ W2T16-T20 (Language, Tourism, Housing, Globalisation, Immigration). Rapid-fire. Target ≥90/100.'),
+        r('rd','📖 Reading: Self-analysis final report','Viết "Reading Attack Plan" cá nhân: (1) chiến lược cho Matching Headings, (2) chiến lược cho T/F/NG, (3) chiến lược cho MCQ, (4) timing: [X] phút/passage, (5) what to do if stuck. Học thuộc kế hoạch này — đây là chiến lược ngày thi.'),
+        v('pl','💡 Tổng kết tuần 18','2 tuần cuối! Writing: T35+T36 done. Speaking: vocab hoàn thành + full mock mode. Tuần 19-20: 4 TASKS/NGÀY. Chuẩn bị tinh thần: cường độ tăng lên.'),
       ],
     ],
   },
 
-  // ── Week 19: Comprehensive Review (4 tasks/day) ────────
+  // ── Week 19: Ôn tập tổng hợp (4 tasks/day) ────────────────
   {
-    theme: 'Ôn Tập Tổng Hợp', themeEn: 'Comprehensive Review', phase: 4,
+    theme: 'Ôn tập tổng hợp — 4 tasks/ngày', themeEn: 'Comprehensive Review — 4 tasks/day', phase: 4,
     days: [
       [
-        { id:'v', type:'vocab',   title:'Vocabulary: Top 100 IELTS words review', detail:'From all 20 weeks, identify your personal "Top 100 words" – the ones most likely to appear and most useful in all 4 skills. Review them: say definition, collocation, and example sentence. No writing—purely oral review for fluency and automaticity.' },
-        { id:'r', type:'reading', title:'Full Reading: Band 7.5-8 simulation',  detail:'Full IELTS Reading (60 min). Use an unseen test. Strict conditions. Aim: ≥34/40. After: spend 20 min analysing every wrong answer. Key question: "What did I misread or misunderstand?" Document answers in a "Final Reading Error Log".', url: IELTS },
-        { id:'w', type:'writing', title:'Task 2: Random topic timed',           detail:'Take a random IELTS question (use an exam bank). No preparation. Plan for 5 min, write for 35 min. Focus: does the essay address ALL parts of the question? (Task Achievement is often the easiest criterion to boost—just answer the FULL question carefully.)' },
-        { id:'l', type:'listening',title:'[+] S4 intensive: Band 8 drill',     detail:'Làm 2 IELTS Section 4 liên tiếp (bài giảng học thuật). Mục tiêu: ≥9/10 mỗi section. Sau mỗi section: nghe lại với transcript, đánh dấu từng chỗ bạn nghe sai, phân tích lý do. S4 ≥9/10 là yêu cầu để đạt L Band 8.', url: IELTS },
+        r('r','📖 Full Reading (≥35/40) — Band 8 target','Full Cambridge Reading (60p strict). Target: ≥35/40. 20p phân tích câu sai sau.', IELTS),
+        l('l','🎧 Full Listening (≥36/40) — Band 8 target','Full IELTS Listening (40p strict). Target: ≥36/40. Phân tích error sau.', IELTS),
+        w('w1','✍️ 100 Collocations: Leadership (W2T37)','Học 100 colloc lãnh đạo (W2T37): demonstrate strong leadership, inspire and motivate others, promote collaborative decision-making, address organisational challenges, implement strategic vision, delegate responsibilities, foster innovation, build high-performing teams, drive positive change, develop leadership skills...'),
+        w('w2','✍️ Task 2 Essay: Leadership','Đề: "Good leaders are born, not made. To what extent do you agree?" Outline 5p → Draft 40p. Target Band 7.5+.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Vocabulary: Topic-specific drills',   detail:'Final topical vocabulary sprint: For each of the 10 most common IELTS topics, write 5 essential words/phrases from memory: Environment, Technology, Education, Health, Society, Science, Business, Arts, Transport, Government. 50 words total. Check accuracy.' },
-        { id:'l', type:'listening',title:'Full Listening: Band 8 simulation',  detail:'Full IELTS Listening (40 min). Target: ≥36/40 (Band 8). After: listen again with transcript. For every question you got right, confirm your understanding. For every question wrong: analyse if it was (1) speed, (2) vocabulary, (3) distractor. Note your exam-day adjustment.', url: IELTS },
-        { id:'s', type:'speaking',title:'Speaking: Part 3 intensive drill',    detail:'Do 10 Part 3 questions from various topics (2 per topic: environment, technology, society, education, culture). Each answer: minimum 60 seconds. Record and listen: Are you developing ideas fully? Giving examples? Using academic vocabulary? Vary response openers.' },
-        { id:'w', type:'writing', title:'[+] Writing Band 7.5 timed essay',    detail:'Đề: "Some people think the best way to increase road safety is to increase the minimum legal age for driving. To what extent do you agree?" Viết 40 phút không tra. Tự chấm từng tiêu chí (TA/CC/LR/GRA), ghi band tự đánh giá. Mỗi tiêu chí phải ≥7.' },
+        r('r2','📖 Reading: Error review + Inference drill','Review câu sai từ hôm qua. Làm thêm 10 inference-type questions. Inference = answer not stated, must be implied. Viết 5 "inference reasoning" notes: "The text says X, which implies Y."', IELTS),
+        l('l2','🎧 S4 × 2 (≥9/10 streak)','Nghe 2 IELTS S4 → target ≥9/10 mỗi. S4 Band 8 streak = mục tiêu của tuần này.', IELTS),
+        w('w3','✍️ 100 Collocations: Volunteering (W2T38)','Học 100 colloc tình nguyện (W2T38): engage in voluntary work, support charitable organisations, promote community service, foster civic responsibility, coordinate volunteer programmes, raise funds for good causes, tackle social issues through volunteering, build social capital, inspire others to give back...'),
+        w('w4','✍️ Task 2 Essay: Volunteering','Đề: "Volunteering should be made compulsory for young people. To what extent do you agree?" Outline 5p → Draft 40p. Self-mark ngay sau khi viết.'),
       ],
       [
-        { id:'r', type:'reading', title:'Reading: Matching Headings mastery',  detail:'3 Matching Headings passages (one full set each). Practice the "topic sentence method": read only the first and last sentence of each paragraph to identify its main idea. Compare score using this method vs reading full paragraphs. Which is more accurate AND faster?', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: S3 intensive practice',  detail:'S3 (discussion between 2-3 speakers) is often hardest because you must distinguish speakers\' opinions. Do 4 S3 sections. After each: write which speaker believed what. Practise: in S3, as soon as a new speaker starts, mentally note "Speaker A says X" before processing the next point.', url: IELTS },
-        { id:'w', type:'writing', title:'Writing: Task 1 variety review',      detail:'In 60 minutes: write brief Task 1 responses for 4 different chart types (bar, line, table, pie). Each: just 2 paragraphs (overview + most significant detail). This "compressed" practice improves efficiency. Check: does each overview sentence capture the most important feature?' },
-        { id:'s', type:'speaking',title:'[+] Pronunciation intensive drill',   detail:'Ghi âm 5 phút nói về bất kỳ chủ đề IELTS. Nghe lại: (1) xác định 5 từ phát âm chưa đúng → tra Cambridge Dictionary → luyện lại, (2) kiểm tra word stress (im-POR-tant), (3) luyện connected speech: "used to" = /juːstə/, "would have" = /wʊdəv/. Pronunciation Band 7 = consistently clear.' },
+        r('r','📖 Cambridge Reading (60p) — T/F/NG mastery','Focus hôm nay: T/F/NG — NOT GIVEN chỉ khi specific claim neither confirmed nor denied. Làm 15 T/F/NG questions và note reasoning for each. Target: ≥13/15.', IELTS),
+        l('l','🎧 Full IELTS Listening (≥37/40)','Full Listening. Target hôm nay: ≥37/40. Nếu đạt: đang ở Band 8 territory! Ghi milestone.', IELTS),
+        w('t1','📊 Task 1: 4 mini-essays (10p each)','Viết 4 mini Task 1 (10p mỗi bài, chỉ overview + 1 body): bar, line, pie, process. Focus: tốc độ và accuracy. Sau đó: review TẤT CẢ 4 — note common errors.'),
+        s('s1','🗣️ Speaking: Part 2 rapid-fire (8 cue cards, 60p)','8 cue cards trong 60p. Topics khác nhau từ SP01-SP30. Record từng bài. Review: filler words giảm chưa? Vocabulary sophisticated hơn không?'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Vocabulary: speaking upgrade final',  detail:'Speaking vocabulary sprint: replace 15 boring words/phrases with sophisticated alternatives: good (beneficial, valuable, advantageous), people (individuals, the population, society at large), important (crucial, fundamental, pivotal), get (obtain, acquire, receive), think (argue, contend, maintain).' },
-        { id:'r', type:'reading', title:'Reading: T/F/NG & Y/N/NG mastery',   detail:'Do 5 T/F/NG and 5 Y/N/NG sets. Focus on NOT GIVEN: This means the specific claim is neither confirmed nor denied. "NG" ≠ "wrong"—the text simply doesn\'t discuss it. Practise identifying the difference.', url: IELTS },
-        { id:'s', type:'speaking',title:'Speaking: fluency & natural flow',   detail:'Do 3 Part 1 practice sessions (10 questions each) focusing ONLY on fluency—don\'t stop to think. If you don\'t know a word, paraphrase or use a simpler word and keep going. Fluency is more important than precision. Record and compare: is the flow improving?' },
-        { id:'l', type:'listening',title:'[+] S1+S2 accuracy: 10/10 target',  detail:'Làm 4 Section 1 và 4 Section 2. S1 rất dễ nhưng hay mất điểm vì chính tả hoặc không nghe kịp tên riêng/số điện thoại. Mục tiêu: 10/10 cho S1. Kiểm tra: bạn có viết sai chính tả số liệu không? S2: map labeling – luyện directional language (opposite, adjacent to, next to).', url: IELTS },
+        r('r','📖 Cambridge Reading — Band 8 reasoning','Làm Cambridge Reading (60p). Target ≥36/40. MCQ: eliminate wrong options với written reason cho mỗi option. Matching Headings: umbrella concept. T/F/NG: precise evidence.', IELTS),
+        l('l','🎧 S1+S2 accuracy drill (10/10 target)','Làm 4 IELTS S1 + 4 IELTS S2. S1 target: 10/10 (form filling = free marks!). S2 target: 9/10 (map labelling focus). Note: S1 spelling errors = 1 mất = 0.25 band. Không được mất.', IELTS),
+        w('w2','✍️ Writing: Zero-error grammar essay','Viết Task 2 280 từ về bất kỳ topic nào. Sau khi viết: proofread CHỈ cho grammar. Mỗi câu: kiểm tra từng trong 5 error types. Target: ZERO grammar errors.'),
+        s('s2','🗣️ Speaking: Full mock (14p) + self-mark','Full Part 1+2+3 ghi âm. Sau đó tự chấm 4 tiêu chí. So sánh với tuần 16 mock. Có cải thiện không? Ghi band estimate Phase 4 cho Speaking.'),
       ],
       [
-        { id:'r', type:'reading', title:'Reading: Band 8 reasoning practice',  detail:'Take 10 MCQ (multiple choice) Reading questions. For each: before selecting an answer, eliminate wrong options one by one with a reason (e.g. "Option A is wrong because the text says... not..."). This eliminates guessing and builds Band 8 analytical skills.', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: Full Band 8 drill',       detail:'Full IELTS Listening (40 min). Target: ≥37/40. Sau khi làm: ghi lại từng câu sai và nghe lại đoạn đó. Phân loại: (a) nghe nhầm từ, (b) bị đánh lạc hướng, (c) từ vựng không biết, (d) viết quá chậm. Xác định nguyên nhân chính và kế hoạch cho ngày thi.', url: IELTS },
-        { id:'w', type:'writing', title:'Writing: Grammar zero-error essay',   detail:'Write a 280-word Task 2 essay. After: proofread specifically for grammar (not content). Check every sentence for: (1) subject-verb agreement, (2) tense consistency, (3) article errors, (4) preposition errors, (5) word form errors. Aim: ZERO grammar errors.' },
+        r('r','📖 Cambridge Reading confidence session','Làm Cambridge Reading (60p). Lần này: tin vào chiến lược. Không lo lắng. Target ≥35/40. Sau khi làm: 10p review câu sai, không spend quá nhiều thời gian phân tích.', IELTS),
+        l('l','🎧 Full Listening (≥36/40)','Full Listening. Ghi score. Compare với score tuần 16+17+18+19D1+D3. Có consistent improvement không?', IELTS),
+        w('w1','✍️ 100 Collocations: Music & Entertainment (W2T39)','Học 100 colloc âm nhạc (W2T39): promote cultural industries, support independent artists, combat music piracy, develop streaming platforms, foster creative expression, address gender diversity in entertainment, preserve folk music traditions, invest in arts education, expand access to cultural events...'),
+        s('s3','🗣️ Speaking: Vocabulary upgrade drill (15p)','Liệt kê 15 "basic" words còn dùng trong speaking. Thay thế bằng sophisticated alternatives. Thực hành: nói 5 phút CHỈ dùng upgraded vocabulary. Record và compare với recording 2 tuần trước.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Vocabulary: relaxed review day',      detail:'Light vocabulary review day—no new words. Just read through your collocation cheat sheets slowly, enjoy them. Say sentences aloud. This is maintenance, not cramming. Your vocabulary is built. Trust the process.' },
-        { id:'r', type:'reading', title:'Reading: confidence-building session', detail:'Do 1 IELTS Reading passage (any topic) under 15 minutes (less than usual). Aim to get ≥11/13. This quick win builds exam confidence. After: read the full passage leisurely, appreciate the language, enjoy the academic text. You\'re ready.', url: IELTS },
-        { id:'s', type:'speaking',title:'Speaking: positive rehearsal',        detail:'Spend 15 minutes speaking about your favourite topics (not necessarily IELTS-related). Speak in full sentences, use academic vocabulary where natural. This builds confidence and fluency without pressure. Enjoy the language.' },
+        r('r','📖 Reading: exam strategy final rehearsal','Đọc lại "Reading Attack Plan" cá nhân từ tuần 18. Visualise từng bước. Sau đó: làm 1 passage (20p) áp dụng chính xác plan đó. Check: có follow plan không?', IELTS),
+        l('l','🎧 Listening strategy card final','Viết Listening Strategy Card (1 trang): (1) Preview 30s: đọc questions, predict answer type. (2) During: ghi luôn, không chờ chắc chắn. (3) Transfer time: check spelling. (4) Nếu miss 1 câu: không panic. (5) Section yếu nhất: [điền vào]. Học thuộc.'),
+        w('w2','✍️ 100 Collocations: Architecture (W2T40) — DONE! ✅','Học 100 colloc kiến trúc (W2T40): design sustainable buildings, promote green architecture, preserve historical buildings, develop smart urban infrastructure, implement energy-efficient design, revitalise urban spaces, blend traditional and modern styles, enhance the built environment... ĐÃ HOÀN THÀNH 40 Writing Topics!'),
+        w('w3','✍️ Task 2 Essay: Architecture & Urban Design','Đề: "Historical buildings should be preserved even if they are expensive to maintain. To what extent do you agree?" Outline 5p → Draft 40p. Final Writing T40!'),
+      ],
+      [
+        v('rev','🔄 Ôn CamCore B3+B4 (140 từ)','Quiz CamCore B3+B4 = 140 từ. Final spaced repetition. Target ≥130/140.'),
+        l('lr','🎧 Ôn CamListen BL13-BL16 (120 từ)','Quiz CamListen BL13+BL14+BL15+BL16 = 120 từ. Target ≥108/120.'),
+        s('sv','🗣️ Speaking: Positive rehearsal','Nói tiếng Anh 15 phút về chủ đề yêu thích. Tự nhiên, không áp lực. Đây là dạng speaking khi bạn đạt Band 7+: natural and confident.'),
+        v('pl','💡 Tổng kết tuần 19','✅ 40 Writing Topics done! ✅ 30 Speaking Topics done! ✅ Cambridge Core 600 + Topic 900 + Listening 600 done! Tuần 20: FINAL EXAM SIMULATION. Chỉ còn 1 tuần. 💪'),
       ],
     ],
   },
 
-  // ── Week 20: Exam Simulation + FINAL MILESTONE (4 tasks/day) ──
+  // ── Week 20: Luyện đề thực chiến (4 tasks/day + MILESTONE) ─
   {
-    theme: 'Luyện Đề Thực Chiến', themeEn: 'Exam Simulation', phase: 4,
-    milestone: '🎓 Hoàn Thành 140 Ngày!',
+    theme: 'Luyện Đề Thực Chiến', themeEn: 'Final Exam Simulation', phase: 4,
+    milestone: '🎓 Hoàn Thành 140 Ngày IELTS!',
     days: [
       [
-        { id:'v', type:'vocab',   title:'Vocabulary: activation + collocations', detail:'Đọc to collocation cheat sheets của 20 chủ đề. Với mỗi chủ đề: nói nhanh 3 collocations + 1 câu ví dụ không nhìn (rapid-fire). Đây là "kích hoạt" não bộ, không phải nhồi nhét. 30 phút tối đa. Sau đó nghỉ ngơi.' },
-        { id:'r', type:'reading', title:'Mock Exam 5: Reading (Official conditions)', detail:'Full IELTS Reading exam simulation với Cambridge test mới nhất (60 min). Điều kiện y hệt thi thật: không điện thoại, không nghỉ, ngồi bàn thẳng lưng. Chấm ngay sau khi làm. Mục tiêu: ≥35/40 (Band 8). Đây là benchmark cuối cùng trước ngày thi.', url: IELTS },
-        { id:'l', type:'listening',title:'Mock Exam 5: Listening (Official conditions)', detail:'Full IELTS Listening (30p nghe + 10p chuyển đáp án). Điều kiện thi thật. Target: ≥35/40 (Band 8). Chấm điểm ngay. Phân tích cuối cùng: bạn có đạt target L 7.5+ nhất quán chưa?', url: IELTS },
-        { id:'w', type:'writing', title:'[+] Error log review: top 5 mistakes', detail:'Đọc lại error log Writing từ tất cả các Phase. Xác định 5 lỗi ngữ pháp/từ vựng bạn hay mắc nhất. Viết 5 câu mẫu đúng cho từng loại lỗi. Đây là tài liệu bạn đọc buổi sáng ngày thi.' },
+        v('va','Vocab: Collocation activation (20p)','Đọc to collocation cheat sheets (20 topics quan trọng nhất). Rapid-fire: 3 collocations + 1 câu ví dụ cho mỗi topic không nhìn. Activation, không nhồi nhét. 20p tối đa.'),
+        r('r','📖 Mock Exam 5: Reading (Official conditions)','Full IELTS Reading (60p). Điều kiện thi thật: không điện thoại, không nghỉ, ngồi thẳng lưng. Target: ≥35/40. Benchmark cuối cùng.', IELTS),
+        l('l','🎧 Mock Exam 5: Listening (Official conditions)','Full IELTS Listening (30p nghe + 10p transfer). Điều kiện thi thật. Target: ≥35/40. Chấm ngay sau khi làm.', IELTS),
+        w('we','✍️ Error Log: Top 5 Writing Mistakes','Đọc lại ALL writing error logs Phase 4. Top 5 lỗi hay mắc nhất. Viết 5 câu mẫu đúng. Đây là tài liệu đọc buổi sáng ngày thi.'),
       ],
       [
-        { id:'r', type:'reading', title:'Reading: final error review',         detail:'Review tất cả câu sai từ Mock ngày 1. Viết 5 insights cuối: "Tôi hiểu rằng [dạng câu X] cần [chiến lược Y]." Đây là tài liệu đọc buổi sáng ngày thi.', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: final error review + S4 drill', detail:'Review câu sai của Mock ngày 1. Nghe lại đúng đoạn đó. Hiểu chính xác nguyên nhân. Sau đó: làm thêm 1 S4 (bài giảng học thuật) để maintain Band 8 accuracy. Target: ≥9/10.', url: IELTS },
-        { id:'w', type:'writing', title:'Mock Exam 5: Writing (Official conditions)', detail:'Full IELTS Writing simulation (60 min, Task 1 + Task 2). Điều kiện thi thật: không từ điển, không internet. Tự chấm với Band descriptors. Đây là Writing benchmark cuối cùng. Aim: TA≥7, CC≥7, LR≥7, GRA≥7.' },
-        { id:'s', type:'speaking',title:'[+] Speaking mock + video analysis',  detail:'Full Speaking mock 15 phút (ghi video nếu có thể). Sau đó: xem/nghe lại và chấm theo 4 tiêu chí IELTS. So sánh với recording từ Tuần 1. Ghi 3 điểm bạn tự hào nhất về sự tiến bộ. Đây là "confidence fuel" cho ngày thi.' },
+        r('re','📖 Reading: Final error review','Review câu sai từ Mock 5 Reading. Viết 5 insights: "Câu X sai vì... → Lần sau tôi sẽ...". Đây là insight sheet để đọc sáng ngày thi.', IELTS),
+        l('le','🎧 Listening: Error review + S4 drill','Review lỗi Mock 5 Listening. Nghe lại đúng đoạn bị sai. Sau đó: 1 IELTS S4 thêm để maintain accuracy. Target ≥9/10.', IELTS),
+        w('wm','✍️ Mock Exam 5: Writing (Official conditions)','Full Writing (60p, T1+T2). Điều kiện thi thật: không từ điển. Tự chấm với Band descriptors. Aim: TA≥7, CC≥7, LR≥7, GRA≥7.'),
+        s('sm','🗣️ Speaking: Mock + Video self-analysis','Full Speaking mock 15p (ghi video). Xem lại: chấm 4 tiêu chí. So sánh với Tuần 1. Ghi 3 điều tiến bộ nhất. Confidence fuel cho ngày thi.'),
       ],
       [
-        { id:'r', type:'reading', title:'Reading: easy passage confidence build', detail:'1 IELTS Reading passage Band 6 level (15 phút, không áp lực). Mục tiêu: ≥12/13. Đây là để xây dựng tự tin, không phải thách thức. Sau khi làm: đọc lại bài vì thích, không vì học. Bạn đã sẵn sàng.', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: light + enjoyment',        detail:'Nghe BBC 6 Minute English vì thích. Không ghi chép, không phân tích. Chỉ thưởng thức tiếng Anh tự nhiên. Điều này reinforces kỹ năng nghe mà không tạo áp lực, giúp tai "warm" trước kỳ thi.', url: BBC6 },
-        { id:'s', type:'speaking',title:'Mock Exam 5: Speaking (Final mock)',   detail:'Final Speaking mock (15 phút, ghi âm). Part 1+2+3 về các chủ đề bạn tự tin nhất. Sau đó: nghe lại và trân trọng sự tiến bộ từ Ngày 1. Ghi 3 điều bạn làm rất tốt. Đọc lại trước khi thi.', },
-        { id:'v', type:'vocab',   title:'[+] Rapid vocab recap: 10 topics',   detail:'Final vocab activation: nói nhanh không nhìn 5 collocations cho mỗi trong 10 topics quan trọng nhất (Environment, Tech, Education, Health, Society, Science, Business, Arts, Transport, Law). Không cần viết, chỉ nói. Tổng: 50 collocations trong 15 phút.' },
+        r('re','📖 Reading: Easy passage confidence build','1 IELTS passage Band 6 level (15p, không áp lực). Target: ≥12/13. Để xây tự tin, không để thách thức. Sau đó: đọc lại bài vì thích, không vì học. Bạn đã sẵn sàng.', IELTS),
+        l('le','🎧 Listening: Light enjoyment (BBC 6 Min)','Nghe BBC 6 Minute English vì thích. Không ghi chép. Chỉ thưởng thức. Giữ ear "warm" mà không tạo áp lực.', BBC6),
+        s('sm','🗣️ Mock Exam 5: Speaking (Final mock)','Final Speaking mock 15p (ghi âm). Topics bạn tự tin nhất. Sau đó: nghe lại và trân trọng sự tiến bộ từ Ngày 1. Ghi 3 điều bạn làm rất tốt.'),
+        v('vr','Vocab rapid recap: 10 topics (50 colloc, 15p)','Nói nhanh không nhìn 5 collocations cho mỗi trong 10 topics quan trọng nhất (Env, Tech, Edu, Health, Society, Science, Business, Govt, Media, Transport). 50 collocations trong 15 phút.'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Vocabulary: exam eve review',         detail:'Tối trước ngày thi giả định: đọc collocation cheatsheet cá nhân. KHÔNG học thêm từ mới. Chỉ confirm những gì bạn đã biết. Sau đó: ngủ sớm. Não consolidate thông tin trong khi ngủ – đây là "passive studying" hiệu quả nhất.' },
-        { id:'r', type:'reading', title:'Reading: exam strategy final read',   detail:'Đọc lại "IELTS Reading Attack Plan" cá nhân (bạn đã viết ở Tuần 19). Visualise: bạn đang cầm đề thi, skimming headings, đọc câu hỏi trước, tìm keywords, làm bình tĩnh. Mental rehearsal = real performance gain.', url: IELTS },
-        { id:'w', type:'writing', title:'Writing: strategy final visualisation', detail:'Đọc lại template intro/body/conclusion của Task 1 và Task 2. Review: 3 loại essay type (opinion/discussion/two-part) và cấu trúc mỗi loại. Visualise viết 1 essay hoàn hảo. Đây là chuẩn bị tâm lý, không phải luyện thêm.' },
-        { id:'l', type:'listening',title:'[+] Listening strategy card review', detail:'Viết (nếu chưa có) hoặc đọc lại Listening Strategy Card: (1) Trong 30 giây preview: đọc câu hỏi, predict answer type (number/name/adjective). (2) Khi nghe: ghi luôn, không chờ chắc chắn. (3) Transfer time: kiểm tra chính tả. (4) Section yếu nhất của bạn: [điền vào]. Chuẩn bị tinh thần.' },
+        v('ve','Vocab: Exam eve review (light)','Đọc chậm Personal Collocation Cheatsheet. KHÔNG học từ mới. Chỉ confirm những gì đã biết. Sau đó: ngủ sớm — não consolidate trong khi ngủ.'),
+        r('rs','📖 Reading: Exam strategy final visualisation','Đọc "Reading Attack Plan" cá nhân. Visualise thực hiện từng bước. Sau đó: không làm Reading nữa hôm nay. Prepare mentally.', IELTS),
+        w('ws','✍️ Writing: Strategy final review','Đọc lại template intro/body/conclusion. Review: 3 essay types (opinion/discussion/two-part). Visualise viết perfect essay. Mental preparation.'),
+        l('ls','🎧 Listening: Strategy card review','Đọc Listening Strategy Card: (1) 30s preview: predict answer type. (2) Ghi luôn khi nghe. (3) Transfer time: check spelling. (4) Miss 1 câu: không panic, tiếp tục. (5) Section yếu: [điền]. Học thuộc lòng.'),
       ],
       [
-        { id:'r', type:'reading', title:'Reading: final enjoyment session',    detail:'Final Reading: 1 passage, chủ đề bạn thích, không tính giờ. Đọc vì hứng thú. Ghi bất kỳ vocabulary mới thú vị nào. Đây là lần đọc học thuật cuối cùng trước kỳ thi. Trân trọng khoảnh khắc này – bạn đã xây được kỹ năng đọc từ 140 ngày cần mẫn.', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: relax with English media', detail:'Nghe 30 phút: podcast, YouTube channel tiếng Anh, hoặc phim yêu thích (có/không có phụ đề). Không ghi chép. Thuần túy thưởng thức. 140 ngày training đã xây dựng listening skills của bạn – hãy tin vào chúng.' },
-        { id:'s', type:'speaking',title:'Speaking: casual English conversation', detail:'Nói tiếng Anh 15 phút về bất cứ điều gì bạn thích: sở thích, kế hoạch tương lai, điều bạn học được trong 140 ngày. Tự nhiên, thư giãn. Đây là cách người Band 7+ nói: natural and confident.' },
-        { id:'v', type:'vocab',   title:'[+] Affirmation + vocab mantra',     detail:'Đọc to 10 câu IELTS-level bạn đã viết đẹp nhất trong 140 ngày (tự tìm trong notes của bạn). Sau đó nói: "Tôi đã chuẩn bị 140 ngày. Tôi có đủ từ vựng, ngữ pháp, và chiến lược. Mục tiêu của tôi là 7.5 và tôi có thể đạt được nó." Nói to. Tin vào bản thân.' },
+        r('rf','📖 Reading: Final enjoyment session','1 passage IELTS chủ đề bạn thích, không tính giờ. Đọc vì hứng thú. Đây là lần đọc học thuật cuối trước kỳ thi. Trân trọng khoảnh khắc — bạn đã build kỹ năng này qua 140 ngày cần mẫn.', IELTS),
+        l('le','🎧 Listening: Relax with English media','Nghe 30p: podcast hoặc YouTube tiếng Anh yêu thích. Không ghi chép. Thuần túy thưởng thức. 140 ngày training — hãy tin vào những kỹ năng đã xây.'),
+        s('sc','🗣️ Speaking: Casual English conversation (15p)','Nói tiếng Anh 15p về bất cứ điều gì: sở thích, kế hoạch. Tự nhiên, không áp lực. Đây là Band 7+ speaking: natural and confident.'),
+        v('va','Affirmation: "Tôi đã sẵn sàng!"','Đọc to 10 câu IELTS-level đẹp nhất bạn từng viết (tìm trong notes). Sau đó nói: "Tôi đã học 140 ngày. Tôi có đủ vocab, ngữ pháp và chiến lược. Tôi sẽ đạt 7.5." Tin vào bản thân. 💪'),
       ],
       [
-        { id:'v', type:'vocab',   title:'Rest day: collocation read-through',  detail:'Đọc chậm Top 100 IELTS collocations. Không test, không viết. Chỉ để ngôn ngữ thấm vào. Tối đa 20 phút. Sau đó: ăn uống tốt, nghỉ ngơi, ngủ đủ giấc. Performance thi thật phụ thuộc nhiều vào sự nghỉ ngơi của bạn.' },
-        { id:'r', type:'reading', title:'Rest day: light newspaper English',    detail:'Hôm nay: KHÔNG luyện IELTS căng thẳng. Nếu muốn làm gì: đọc 1 bài báo tiếng Anh (BBC, Guardian) trong 15 phút. Thưởng thức. Giữ tâm trí active nhưng không stress. Hãy tin 140 ngày chuẩn bị của bạn.' },
-        { id:'l', type:'listening',title:'Rest day: enjoy English audio',      detail:'Nghe nhạc tiếng Anh, podcast ngắn, hoặc clip YouTube yêu thích. Không ghi chép. Chỉ để tiếng Anh "chạy nền" trong đầu bạn. Đây là cách để não bộ ở trạng thái tốt nhất cho ngày thi.', url: BBC6 },
-        { id:'s', type:'speaking',title:'[+] Rest day: final positive self-talk', detail:'Nói tiếng Anh 5 phút về hành trình 140 ngày của bạn với 1 người thân (hoặc tự nói). Highlight những gì bạn đã đạt được. Nói: "I started at 5.5 and I\'ve been training for 140 days. I\'m ready." Niềm tin vào bản thân là kỹ năng cuối cùng cần luyện.' },
+        v('vl','Rest day: Light collocation read-through','Đọc chậm Top 100 IELTS collocations (20p max). Không test. Chỉ để ngôn ngữ thấm vào. Sau đó: ăn tốt, nghỉ ngơi.'),
+        r('rl','Rest day: Light newspaper English (15p)','Đọc 1 bài báo tiếng Anh ngắn (BBC, Guardian). Thưởng thức. Không phân tích. Giữ mind active không stress.'),
+        l('ll','Rest day: English audio enjoyment','Nghe nhạc tiếng Anh hoặc podcast ngắn. Không ghi chép. Để tiếng Anh "chạy nền" trong đầu.', BBC6),
+        s('sl','Rest day: Positive self-talk (5p)','Nói tiếng Anh 5p về hành trình 140 ngày. "I started at 5.5 and have trained for 140 days. I am ready for 7.5." Niềm tin vào bản thân là kỹ năng cuối cùng. 🎯'),
       ],
-      // Day 140: FINAL MILESTONE
+      // Day 140 = FINAL MILESTONE
       [
-        { id:'m1', type:'mock', title:'🏆 Final Mock: Listening + Reading', detail:'Full IELTS exam simulation (Listening 40 min + Reading 60 min). Dùng đề Cambridge tốt nhất bạn có. Điều kiện thi thật. Chấm cả 2 ngay sau khi làm. So sánh với điểm Ngày 35, 70, 105. Tính mức cải thiện. ĂN MỪNG những gì bạn đã đạt được!', url: IELTS },
-        { id:'m2', type:'mock', title:'🏆 Final Mock: Writing + Speaking',   detail:'Full Writing (60 min) + Full Speaking (15 min ghi âm). Sau khi làm: tự chấm Writing với band descriptors. Nghe lại Speaking và assign band cho từng tiêu chí. So sánh với Phase 1. Ghi lại mức cải thiện bằng số cụ thể.' },
-        { id:'m3', type:'mock', title:'🎓 Tổng kết hành trình 140 ngày',      detail:'Bạn đã hoàn thành 140 ngày luyện thi IELTS cường độ cao. Hôm nay: (1) So sánh điểm Phase 4 vs Phase 1 – ghi mức improvement mỗi kỹ năng, (2) Viết 3 điều bạn tự hào nhất, (3) Đọc lại chiến lược thi lần cuối, (4) Tin vào bản thân. Mục tiêu: Overall 7.5. R8, L8, W7, S7. Bạn đã làm đủ rồi. Hãy đi thi và chinh phục! 🏆' },
-        { id:'x', type:'mock', title:'📋 Ngày thi – Checklist cuối cùng',    detail:'[Checklist ngày đi thi] ✅ Ăn sáng đầy đủ (não cần glucose). ✅ Mang đủ giấy tờ (CMND/HC, xác nhận đăng ký). ✅ Đến sớm 30 phút để làm quen không gian. ✅ Listening: preview câu hỏi trong 30 giây. ✅ Reading: 20 phút/passage. ✅ Writing: 20p Task 1, 40p Task 2. ✅ Speaking: mở đầu bằng "That\'s an interesting question..." nếu cần thời gian suy nghĩ. TỰ TIN LÊN – bạn đã chuẩn bị 140 ngày! 🎯' },
+        m('m1','🏆 Final Mock: Listening + Reading','Full IELTS simulation (L 40p + R 60p). Cambridge test tốt nhất bạn có. Điều kiện thi thật. Chấm cả 2 ngay sau. So sánh với Day 35, 70, 105. Tính improvement. ĂN MỪNG! 🎉', IELTS),
+        m('m2','🏆 Final Mock: Writing + Speaking','Full Writing (60p, T1+T2) + Full Speaking (15p ghi âm). Tự chấm Writing với Band descriptors. Nghe lại Speaking và assign band cho 4 tiêu chí. So sánh với Phase 1. Ghi improvement bằng số.'),
+        m('m3','🎓 Tổng kết 140 ngày hành trình','(1) So sánh Phase 4 vs Phase 1 scores, (2) Viết 3 điều tự hào nhất, (3) Đọc chiến lược thi lần cuối. Mục tiêu: R8, L8, W7, S7, Overall 7.5. Bạn đã làm đủ rồi. Hãy đi thi và chinh phục! 🏆'),
+        m('x','📋 Exam Day Checklist','✅ Ăn sáng đầy đủ. ✅ Mang đủ giấy tờ (CMND/HC, xác nhận đăng ký). ✅ Đến sớm 30 phút. ✅ L: preview 30 giây/section. ✅ R: 20 phút/passage. ✅ W: 20p T1 + 40p T2. ✅ S: "That\'s an interesting question..." nếu cần thời gian. TỰ TIN! 140 ngày đã chuẩn bị bạn cho khoảnh khắc này! 🎯'),
       ],
     ],
   },
-
 ];
 
 // ─── Generator ───────────────────────────────────────────────
