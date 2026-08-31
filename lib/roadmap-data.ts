@@ -25,8 +25,8 @@ export interface RoadmapDay {
 export const PHASES = [
   { id: 1 as Phase, name: 'Xây Nền Tảng',  bandRange: '5.5 → 6.0', days: [1,35]   as [number,number], color: '#4f8ef7', bg: '#EFF6FF', description: 'Nắm format IELTS, chiến lược cơ bản và từ vựng nền tảng cho 5 chủ đề đầu.' },
   { id: 2 as Phase, name: 'Bứt Phá',       bandRange: '6.0 → 6.5', days: [36,70]  as [number,number], color: '#a855f7', bg: '#F5F3FF', description: 'Chinh phục dạng câu khó, xây chiến lược thi bài bản, nâng vocab học thuật.' },
-  { id: 3 as Phase, name: 'Đào Sâu',       bandRange: '6.5 → 7.0', days: [71,105] as [number,number], color: '#06b6d4', bg: '#ECFEFF', description: 'Nâng cao 4 kỹ năng lên Band 7: inference, complex grammar, academic style.' },
-  { id: 4 as Phase, name: 'Thực Chiến',    bandRange: '7.0 → 7.5', days: [106,140] as [number,number], color: '#f59e0b', bg: '#FFFBEB', description: 'Full mock test, phân tích lỗi sai từng tiêu chí, tinh chỉnh đến ngày thi.' },
+  { id: 3 as Phase, name: 'Đào Sâu',       bandRange: '6.5 → 7.0', days: [71,105] as [number,number], color: '#06b6d4', bg: '#ECFEFF', description: 'Nâng cao 4 kỹ năng lên Band 7: inference, complex grammar, academic style. Nghe mỗi ngày!' },
+  { id: 4 as Phase, name: 'Thực Chiến',    bandRange: '7.0 → 7.5', days: [106,140] as [number,number], color: '#f59e0b', bg: '#FFFBEB', description: 'Full mock test mỗi 3 ngày, 4 tasks/ngày ở giai đoạn cuối, phân tích lỗi từng tiêu chí, tinh chỉnh đến ngày thi.' },
 ];
 
 // ─── URL Constants ──────────────────────────────────────────
@@ -43,9 +43,9 @@ const BBCWRD = 'https://www.bbc.com/news/world';
 const IELTS  = 'https://ieltsonlinetests.com/';
 const TED    = 'https://ed.ted.com/';
 
-// ─── Week Data (20 weeks × 7 days × 3 tasks) ────────────────
+// ─── Week Data (20 weeks × 7 days, 3-4 tasks per day) ──────
 type T = { id: string; type: TaskType; title: string; detail: string; url?: string };
-type WeekDef = { theme: string; themeEn: string; phase: Phase; milestone?: string; days: [T,T,T][] };
+type WeekDef = { theme: string; themeEn: string; phase: Phase; milestone?: string; days: T[][] };
 
 const WEEKS: WeekDef[] = [
 
@@ -827,7 +827,7 @@ const WEEKS: WeekDef[] = [
     ],
   },
 
-  // ── Week 19: Comprehensive Review ────────────────────────
+  // ── Week 19: Comprehensive Review (4 tasks/day) ────────
   {
     theme: 'Ôn Tập Tổng Hợp', themeEn: 'Comprehensive Review', phase: 4,
     days: [
@@ -835,32 +835,30 @@ const WEEKS: WeekDef[] = [
         { id:'v', type:'vocab',   title:'Vocabulary: Top 100 IELTS words review', detail:'From all 20 weeks, identify your personal "Top 100 words" – the ones most likely to appear and most useful in all 4 skills. Review them: say definition, collocation, and example sentence. No writing—purely oral review for fluency and automaticity.' },
         { id:'r', type:'reading', title:'Full Reading: Band 7.5-8 simulation',  detail:'Full IELTS Reading (60 min). Use an unseen test. Strict conditions. Aim: ≥34/40. After: spend 20 min analysing every wrong answer. Key question: "What did I misread or misunderstand?" Document answers in a "Final Reading Error Log".', url: IELTS },
         { id:'w', type:'writing', title:'Task 2: Random topic timed',           detail:'Take a random IELTS question (use an exam bank). No preparation. Plan for 5 min, write for 35 min. Focus: does the essay address ALL parts of the question? (Task Achievement is often the easiest criterion to boost—just answer the FULL question carefully.)' },
+        { id:'l', type:'listening',title:'[+] S4 intensive: Band 8 drill',     detail:'Làm 2 IELTS Section 4 liên tiếp (bài giảng học thuật). Mục tiêu: ≥9/10 mỗi section. Sau mỗi section: nghe lại với transcript, đánh dấu từng chỗ bạn nghe sai, phân tích lý do. S4 ≥9/10 là yêu cầu để đạt L Band 8.', url: IELTS },
       ],
       [
         { id:'v', type:'vocab',   title:'Vocabulary: Topic-specific drills',   detail:'Final topical vocabulary sprint: For each of the 10 most common IELTS topics, write 5 essential words/phrases from memory: Environment, Technology, Education, Health, Society, Science, Business, Arts, Transport, Government. 50 words total. Check accuracy.' },
         { id:'l', type:'listening',title:'Full Listening: Band 8 simulation',  detail:'Full IELTS Listening (40 min). Target: ≥36/40 (Band 8). After: listen again with transcript. For every question you got right, confirm your understanding. For every question wrong: analyse if it was (1) speed, (2) vocabulary, (3) distractor. Note your exam-day adjustment.', url: IELTS },
         { id:'s', type:'speaking',title:'Speaking: Part 3 intensive drill',    detail:'Do 10 Part 3 questions from various topics (2 per topic: environment, technology, society, education, culture). Each answer: minimum 60 seconds. Record and listen: Are you developing ideas fully? Giving examples? Using academic vocabulary? Vary response openers.' },
+        { id:'w', type:'writing', title:'[+] Writing Band 7.5 timed essay',    detail:'Đề: "Some people think the best way to increase road safety is to increase the minimum legal age for driving. To what extent do you agree?" Viết 40 phút không tra. Tự chấm từng tiêu chí (TA/CC/LR/GRA), ghi band tự đánh giá. Mỗi tiêu chí phải ≥7.' },
       ],
       [
         { id:'r', type:'reading', title:'Reading: Matching Headings mastery',  detail:'3 Matching Headings passages (one full set each). Practice the "topic sentence method": read only the first and last sentence of each paragraph to identify its main idea. Compare score using this method vs reading full paragraphs. Which is more accurate AND faster?', url: IELTS },
         { id:'l', type:'listening',title:'Listening: S3 intensive practice',  detail:'S3 (discussion between 2-3 speakers) is often hardest because you must distinguish speakers\' opinions. Do 4 S3 sections. After each: write which speaker believed what. Practise: in S3, as soon as a new speaker starts, mentally note "Speaker A says X" before processing the next point.', url: IELTS },
         { id:'w', type:'writing', title:'Writing: Task 1 variety review',      detail:'In 60 minutes: write brief Task 1 responses for 4 different chart types (bar, line, table, pie). Each: just 2 paragraphs (overview + most significant detail). This "compressed" practice improves efficiency. Check: does each overview sentence capture the most important feature?' },
+        { id:'s', type:'speaking',title:'[+] Pronunciation intensive drill',   detail:'Ghi âm 5 phút nói về bất kỳ chủ đề IELTS. Nghe lại: (1) xác định 5 từ phát âm chưa đúng → tra Cambridge Dictionary → luyện lại, (2) kiểm tra word stress (im-POR-tant), (3) luyện connected speech: "used to" = /juːstə/, "would have" = /wʊdəv/. Pronunciation Band 7 = consistently clear.' },
       ],
       [
-        { id:'v', type:'vocab',   title:'Vocabulary: speaking upgrade final',  detail:'Speaking vocabulary sprint: replace 15 boring words/phrases with sophisticated alternatives in speaking contexts: good (beneficial, valuable, advantageous), people (individuals, the population, society at large), important (crucial, fundamental, pivotal), get (obtain, acquire, receive), think (argue, contend, maintain).' },
-        { id:'r', type:'reading', title:'Reading: T/F/NG & Y/N/NG mastery',   detail:'Do 5 T/F/NG and 5 Y/N/NG sets. Focus on NOT GIVEN: This is not saying the info isn\'t in the passage—it means the specific claim is neither confirmed nor denied. "NG" ≠ "wrong"—the text simply doesn\'t discuss it. Practise identifying the difference.', url: IELTS },
+        { id:'v', type:'vocab',   title:'Vocabulary: speaking upgrade final',  detail:'Speaking vocabulary sprint: replace 15 boring words/phrases with sophisticated alternatives: good (beneficial, valuable, advantageous), people (individuals, the population, society at large), important (crucial, fundamental, pivotal), get (obtain, acquire, receive), think (argue, contend, maintain).' },
+        { id:'r', type:'reading', title:'Reading: T/F/NG & Y/N/NG mastery',   detail:'Do 5 T/F/NG and 5 Y/N/NG sets. Focus on NOT GIVEN: This means the specific claim is neither confirmed nor denied. "NG" ≠ "wrong"—the text simply doesn\'t discuss it. Practise identifying the difference.', url: IELTS },
         { id:'s', type:'speaking',title:'Speaking: fluency & natural flow',   detail:'Do 3 Part 1 practice sessions (10 questions each) focusing ONLY on fluency—don\'t stop to think. If you don\'t know a word, paraphrase or use a simpler word and keep going. Fluency is more important than precision. Record and compare: is the flow improving?' },
+        { id:'l', type:'listening',title:'[+] S1+S2 accuracy: 10/10 target',  detail:'Làm 4 Section 1 và 4 Section 2. S1 rất dễ nhưng hay mất điểm vì chính tả hoặc không nghe kịp tên riêng/số điện thoại. Mục tiêu: 10/10 cho S1. Kiểm tra: bạn có viết sai chính tả số liệu không? S2: map labeling – luyện directional language (opposite, adjacent to, next to).', url: IELTS },
       ],
       [
         { id:'r', type:'reading', title:'Reading: Band 8 reasoning practice',  detail:'Take 10 MCQ (multiple choice) Reading questions. For each: before selecting an answer, eliminate wrong options one by one with a reason (e.g. "Option A is wrong because the text says... not..."). This eliminates guessing and builds Band 8 analytical skills.', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: pre-exam review',         detail:'Do 4 full IELTS Listening sections (S1, S2, S3, S4 – one from each, mixed topics). Score each section separately. Which section consistently scores highest? Which lowest? Your exam-day strategy: give extra focus to weak section (read those questions first during preview time).', url: IELTS },
+        { id:'l', type:'listening',title:'Listening: Full Band 8 drill',       detail:'Full IELTS Listening (40 min). Target: ≥37/40. Sau khi làm: ghi lại từng câu sai và nghe lại đoạn đó. Phân loại: (a) nghe nhầm từ, (b) bị đánh lạc hướng, (c) từ vựng không biết, (d) viết quá chậm. Xác định nguyên nhân chính và kế hoạch cho ngày thi.', url: IELTS },
         { id:'w', type:'writing', title:'Writing: Grammar zero-error essay',   detail:'Write a 280-word Task 2 essay. After: proofread specifically for grammar (not content). Check every sentence for: (1) subject-verb agreement, (2) tense consistency, (3) article errors, (4) preposition errors, (5) word form errors. Aim: ZERO grammar errors.' },
-      ],
-      [
-        { id:'r', type:'reading', title:'Reading: full timed with review',    detail:'Final pre-exam full reading simulation (60 min). After finishing: spend 15 minutes reviewing your most uncertain answers only. If you changed answers during review, note: did it improve or worsen your score? This tells you whether to trust your first instinct on exam day.', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: exam preparation notes',  detail:'Write your final exam-day Listening preparation notes (on paper): (1) what to do during preview time (30 seconds per section), (2) how to handle missing an answer (don\'t panic, leave blank and continue), (3) how to use transfer time (check spelling, form vs number), (4) which section to focus most on.' },
-        { id:'s', type:'speaking',title:'Speaking: full pre-exam simulation',  detail:'Full 15-min Speaking mock under exam conditions. No notes. No preparation time. Answer as if in the real exam. Record. This is your benchmark before the final exam week. Assessment: compare this to your Week 1 recording. How far have you come?' },
-      ],
       [
         { id:'v', type:'vocab',   title:'Vocabulary: relaxed review day',      detail:'Light vocabulary review day—no new words. Just read through your collocation cheat sheets slowly, enjoy them. Say sentences aloud. This is maintenance, not cramming. Your vocabulary is built. Trust the process.' },
         { id:'r', type:'reading', title:'Reading: confidence-building session', detail:'Do 1 IELTS Reading passage (any topic) under 15 minutes (less than usual). Aim to get ≥11/13. This quick win builds exam confidence. After: read the full passage leisurely, appreciate the language, enjoy the academic text. You\'re ready.', url: IELTS },
@@ -869,46 +867,53 @@ const WEEKS: WeekDef[] = [
     ],
   },
 
-  // ── Week 20: Exam Simulation + FINAL MILESTONE ───────────
+  // ── Week 20: Exam Simulation + FINAL MILESTONE (4 tasks/day) ──
   {
     theme: 'Luyện Đề Thực Chiến', themeEn: 'Exam Simulation', phase: 4,
     milestone: '🎓 Hoàn Thành 140 Ngày!',
     days: [
       [
-        { id:'v', type:'vocab',   title:'Vocabulary: Day before activation',   detail:'Read aloud your Top 100 IELTS words with their collocations. Speak sentences using them. This is "activation" not memorisation—you\'re priming your brain to access this vocabulary automatically in the exam. 30 minutes maximum, then rest.' },
-        { id:'r', type:'reading', title:'Mock Exam 5: Reading (Official conditions)', detail:'Full IELTS Reading exam simulation with official Cambridge test (60 min). Treat it like the real exam: no phone, no breaks, sit at a desk. Score immediately after. Target: ≥35/40. This is your final benchmark before exam day.', url: IELTS },
-        { id:'l', type:'listening',title:'Mock Exam 5: Listening (Official conditions)', detail:'Full IELTS Listening (40 min total: 30 listening + 10 transfer). Official conditions. Target: ≥35/40. Score immediately. Final pre-exam analysis: are you consistently hitting your target band? Confidence check.', url: IELTS },
+        { id:'v', type:'vocab',   title:'Vocabulary: activation + collocations', detail:'Đọc to collocation cheat sheets của 20 chủ đề. Với mỗi chủ đề: nói nhanh 3 collocations + 1 câu ví dụ không nhìn (rapid-fire). Đây là "kích hoạt" não bộ, không phải nhồi nhét. 30 phút tối đa. Sau đó nghỉ ngơi.' },
+        { id:'r', type:'reading', title:'Mock Exam 5: Reading (Official conditions)', detail:'Full IELTS Reading exam simulation với Cambridge test mới nhất (60 min). Điều kiện y hệt thi thật: không điện thoại, không nghỉ, ngồi bàn thẳng lưng. Chấm ngay sau khi làm. Mục tiêu: ≥35/40 (Band 8). Đây là benchmark cuối cùng trước ngày thi.', url: IELTS },
+        { id:'l', type:'listening',title:'Mock Exam 5: Listening (Official conditions)', detail:'Full IELTS Listening (30p nghe + 10p chuyển đáp án). Điều kiện thi thật. Target: ≥35/40 (Band 8). Chấm điểm ngay. Phân tích cuối cùng: bạn có đạt target L 7.5+ nhất quán chưa?', url: IELTS },
+        { id:'w', type:'writing', title:'[+] Error log review: top 5 mistakes', detail:'Đọc lại error log Writing từ tất cả các Phase. Xác định 5 lỗi ngữ pháp/từ vựng bạn hay mắc nhất. Viết 5 câu mẫu đúng cho từng loại lỗi. Đây là tài liệu bạn đọc buổi sáng ngày thi.' },
       ],
       [
-        { id:'r', type:'reading', title:'Reading: final error review',         detail:'Review all wrong answers from the Week 20 Day 1 mock. Write 5 final insights: "I now understand that [question type X] requires [specific strategy Y]." Keep this insight sheet—read it the morning of your exam.', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: final error review',      detail:'Review wrong answers from Week 20 Day 1 mock. For each wrong answer: listen to that specific moment again. Understand exactly what caused the error (speed, vocabulary, distractor). Write your final Listening strategy for exam day.', url: IELTS },
-        { id:'w', type:'writing', title:'Mock Exam 5: Writing (Official conditions)', detail:'Full IELTS Writing simulation (60 min, Task 1 + Task 2). Strict conditions: no dictionary, no online resources. Treat as the real exam. After: self-assess using Band descriptors. This is your final Writing benchmark.' },
+        { id:'r', type:'reading', title:'Reading: final error review',         detail:'Review tất cả câu sai từ Mock ngày 1. Viết 5 insights cuối: "Tôi hiểu rằng [dạng câu X] cần [chiến lược Y]." Đây là tài liệu đọc buổi sáng ngày thi.', url: IELTS },
+        { id:'l', type:'listening',title:'Listening: final error review + S4 drill', detail:'Review câu sai của Mock ngày 1. Nghe lại đúng đoạn đó. Hiểu chính xác nguyên nhân. Sau đó: làm thêm 1 S4 (bài giảng học thuật) để maintain Band 8 accuracy. Target: ≥9/10.', url: IELTS },
+        { id:'w', type:'writing', title:'Mock Exam 5: Writing (Official conditions)', detail:'Full IELTS Writing simulation (60 min, Task 1 + Task 2). Điều kiện thi thật: không từ điển, không internet. Tự chấm với Band descriptors. Đây là Writing benchmark cuối cùng. Aim: TA≥7, CC≥7, LR≥7, GRA≥7.' },
+        { id:'s', type:'speaking',title:'[+] Speaking mock + video analysis',  detail:'Full Speaking mock 15 phút (ghi video nếu có thể). Sau đó: xem/nghe lại và chấm theo 4 tiêu chí IELTS. So sánh với recording từ Tuần 1. Ghi 3 điểm bạn tự hào nhất về sự tiến bộ. Đây là "confidence fuel" cho ngày thi.' },
       ],
       [
-        { id:'r', type:'reading', title:'Reading: relax and confidence build', detail:'One easy IELTS Reading passage (Band 6 level). Complete in 15 minutes without pressure. This is about building confidence, not challenging yourself. Finish with ≥12/13. Remind yourself: you have prepared for 140 days. You are ready.', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: light practice + enjoy',  detail:'Listen to BBC 6 Minute English for pleasure. No note-taking, no pressure. Just enjoy understanding natural English. This reinforces your listening ability without stress and keeps your ear "warm" before the exam.', url: BBC6 },
-        { id:'s', type:'speaking',title:'Mock Exam 5: Speaking (Final mock)',   detail:'Final Speaking mock (15 min, recorded). Part 1 + 2 + 3 on topics you feel most confident with. After: listen back and appreciate how far you\'ve come from Day 1. Note: 3 things you do very well now. Write these as affirmations to read before the exam.' },
+        { id:'r', type:'reading', title:'Reading: easy passage confidence build', detail:'1 IELTS Reading passage Band 6 level (15 phút, không áp lực). Mục tiêu: ≥12/13. Đây là để xây dựng tự tin, không phải thách thức. Sau khi làm: đọc lại bài vì thích, không vì học. Bạn đã sẵn sàng.', url: IELTS },
+        { id:'l', type:'listening',title:'Listening: light + enjoyment',        detail:'Nghe BBC 6 Minute English vì thích. Không ghi chép, không phân tích. Chỉ thưởng thức tiếng Anh tự nhiên. Điều này reinforces kỹ năng nghe mà không tạo áp lực, giúp tai "warm" trước kỳ thi.', url: BBC6 },
+        { id:'s', type:'speaking',title:'Mock Exam 5: Speaking (Final mock)',   detail:'Final Speaking mock (15 phút, ghi âm). Part 1+2+3 về các chủ đề bạn tự tin nhất. Sau đó: nghe lại và trân trọng sự tiến bộ từ Ngày 1. Ghi 3 điều bạn làm rất tốt. Đọc lại trước khi thi.', },
+        { id:'v', type:'vocab',   title:'[+] Rapid vocab recap: 10 topics',   detail:'Final vocab activation: nói nhanh không nhìn 5 collocations cho mỗi trong 10 topics quan trọng nhất (Environment, Tech, Education, Health, Society, Science, Business, Arts, Transport, Law). Không cần viết, chỉ nói. Tổng: 50 collocations trong 15 phút.' },
       ],
       [
-        { id:'v', type:'vocab',   title:'Vocabulary: exam eve review',         detail:'The evening before exam-style day: light vocabulary review. Re-read your personal collocations cheatsheet. Do NOT learn new things. Just reassure yourself of what you know. Then: rest. Your brain consolidates during sleep.' },
-        { id:'r', type:'reading', title:'Reading: exam strategy final read',   detail:'Read your personal "IELTS Reading Attack Plan" that you wrote in Week 19. Visualise yourself executing it perfectly in the exam: skimming headings, reading questions first, timing passages, staying calm when stuck. Mental rehearsal works.', url: IELTS },
-        { id:'w', type:'writing', title:'Writing: task 1 & 2 strategy review',  detail:'Read your Task 1 and Task 2 templates/structures. Review: introduction formula for each essay type (opinion, discussion, two-part), your overused cohesive devices to avoid, your top-performing vocabulary for writing. Visualise writing a perfect essay.' },
+        { id:'v', type:'vocab',   title:'Vocabulary: exam eve review',         detail:'Tối trước ngày thi giả định: đọc collocation cheatsheet cá nhân. KHÔNG học thêm từ mới. Chỉ confirm những gì bạn đã biết. Sau đó: ngủ sớm. Não consolidate thông tin trong khi ngủ – đây là "passive studying" hiệu quả nhất.' },
+        { id:'r', type:'reading', title:'Reading: exam strategy final read',   detail:'Đọc lại "IELTS Reading Attack Plan" cá nhân (bạn đã viết ở Tuần 19). Visualise: bạn đang cầm đề thi, skimming headings, đọc câu hỏi trước, tìm keywords, làm bình tĩnh. Mental rehearsal = real performance gain.', url: IELTS },
+        { id:'w', type:'writing', title:'Writing: strategy final visualisation', detail:'Đọc lại template intro/body/conclusion của Task 1 và Task 2. Review: 3 loại essay type (opinion/discussion/two-part) và cấu trúc mỗi loại. Visualise viết 1 essay hoàn hảo. Đây là chuẩn bị tâm lý, không phải luyện thêm.' },
+        { id:'l', type:'listening',title:'[+] Listening strategy card review', detail:'Viết (nếu chưa có) hoặc đọc lại Listening Strategy Card: (1) Trong 30 giây preview: đọc câu hỏi, predict answer type (number/name/adjective). (2) Khi nghe: ghi luôn, không chờ chắc chắn. (3) Transfer time: kiểm tra chính tả. (4) Section yếu nhất của bạn: [điền vào]. Chuẩn bị tinh thần.' },
       ],
       [
-        { id:'r', type:'reading', title:'Reading: confidence final session',   detail:'Final Reading session: 1 IELTS passage, your choice, untimed. Read it for enjoyment. Appreciate the academic language. Note any new vocabulary you encounter. This is your last academic reading before the exam. Enjoy it—you earned this moment.', url: IELTS },
-        { id:'l', type:'listening',title:'Listening: relax with English audio', detail:'Listen to your favourite English podcast, YouTube channel, or movie for 30 minutes. No notes, no analysis. Pure enjoyment. You have built 140 days of listening skills—trust them. Relax and let your English flow naturally.' },
-        { id:'s', type:'speaking',title:'Speaking: light conversation practice', detail:'Speak English for 15 minutes about anything you enjoy—your hobbies, your future plans, something interesting you learned in this 140-day journey. Natural, relaxed, flowing English. This is how IELTS Band 7+ speakers sound: natural and confident.' },
+        { id:'r', type:'reading', title:'Reading: final enjoyment session',    detail:'Final Reading: 1 passage, chủ đề bạn thích, không tính giờ. Đọc vì hứng thú. Ghi bất kỳ vocabulary mới thú vị nào. Đây là lần đọc học thuật cuối cùng trước kỳ thi. Trân trọng khoảnh khắc này – bạn đã xây được kỹ năng đọc từ 140 ngày cần mẫn.', url: IELTS },
+        { id:'l', type:'listening',title:'Listening: relax with English media', detail:'Nghe 30 phút: podcast, YouTube channel tiếng Anh, hoặc phim yêu thích (có/không có phụ đề). Không ghi chép. Thuần túy thưởng thức. 140 ngày training đã xây dựng listening skills của bạn – hãy tin vào chúng.' },
+        { id:'s', type:'speaking',title:'Speaking: casual English conversation', detail:'Nói tiếng Anh 15 phút về bất cứ điều gì bạn thích: sở thích, kế hoạch tương lai, điều bạn học được trong 140 ngày. Tự nhiên, thư giãn. Đây là cách người Band 7+ nói: natural and confident.' },
+        { id:'v', type:'vocab',   title:'[+] Affirmation + vocab mantra',     detail:'Đọc to 10 câu IELTS-level bạn đã viết đẹp nhất trong 140 ngày (tự tìm trong notes của bạn). Sau đó nói: "Tôi đã chuẩn bị 140 ngày. Tôi có đủ từ vựng, ngữ pháp, và chiến lược. Mục tiêu của tôi là 7.5 và tôi có thể đạt được nó." Nói to. Tin vào bản thân.' },
       ],
       [
-        { id:'v', type:'vocab',   title:'Rest day: light vocabulary activation', detail:'Gentle vocabulary review only: Read your "Top 100 IELTS collocations" slowly and enjoyably. Don\'t test yourself—just let the language wash over you. Do this for 20 minutes maximum. Then: eat well, sleep well. Your exam performance depends on how rested you are.' },
-        { id:'r', type:'reading', title:'Rest day: no intensive practice',     detail:'Today: NO intense IELTS practice. If you need to do something: read a newspaper article in English for 15 minutes. Enjoy it. Keep your mind engaged but not stressed. Trust your 140 days of preparation. You are ready.' },
-        { id:'s', type:'speaking',title:'Rest day: positive self-talk',        detail:'Today: speak positively about your IELTS journey. Tell a friend or family member (in English or Vietnamese) about your 140-day journey and what you\'ve learned. Recall your favourite vocabulary. Affirm: "I am prepared. I am confident. I will achieve 7.5."' },
+        { id:'v', type:'vocab',   title:'Rest day: collocation read-through',  detail:'Đọc chậm Top 100 IELTS collocations. Không test, không viết. Chỉ để ngôn ngữ thấm vào. Tối đa 20 phút. Sau đó: ăn uống tốt, nghỉ ngơi, ngủ đủ giấc. Performance thi thật phụ thuộc nhiều vào sự nghỉ ngơi của bạn.' },
+        { id:'r', type:'reading', title:'Rest day: light newspaper English',    detail:'Hôm nay: KHÔNG luyện IELTS căng thẳng. Nếu muốn làm gì: đọc 1 bài báo tiếng Anh (BBC, Guardian) trong 15 phút. Thưởng thức. Giữ tâm trí active nhưng không stress. Hãy tin 140 ngày chuẩn bị của bạn.' },
+        { id:'l', type:'listening',title:'Rest day: enjoy English audio',      detail:'Nghe nhạc tiếng Anh, podcast ngắn, hoặc clip YouTube yêu thích. Không ghi chép. Chỉ để tiếng Anh "chạy nền" trong đầu bạn. Đây là cách để não bộ ở trạng thái tốt nhất cho ngày thi.', url: BBC6 },
+        { id:'s', type:'speaking',title:'[+] Rest day: final positive self-talk', detail:'Nói tiếng Anh 5 phút về hành trình 140 ngày của bạn với 1 người thân (hoặc tự nói). Highlight những gì bạn đã đạt được. Nói: "I started at 5.5 and I\'ve been training for 140 days. I\'m ready." Niềm tin vào bản thân là kỹ năng cuối cùng cần luyện.' },
       ],
       // Day 140: FINAL MILESTONE
       [
-        { id:'m1', type:'mock', title:'🏆 Final Mock: Listening + Reading', detail:'Full IELTS exam simulation (Listening 40 min + Reading 60 min). Use the best Cambridge test you have. Official conditions. Score both immediately. Compare with your Day 35, 70, 105 scores. Calculate your improvement. CELEBRATE how far you\'ve come!', url: IELTS },
-        { id:'m2', type:'mock', title:'🏆 Final Mock: Writing + Analysis',  detail:'Full Writing simulation (60 min). Task 1 + Task 2. After: comprehensive self-assessment. Write your band estimates for all criteria. This is your final practice before the real exam. You have done 140 days of preparation. Trust your work.' },
-        { id:'m3', type:'mock', title:'🎓 140 Days Complete – Final Review',  detail:'You have completed 140 days of intensive IELTS preparation. Today: (1) Calculate your progress (compare Phase 4 scores vs Phase 1), (2) Write 3 things you\'re most proud of improving, (3) Review your exam-day strategy one final time, (4) Believe in yourself. 목표: 7.5. You\'ve earned it. 화이팅! 🏆' },
+        { id:'m1', type:'mock', title:'🏆 Final Mock: Listening + Reading', detail:'Full IELTS exam simulation (Listening 40 min + Reading 60 min). Dùng đề Cambridge tốt nhất bạn có. Điều kiện thi thật. Chấm cả 2 ngay sau khi làm. So sánh với điểm Ngày 35, 70, 105. Tính mức cải thiện. ĂN MỪNG những gì bạn đã đạt được!', url: IELTS },
+        { id:'m2', type:'mock', title:'🏆 Final Mock: Writing + Speaking',   detail:'Full Writing (60 min) + Full Speaking (15 min ghi âm). Sau khi làm: tự chấm Writing với band descriptors. Nghe lại Speaking và assign band cho từng tiêu chí. So sánh với Phase 1. Ghi lại mức cải thiện bằng số cụ thể.' },
+        { id:'m3', type:'mock', title:'🎓 Tổng kết hành trình 140 ngày',      detail:'Bạn đã hoàn thành 140 ngày luyện thi IELTS cường độ cao. Hôm nay: (1) So sánh điểm Phase 4 vs Phase 1 – ghi mức improvement mỗi kỹ năng, (2) Viết 3 điều bạn tự hào nhất, (3) Đọc lại chiến lược thi lần cuối, (4) Tin vào bản thân. Mục tiêu: Overall 7.5. R8, L8, W7, S7. Bạn đã làm đủ rồi. Hãy đi thi và chinh phục! 🏆' },
+        { id:'x', type:'mock', title:'📋 Ngày thi – Checklist cuối cùng',    detail:'[Checklist ngày đi thi] ✅ Ăn sáng đầy đủ (não cần glucose). ✅ Mang đủ giấy tờ (CMND/HC, xác nhận đăng ký). ✅ Đến sớm 30 phút để làm quen không gian. ✅ Listening: preview câu hỏi trong 30 giây. ✅ Reading: 20 phút/passage. ✅ Writing: 20p Task 1, 40p Task 2. ✅ Speaking: mở đầu bằng "That\'s an interesting question..." nếu cần thời gian suy nghĩ. TỰ TIN LÊN – bạn đã chuẩn bị 140 ngày! 🎯' },
       ],
     ],
   },
