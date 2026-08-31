@@ -155,7 +155,7 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
           />
           <NavItem
             href="/roadmap"
-            icon={<Map size={18} className="text-emerald-500" />}
+            icon={<Map size={18} className="text-[var(--primary)]" />}
             label="Lộ Trình 140 Ngày"
             active={!!pathname?.startsWith('/roadmap')}
             collapsed={collapsed}

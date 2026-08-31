@@ -1,43 +1,50 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Check, Lock, Star, Trophy, ChevronDown, ChevronUp, BookOpen, Headphones, PenLine, Mic, Brain, Target, Flame, Calendar } from 'lucide-react';
-import { ROADMAP, PHASES, type RoadmapDay, type Skill } from '@/lib/roadmap-data';
+import { ArrowLeft, Check, Lock, Trophy, BookOpen, Headphones, PenLine, Mic, Brain, Target, FlaskConical, X, ExternalLink, Flame, Calendar } from 'lucide-react';
+import { ROADMAP, PHASES, type RoadmapDay, type TaskType } from '@/lib/roadmap-data';
 
-const STORAGE_KEY = 'ielts_roadmap_v1';
+// ─── Storage ─────────────────────────────────────────────────
+const STORAGE_KEY = 'ielts_roadmap_v2';
 
-function loadProgress(): Set<number> {
-  if (typeof window === 'undefined') return new Set();
+type TaskRecord = Record<string, boolean>; // key: `${day}_${taskId}`
+
+function loadTasks(): TaskRecord {
+  if (typeof window === 'undefined') return {};
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return new Set();
-    return new Set(JSON.parse(raw) as number[]);
-  } catch { return new Set(); }
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+function saveTasks(r: TaskRecord) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(r));
 }
 
-function saveProgress(completed: Set<number>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(completed)));
+function isDayComplete(day: RoadmapDay, tasks: TaskRecord): boolean {
+  return day.tasks.every(t => tasks[`${day.day}_${t.id}`]);
 }
 
-const SKILL_META: Record<Skill, { color: string; bg: string; icon: React.ReactNode; label: string }> = {
-  vocab:     { color: '#8B5CF6', bg: '#F5F3FF', icon: <Brain size={14} />,     label: 'Từ vựng' },
-  listening: { color: '#3B82F6', bg: '#EFF6FF', icon: <Headphones size={14} />, label: 'Listening' },
-  reading:   { color: '#10B981', bg: '#ECFDF5', icon: <BookOpen size={14} />,  label: 'Reading' },
-  writing:   { color: '#F59E0B', bg: '#FFFBEB', icon: <PenLine size={14} />,   label: 'Writing' },
-  speaking:  { color: '#EF4444', bg: '#FEF2F2', icon: <Mic size={14} />,       label: 'Speaking' },
-  grammar:   { color: '#6B7280', bg: '#F9FAFB', icon: <BookOpen size={14} />,  label: 'Ngữ pháp' },
-  mock:      { color: '#F59E0B', bg: '#FFFBEB', icon: <Target size={14} />,    label: 'Mock Test' },
+function getStatus(day: number, allDays: RoadmapDay[], tasks: TaskRecord): 'done' | 'current' | 'locked' {
+  const d = allDays.find(x => x.day === day)!;
+  if (isDayComplete(d, tasks)) return 'done';
+  if (day === 1) return 'current';
+  const prev = allDays.find(x => x.day === day - 1);
+  if (prev && isDayComplete(prev, tasks)) return 'current';
+  return 'locked';
+}
+
+// ─── Task type metadata ───────────────────────────────────────
+const TASK_META: Record<TaskType, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
+  vocab:     { label: 'Từ vựng',   icon: <Brain size={15}/>,       color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)' },
+  reading:   { label: 'Đọc',       icon: <BookOpen size={15}/>,    color: '#10B981', bg: 'rgba(16,185,129,0.1)' },
+  listening: { label: 'Nghe',      icon: <Headphones size={15}/>,  color: '#3B82F6', bg: 'rgba(59,130,246,0.1)' },
+  writing:   { label: 'Viết',      icon: <PenLine size={15}/>,     color: '#F59E0B', bg: 'rgba(245,158,11,0.1)' },
+  speaking:  { label: 'Nói',       icon: <Mic size={15}/>,         color: '#EF4444', bg: 'rgba(239,68,68,0.1)'  },
+  grammar:   { label: 'Ngữ pháp',  icon: <BookOpen size={15}/>,    color: '#6366F1', bg: 'rgba(99,102,241,0.1)' },
+  mock:      { label: 'Mock Test', icon: <Target size={15}/>,      color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
 };
 
-// zigzag positions for 5-per-row snake layout
-const COLS = 5;
-function getNodePosition(dayIndex: number): { col: number; row: number } {
-  const row = Math.floor(dayIndex / COLS);
-  const posInRow = dayIndex % COLS;
-  const col = row % 2 === 0 ? posInRow : (COLS - 1 - posInRow);
-  return { col, row };
-}
-
+// ─── Day Node ─────────────────────────────────────────────────
 interface NodeProps {
   day: RoadmapDay;
   status: 'done' | 'current' | 'locked';
@@ -49,432 +56,549 @@ function DayNode({ day, status, onClick }: NodeProps) {
   const isDone = status === 'done';
   const isCurrent = status === 'current';
   const isLocked = status === 'locked';
+  const size = day.isMilestone ? 68 : 58;
 
   return (
     <button
       onClick={isLocked ? undefined : onClick}
       disabled={isLocked}
-      className={`relative flex flex-col items-center group ${isLocked ? 'cursor-default' : 'cursor-pointer'}`}
-      style={{ width: 72 }}
+      className="relative flex flex-col items-center group"
+      style={{ width: 78 }}
     >
       {/* Milestone crown */}
       {day.isMilestone && !isLocked && (
-        <div className="absolute -top-5 left-1/2 -translate-x-1/2">
-          <Trophy size={14} style={{ color: phase.color }} />
-        </div>
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-base">🏆</div>
+      )}
+
+      {/* Outer glow ring for current */}
+      {isCurrent && (
+        <div
+          className="absolute rounded-full animate-ping"
+          style={{
+            width: size + 16, height: size + 16,
+            top: -8, left: '50%', transform: 'translateX(-50%)',
+            background: `${phase.color}20`,
+          }}
+        />
       )}
 
       {/* Circle */}
       <div
-        className={`relative flex items-center justify-center rounded-full font-black text-sm transition-all duration-300 ${
-          isDone ? 'shadow-lg' : isCurrent ? 'shadow-2xl scale-110' : 'shadow-sm'
-        }`}
+        className="relative flex items-center justify-center rounded-full font-black transition-all duration-300"
         style={{
-          width: day.isMilestone ? 64 : 56,
-          height: day.isMilestone ? 64 : 56,
+          width: size, height: size,
           background: isDone
-            ? `linear-gradient(135deg, ${phase.color}, ${phase.color}cc)`
+            ? `radial-gradient(circle at 35% 35%, ${phase.color}ff, ${phase.color}bb)`
             : isCurrent
-            ? `linear-gradient(135deg, ${phase.color}, ${phase.color}99)`
-            : '#E5E7EB',
-          border: isCurrent ? `3px solid ${phase.color}` : isDone ? 'none' : '2px solid #D1D5DB',
-          boxShadow: isCurrent ? `0 0 20px ${phase.color}66, 0 0 40px ${phase.color}33` : undefined,
+            ? `radial-gradient(circle at 35% 35%, ${phase.color}cc, ${phase.color}88)`
+            : 'radial-gradient(circle at 35% 35%, #374151, #1f2937)',
+          boxShadow: isDone
+            ? `0 4px 20px ${phase.color}55, 0 2px 8px ${phase.color}33, inset 0 1px 0 rgba(255,255,255,0.25)`
+            : isCurrent
+            ? `0 0 0 3px ${phase.color}, 0 0 28px ${phase.color}66, 0 4px 16px ${phase.color}44, inset 0 1px 0 rgba(255,255,255,0.2)`
+            : '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
+          transform: isCurrent ? 'scale(1.08)' : 'scale(1)',
         }}
       >
-        {/* Pulse ring for current */}
-        {isCurrent && (
-          <span
-            className="absolute inset-0 rounded-full animate-ping opacity-30"
-            style={{ background: phase.color }}
-          />
-        )}
-
         {isDone ? (
-          <Check size={22} color="white" strokeWidth={3} />
+          <Check size={20} color="white" strokeWidth={3} />
         ) : isLocked ? (
-          <Lock size={16} color="#9CA3AF" />
+          <Lock size={15} color="#6B7280" />
+        ) : day.isMilestone ? (
+          <FlaskConical size={20} color="white" />
         ) : (
-          <span style={{ color: isCurrent ? 'white' : '#6B7280' }}>{day.day}</span>
-        )}
-
-        {/* Star for milestone */}
-        {day.isMilestone && isDone && (
-          <Star size={12} color="gold" fill="gold" className="absolute -top-1 -right-1" />
+          <span className="text-sm font-black" style={{ color: isCurrent ? 'white' : '#9CA3AF' }}>
+            {day.day}
+          </span>
         )}
       </div>
 
-      {/* Day number label */}
+      {/* Label */}
       <span
-        className="mt-1.5 text-[10px] font-semibold leading-tight text-center"
-        style={{ color: isLocked ? '#9CA3AF' : isDone ? phase.color : isCurrent ? phase.color : '#6B7280' }}
+        className="mt-2 text-[10px] font-bold leading-tight text-center"
+        style={{ color: isLocked ? '#4B5563' : isDone ? phase.color : isCurrent ? 'white' : '#6B7280' }}
       >
-        {isCurrent ? '📍 Hôm nay' : `Ngày ${day.day}`}
+        {isCurrent ? '📍 Hôm nay' : `N${day.day}`}
       </span>
-
-      {/* Theme pill */}
-      {(isDone || isCurrent) && (
-        <span
-          className="mt-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full whitespace-nowrap max-w-[80px] truncate"
-          style={{ background: phase.bg, color: phase.color }}
-        >
-          {day.theme.split(' & ')[0]}
-        </span>
-      )}
     </button>
   );
 }
 
+// ─── Connector SVG between rows ───────────────────────────────
+function RowConnector({ isEvenRow, color }: { isEvenRow: boolean; color: string }) {
+  const side = isEvenRow ? 'right' : 'left';
+  return (
+    <div className="relative h-10 w-full">
+      <svg width="100%" height="40" className="absolute inset-0">
+        {side === 'right' ? (
+          <path d="M 90% 0 Q 95% 20 90% 40" stroke={color} strokeWidth="2" fill="none" strokeOpacity="0.4" strokeDasharray="4 3"/>
+        ) : (
+          <path d="M 10% 0 Q 5% 20 10% 40" stroke={color} strokeWidth="2" fill="none" strokeOpacity="0.4" strokeDasharray="4 3"/>
+        )}
+      </svg>
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────
+const COLS = 5;
+
 export default function RoadmapPage() {
   const [mounted, setMounted] = useState(false);
-  const [completed, setCompleted] = useState<Set<number>>(new Set());
+  const [tasks, setTasks] = useState<TaskRecord>({});
   const [selectedDay, setSelectedDay] = useState<RoadmapDay | null>(null);
-  const [expandedPhase, setExpandedPhase] = useState<number | null>(null);
   const currentDayRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setMounted(true);
-    setCompleted(loadProgress());
-  }, []);
+  useEffect(() => { setMounted(true); setTasks(loadTasks()); }, []);
 
-  // Auto-scroll to current day on load
   useEffect(() => {
     if (mounted && currentDayRef.current) {
-      setTimeout(() => {
-        currentDayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 500);
+      setTimeout(() => currentDayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 600);
     }
   }, [mounted]);
 
-  const getStatus = (day: number): 'done' | 'current' | 'locked' => {
-    if (completed.has(day)) return 'done';
-    // Current = the first uncompleted day (all previous must be done, or day 1)
-    if (day === 1 || completed.has(day - 1)) return 'current';
-    return 'locked';
-  };
+  const getStatusMemo = useCallback((day: number) => {
+    return getStatus(day, ROADMAP, tasks);
+  }, [tasks]);
 
-  const handleToggleComplete = (day: number) => {
-    const status = getStatus(day);
+  const handleToggleTask = (day: RoadmapDay, taskId: string) => {
+    const status = getStatusMemo(day.day);
     if (status === 'locked') return;
-
-    setCompleted(prev => {
-      const next = new Set(Array.from(prev));
-      if (next.has(day)) {
-        // Uncomplete: also uncheck all subsequent completed days
-        for (let d = day; d <= 140; d++) next.delete(d);
-      } else {
-        next.add(day);
-      }
-      saveProgress(next);
+    const key = `${day.day}_${taskId}`;
+    setTasks(prev => {
+      const next = { ...prev, [key]: !prev[key] };
+      saveTasks(next);
       return next;
     });
-    setSelectedDay(null);
   };
 
-  const completedCount = completed.size;
-  const progressPct = Math.round((completedCount / 140) * 100);
-  const currentDay = ROADMAP.find(d => getStatus(d.day) === 'current');
+  const completedDaysCount = ROADMAP.filter(d => isDayComplete(d, tasks)).length;
+  const progressPct = Math.round((completedDaysCount / 140) * 100);
+
   const streakDays = (() => {
     let streak = 0;
-    for (let d = completedCount; d >= 1; d--) {
-      if (completed.has(d)) streak++;
+    for (let d = completedDaysCount; d >= 1; d--) {
+      const day = ROADMAP.find(x => x.day === d);
+      if (day && isDayComplete(day, tasks)) streak++;
       else break;
     }
     return streak;
   })();
 
+  const currentDay = ROADMAP.find(d => getStatusMemo(d.day) === 'current');
+
   if (!mounted) return null;
 
-  // Group days into rows of COLS
+  // Group into rows
   const rows: RoadmapDay[][] = [];
-  for (let i = 0; i < ROADMAP.length; i += COLS) {
-    rows.push(ROADMAP.slice(i, i + COLS));
-  }
+  for (let i = 0; i < ROADMAP.length; i += COLS) rows.push(ROADMAP.slice(i, i + COLS));
+  const snakeRows = rows.map((row, i) => i % 2 === 0 ? row : [...row].reverse());
 
-  // Render snake: odd rows reversed
-  const snakeRows = rows.map((row, rowIndex) =>
-    rowIndex % 2 === 0 ? row : [...row].reverse()
-  );
+  // Phase color for current node (for connector)
+  const currentPhaseColor = currentDay ? PHASES.find(p => p.id === currentDay.phase)!.color : '#4f8ef7';
 
   return (
     <div className="min-h-dvh bg-[var(--bg)]">
-      {/* ── Sticky Header ──────────────────────────────────── */}
-      <header className="sticky top-0 z-30 bg-[var(--card)]/90 backdrop-blur-xl border-b border-[var(--border)]">
-        <div className="max-w-3xl mx-auto px-4 h-16 flex items-center gap-3">
+      {/* ── Sticky Header (NO backdrop-blur to avoid UI glitch) ── */}
+      <header className="sticky top-0 z-30 bg-[var(--card)] border-b border-[var(--border)]">
+        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
           <Link href="/" className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[var(--bg)] text-[var(--text-muted)] transition-colors">
-            <ArrowLeft size={20} />
+            <ArrowLeft size={18} />
           </Link>
           <div className="flex-1 min-w-0">
-            <h1 className="font-black text-[var(--text)] text-base truncate">🗺️ Lộ Trình IELTS 7.5</h1>
-            <p className="text-xs text-[var(--text-muted)]">140 ngày · 3h/ngày · Mục tiêu: 20/01/2027</p>
+            <h1 className="font-black text-[var(--text)] text-sm truncate">Lộ Trình IELTS 7.5</h1>
+            <p className="text-[10px] text-[var(--text-muted)]">140 ngày · 3h/ngày · 20/01/2027</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-orange-500 font-bold text-sm">
-              <Flame size={16} /> <span>{streakDays}</span>
-            </div>
-            <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 px-3 py-1.5 rounded-full font-bold text-sm">
-              <Check size={14} /> {completedCount}/140
+          <div className="flex items-center gap-2">
+            {streakDays > 0 && (
+              <div className="flex items-center gap-1 text-orange-400 font-bold text-xs">
+                <Flame size={14}/> {streakDays}
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 bg-[var(--primary-light)] text-[var(--primary)] px-3 py-1.5 rounded-full font-bold text-xs">
+              <Check size={12}/> {completedDaysCount}/140
             </div>
           </div>
         </div>
-
-        {/* Progress bar */}
-        <div className="h-1.5 bg-[var(--border)]">
+        <div className="h-1 bg-[var(--border)]">
           <div
             className="h-full transition-all duration-700"
-            style={{
-              width: `${progressPct}%`,
-              background: 'linear-gradient(90deg, #10B981, #3B82F6, #8B5CF6, #F59E0B)',
-            }}
+            style={{ width: `${progressPct}%`, background: 'linear-gradient(90deg, #4f8ef7, #a855f7, #06b6d4, #f59e0b)' }}
           />
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8 flex flex-col gap-8">
-        {/* ── Stats Row ─────────────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <main className="max-w-3xl mx-auto px-4 pb-16">
+        {/* ── Hero Section ─────────────────────────────────── */}
+        <div className="pt-8 pb-6 text-center">
+          <div className="inline-flex items-center gap-2 bg-[var(--primary-light)] text-[var(--primary)] px-4 py-1.5 rounded-full text-xs font-bold mb-4">
+            <Calendar size={13}/> Bắt đầu ngay hôm nay
+          </div>
+          <h2 className="text-2xl font-black text-[var(--text)] mb-2">
+            Hành trình chinh phục{' '}
+            <span style={{ background: 'linear-gradient(135deg, #4f8ef7, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              IELTS 7.5
+            </span>
+          </h2>
+          <p className="text-sm text-[var(--text-muted)] max-w-sm mx-auto">
+            5.5 → 7.5 trong 140 ngày · 3 giờ mỗi ngày · Hoàn thành từng task để mở khóa ngày tiếp theo
+          </p>
+        </div>
+
+        {/* ── Phase Cards ──────────────────────────────────── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-8">
           {PHASES.map(p => {
             const pDays = ROADMAP.filter(d => d.phase === p.id);
-            const pDone = pDays.filter(d => completed.has(d.day)).length;
+            const pDone = pDays.filter(d => isDayComplete(d, tasks)).length;
             const pPct = Math.round((pDone / pDays.length) * 100);
             return (
-              <div key={p.id} className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-3 flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[var(--text-muted)]">Phase {p.id}</span>
+              <div
+                key={p.id}
+                className="rounded-2xl p-3.5 border"
+                style={{
+                  background: `linear-gradient(135deg, ${p.color}15, ${p.color}08)`,
+                  borderColor: `${p.color}30`,
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-black"
+                    style={{ background: p.color }}
+                  >
+                    {p.id}
+                  </div>
                   <span className="text-xs font-black" style={{ color: p.color }}>{pPct}%</span>
                 </div>
                 <p className="text-[11px] font-bold text-[var(--text)] leading-tight">{p.name}</p>
-                <p className="text-[10px] text-[var(--text-muted)]">{p.bandRange}</p>
-                <div className="h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
+                <p className="text-[10px] text-[var(--text-muted)] mb-2">{p.bandRange}</p>
+                <div className="h-1 bg-[var(--border)] rounded-full overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pPct}%`, background: p.color }} />
                 </div>
-                <p className="text-[10px] text-[var(--text-muted)]">{pDone}/{pDays.length} ngày</p>
               </div>
             );
           })}
         </div>
 
         {/* ── Current Day Banner ────────────────────────────── */}
-        {currentDay && (
-          <div
-            className="rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:scale-[1.01] transition-all shadow-lg"
-            style={{
-              background: `linear-gradient(135deg, ${PHASES.find(p => p.id === currentDay.phase)!.color}22, ${PHASES.find(p => p.id === currentDay.phase)!.color}11)`,
-              border: `1.5px solid ${PHASES.find(p => p.id === currentDay.phase)!.color}44`,
-            }}
-            onClick={() => setSelectedDay(currentDay)}
-          >
+        {currentDay && (() => {
+          const phase = PHASES.find(p => p.id === currentDay.phase)!;
+          const completedTasksCount = currentDay.tasks.filter(t => tasks[`${currentDay.day}_${t.id}`]).length;
+          return (
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl text-white flex-shrink-0 shadow-lg"
-              style={{ background: PHASES.find(p => p.id === currentDay.phase)!.color }}
+              className="rounded-2xl p-4 mb-8 cursor-pointer hover:scale-[1.01] transition-transform border"
+              style={{
+                background: `linear-gradient(135deg, ${phase.color}18, ${phase.color}08)`,
+                borderColor: `${phase.color}40`,
+              }}
+              onClick={() => setSelectedDay(currentDay)}
             >
-              {currentDay.day}
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl text-white flex-shrink-0"
+                  style={{ background: `radial-gradient(circle at 35% 35%, ${phase.color}, ${phase.color}aa)`, boxShadow: `0 4px 16px ${phase.color}44` }}
+                >
+                  {currentDay.day}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-semibold text-[var(--text-muted)] mb-0.5">📍 Ngày hiện tại · Tuần {currentDay.week}</p>
+                  <p className="font-bold text-[var(--text)] truncate">{currentDay.theme}</p>
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    {currentDay.tasks.map(t => {
+                      const done = tasks[`${currentDay.day}_${t.id}`];
+                      return (
+                        <div
+                          key={t.id}
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-white"
+                          style={{ background: done ? TASK_META[t.type].color : '#374151' }}
+                        >
+                          {done ? <Check size={10}/> : <div className="w-1.5 h-1.5 rounded-full bg-gray-500"/>}
+                        </div>
+                      );
+                    })}
+                    <span className="text-[10px] text-[var(--text-muted)] ml-1">{completedTasksCount}/{currentDay.tasks.length} tasks</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-[var(--text-muted)] mb-0.5">📍 Hôm nay • Tuần {currentDay.week} • {currentDay.theme}</p>
-              <p className="font-bold text-[var(--text)] text-base truncate">{currentDay.dayTitle}</p>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                {currentDay.tasks.map(t => `${t.emoji} ${t.duration}p`).join(' · ')}
-              </p>
-            </div>
-            <Calendar size={20} className="text-[var(--text-muted)] flex-shrink-0" />
-          </div>
-        )}
+          );
+        })()}
 
-        {/* ── Phase banners + Snake Tree ────────────────────── */}
-        <div className="flex flex-col gap-1">
+        {/* ── Snake Tree ────────────────────────────────────── */}
+        <div className="flex flex-col">
           {snakeRows.map((row, rowIndex) => {
-            // Check if we need a phase banner before this row
-            const firstDayInRow = rows[rowIndex][0]; // original order
-            const isPhaseStart = firstDayInRow.day === 1 || firstDayInRow.day === 36 || firstDayInRow.day === 71 || firstDayInRow.day === 106;
-            const phase = PHASES.find(p => p.id === firstDayInRow.phase)!;
+            const originalRow = rows[rowIndex];
+            const firstDay = originalRow[0];
+            const isPhaseStart = [1, 36, 71, 106].includes(firstDay.day);
+            const phase = PHASES.find(p => p.id === firstDay.phase)!;
+            const hasCurrentInRow = row.some(d => getStatusMemo(d.day) === 'current');
 
             return (
               <div key={rowIndex}>
-                {/* Phase banner */}
+                {/* Phase header banner */}
                 {isPhaseStart && (
                   <div
-                    className="rounded-2xl p-4 mb-4 mt-2 cursor-pointer select-none"
+                    className="rounded-2xl p-4 mb-4 mt-2 overflow-hidden relative"
                     style={{
-                      background: `linear-gradient(135deg, ${phase.color}20, ${phase.color}08)`,
-                      border: `1.5px solid ${phase.color}40`,
+                      background: `linear-gradient(135deg, ${phase.color}22, ${phase.color}08)`,
+                      border: `1.5px solid ${phase.color}35`,
                     }}
-                    onClick={() => setExpandedPhase(prev => prev === phase.id ? null : phase.id)}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-lg" style={{ background: phase.color }}>
-                          {phase.id}
-                        </div>
-                        <div>
-                          <p className="font-black text-[var(--text)]">Phase {phase.id}: {phase.name}</p>
-                          <p className="text-xs text-[var(--text-muted)]">Ngày {phase.days[0]}–{phase.days[1]} · Mục tiêu {phase.bandRange}</p>
-                        </div>
+                    {/* Decorative background circle */}
+                    <div
+                      className="absolute -right-8 -top-8 w-32 h-32 rounded-full opacity-10"
+                      style={{ background: phase.color }}
+                    />
+                    <div className="flex items-center gap-3 relative">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black"
+                        style={{ background: `radial-gradient(circle at 35% 35%, ${phase.color}, ${phase.color}aa)`, boxShadow: `0 4px 12px ${phase.color}44` }}
+                      >
+                        {phase.id}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold px-2 py-1 rounded-full" style={{ background: phase.bg, color: phase.color }}>
-                          {Math.round((ROADMAP.filter(d => d.phase === phase.id && completed.has(d.day)).length / 35) * 100)}%
-                        </span>
-                        {expandedPhase === phase.id ? <ChevronUp size={16} className="text-[var(--text-muted)]" /> : <ChevronDown size={16} className="text-[var(--text-muted)]" />}
+                      <div>
+                        <p className="font-black text-[var(--text)] text-sm">Phase {phase.id}: {phase.name}</p>
+                        <p className="text-[11px] text-[var(--text-muted)]">Ngày {phase.days[0]}–{phase.days[1]} · Mục tiêu {phase.bandRange}</p>
+                      </div>
+                      <div
+                        className="ml-auto text-xs font-black px-2.5 py-1 rounded-full"
+                        style={{ background: phase.bg, color: phase.color }}
+                      >
+                        {Math.round((ROADMAP.filter(d => d.phase === phase.id && isDayComplete(d, tasks)).length / 35) * 100)}%
                       </div>
                     </div>
-                    {expandedPhase === phase.id && (
-                      <p className="text-sm text-[var(--text-muted)] mt-2 ml-13 pl-1">{phase.description}</p>
-                    )}
+                    <p className="text-[11px] text-[var(--text-muted)] mt-2 ml-13 pl-1 leading-relaxed">{phase.description}</p>
                   </div>
                 )}
 
                 {/* Node row */}
                 <div
-                  ref={row.some(d => getStatus(d.day) === 'current') ? currentDayRef : undefined}
-                  className="relative flex justify-around items-end py-3 px-2"
+                  ref={hasCurrentInRow ? currentDayRef : undefined}
+                  className="flex justify-around items-center py-4 px-2"
                 >
-                  {/* Connecting line between rows */}
-                  <div
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-3"
-                    style={{ background: '#E5E7EB' }}
-                  />
-
-                  {/* Nodes */}
                   {row.map(day => (
                     <DayNode
                       key={day.day}
                       day={day}
-                      status={getStatus(day.day)}
+                      status={getStatusMemo(day.day)}
                       onClick={() => setSelectedDay(day)}
                     />
                   ))}
                 </div>
 
-                {/* Horizontal connector at bottom of row */}
+                {/* Row connector */}
                 {rowIndex < snakeRows.length - 1 && (
-                  <div className="flex items-center justify-center h-4">
-                    <div className="w-0.5 h-full" style={{ background: '#E5E7EB' }} />
-                  </div>
+                  <RowConnector isEvenRow={rowIndex % 2 === 0} color={currentPhaseColor} />
                 )}
               </div>
             );
           })}
         </div>
 
-        {/* ── Completion Message ────────────────────────────── */}
-        {completedCount === 140 && (
-          <div className="text-center py-12 flex flex-col items-center gap-4">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-2xl shadow-yellow-500/30">
-              <Trophy size={44} className="text-white" />
+        {/* ── Completion Banner ─────────────────────────────── */}
+        {completedDaysCount === 140 && (
+          <div className="text-center py-16 flex flex-col items-center gap-5">
+            <div
+              className="w-28 h-28 rounded-full flex items-center justify-center shadow-2xl"
+              style={{ background: 'radial-gradient(circle at 35% 35%, #FBBF24, #F59E0B)' }}
+            >
+              <Trophy size={52} className="text-white" />
             </div>
-            <h2 className="text-2xl font-black text-[var(--text)]">🎓 Hoàn Thành 140 Ngày!</h2>
-            <p className="text-[var(--text-muted)]">Bạn đã chinh phục hành trình từ 5.5 lên 7.5.<br />Chúc bạn thi đạt điểm mơ ước! 🏆</p>
+            <h2 className="text-2xl font-black text-[var(--text)]">🎓 140 Ngày Hoàn Thành!</h2>
+            <p className="text-[var(--text-muted)] text-sm max-w-xs text-center leading-relaxed">
+              Bạn đã chinh phục hành trình từ 5.5 → 7.5.<br/>
+              Chúc bạn thi đạt điểm mơ ước! 🏆
+            </p>
           </div>
         )}
       </main>
 
       {/* ── Day Detail Modal ───────────────────────────────── */}
-      {selectedDay && (
-        <>
-          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedDay(null)} />
-          <div className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto bg-[var(--card)] rounded-t-3xl shadow-2xl animate-slide-up-sheet">
-            <div className="sticky top-0 bg-[var(--card)] px-6 pt-5 pb-3 border-b border-[var(--border)] z-10">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  {selectedDay.isMilestone && (
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <Trophy size={14} className="text-amber-500" />
-                      <span className="text-xs font-bold text-amber-600">{selectedDay.milestoneLabel}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-semibold text-[var(--text-muted)]">
-                      Ngày {selectedDay.day} · Tuần {selectedDay.week}
-                    </span>
-                    <span
-                      className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                      style={{
-                        background: PHASES.find(p => p.id === selectedDay.phase)!.bg,
-                        color: PHASES.find(p => p.id === selectedDay.phase)!.color,
-                      }}
-                    >
-                      Phase {selectedDay.phase}
-                    </span>
-                  </div>
-                  <h2 className="text-xl font-black text-[var(--text)]">{selectedDay.dayTitle}</h2>
-                  <p className="text-sm text-[var(--text-muted)] mt-0.5">📚 Chủ đề: {selectedDay.theme}</p>
-                </div>
-                <button onClick={() => setSelectedDay(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--bg)] text-[var(--text-muted)] hover:text-[var(--text)] transition-colors text-lg">×</button>
-              </div>
-            </div>
+      {selectedDay && (() => {
+        const phase = PHASES.find(p => p.id === selectedDay.phase)!;
+        const status = getStatusMemo(selectedDay.day);
+        const allDone = isDayComplete(selectedDay, tasks);
+        const doneCount = selectedDay.tasks.filter(t => tasks[`${selectedDay.day}_${t.id}`]).length;
 
-            <div className="px-6 py-5 flex flex-col gap-4">
-              {/* Total time */}
-              <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-                <Target size={15} />
-                <span>Tổng thời gian: <strong className="text-[var(--text)]">
-                  {selectedDay.tasks.reduce((s, t) => s + t.duration, 0)} phút (3 giờ)
-                </strong></span>
-              </div>
+        return (
+          <>
+            <div className="fixed inset-0 z-50 bg-black/60" onClick={() => setSelectedDay(null)} />
+            <div className="fixed inset-x-0 bottom-0 z-50 max-h-[88vh] overflow-y-auto bg-[var(--card)] rounded-t-3xl shadow-2xl animate-slide-up-sheet">
+              {/* Modal header */}
+              <div className="sticky top-0 bg-[var(--card)] px-5 pt-5 pb-3 border-b border-[var(--border)] z-10">
+                {/* Drag handle */}
+                <div className="w-10 h-1 bg-[var(--border)] rounded-full mx-auto mb-4"/>
 
-              {/* Tasks */}
-              <div className="flex flex-col gap-3">
-                {selectedDay.tasks.map((task, i) => {
-                  const meta = SKILL_META[task.skill];
-                  return (
-                    <div
-                      key={i}
-                      className="flex gap-3 p-4 rounded-2xl border"
-                      style={{ background: meta.bg, borderColor: `${meta.color}30` }}
-                    >
-                      <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-                        style={{ background: meta.color, color: 'white' }}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    {/* Phase + milestone badge */}
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        style={{ background: phase.bg, color: phase.color }}
                       >
-                        {meta.icon}
+                        Phase {selectedDay.phase} · Tuần {selectedDay.week}
+                      </span>
+                      {selectedDay.isMilestone && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+                          🏆 {selectedDay.milestoneLabel || 'Milestone'}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {/* Day number circle */}
+                      <div
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-lg flex-shrink-0"
+                        style={{
+                          background: `radial-gradient(circle at 35% 35%, ${phase.color}, ${phase.color}aa)`,
+                          boxShadow: `0 4px 16px ${phase.color}44`,
+                        }}
+                      >
+                        {allDone ? <Check size={22}/> : selectedDay.day}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-bold" style={{ color: meta.color }}>{meta.label}</span>
-                          <span className="text-xs text-[var(--text-muted)] ml-auto">{task.emoji} {task.duration} phút</span>
-                        </div>
-                        <p className="text-sm text-[var(--text)] leading-relaxed">{task.description}</p>
+                      <div>
+                        <h2 className="text-lg font-black text-[var(--text)]">Ngày {selectedDay.day}</h2>
+                        <p className="text-sm text-[var(--text-muted)]">{selectedDay.theme}</p>
                       </div>
                     </div>
-                  );
-                })}
+
+                    {/* Progress mini-bar */}
+                    <div className="flex items-center gap-2 mt-3">
+                      <div className="flex-1 h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{ width: `${(doneCount / selectedDay.tasks.length) * 100}%`, background: phase.color }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-bold text-[var(--text-muted)]">{doneCount}/{selectedDay.tasks.length}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedDay(null)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--bg)] text-[var(--text-muted)] hover:text-[var(--text)] transition-colors flex-shrink-0"
+                  >
+                    <X size={16}/>
+                  </button>
+                </div>
               </div>
 
-              {/* Complete button */}
-              <div className="pt-2 pb-4">
-                {getStatus(selectedDay.day) === 'locked' ? (
-                  <div className="flex items-center gap-2 justify-center py-4 text-[var(--text-muted)] text-sm">
-                    <Lock size={16} /> Hoàn thành ngày trước để mở khóa
-                  </div>
-                ) : completed.has(selectedDay.day) ? (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2 justify-center py-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold">
-                      <Check size={18} strokeWidth={3} /> Đã hoàn thành ngày này!
-                    </div>
-                    <button
-                      onClick={() => handleToggleComplete(selectedDay.day)}
-                      className="text-xs text-center text-[var(--text-muted)] hover:text-red-500 transition-colors py-1"
-                    >
-                      Bỏ đánh dấu hoàn thành
-                    </button>
+              {/* Modal body — task list */}
+              <div className="px-5 py-4 flex flex-col gap-3">
+                {status === 'locked' ? (
+                  <div className="flex items-center justify-center gap-2 py-10 text-[var(--text-muted)] text-sm flex-col">
+                    <Lock size={28} className="mb-2 opacity-50"/>
+                    <p className="font-medium">Ngày bị khóa</p>
+                    <p className="text-xs text-center max-w-xs">Hoàn thành tất cả tasks của ngày trước để mở khóa ngày này.</p>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => handleToggleComplete(selectedDay.day)}
-                    className="w-full py-4 rounded-2xl font-black text-white text-lg shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all"
-                    style={{
-                      background: `linear-gradient(135deg, ${PHASES.find(p => p.id === selectedDay.phase)!.color}, ${PHASES.find(p => p.id === selectedDay.phase)!.color}cc)`,
-                      boxShadow: `0 8px 24px ${PHASES.find(p => p.id === selectedDay.phase)!.color}44`,
-                    }}
-                  >
-                    ✅ Đánh dấu hoàn thành ngày {selectedDay.day}
-                  </button>
+                  <>
+                    {selectedDay.tasks.map(task => {
+                      const meta = TASK_META[task.type];
+                      const isChecked = !!tasks[`${selectedDay.day}_${task.id}`];
+                      return (
+                        <div
+                          key={task.id}
+                          className="rounded-2xl border overflow-hidden transition-all duration-200"
+                          style={{
+                            background: isChecked ? 'var(--bg)' : meta.bg,
+                            borderColor: isChecked ? 'var(--border)' : `${meta.color}25`,
+                            opacity: isChecked ? 0.65 : 1,
+                          }}
+                        >
+                          <div className="flex items-start gap-3 p-4">
+                            {/* Checkbox */}
+                            <button
+                              onClick={() => handleToggleTask(selectedDay, task.id)}
+                              className="flex-shrink-0 mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all"
+                              style={{
+                                borderColor: isChecked ? meta.color : `${meta.color}60`,
+                                background: isChecked ? meta.color : 'transparent',
+                              }}
+                            >
+                              {isChecked && <Check size={12} color="white" strokeWidth={3}/>}
+                            </button>
+
+                            {/* Task icon */}
+                            <div
+                              className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-white"
+                              style={{ background: isChecked ? '#374151' : meta.color }}
+                            >
+                              {meta.icon}
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span
+                                  className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                                  style={{
+                                    background: isChecked ? '#374151' : `${meta.color}20`,
+                                    color: isChecked ? '#6B7280' : meta.color
+                                  }}
+                                >
+                                  {meta.label}
+                                </span>
+                                {isChecked && <span className="text-[10px] text-[var(--text-muted)]">✓ Hoàn thành</span>}
+                              </div>
+                              <p className={`text-sm font-bold leading-snug mb-1.5 ${isChecked ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'}`}>
+                                {task.title}
+                              </p>
+                              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                                {task.detail}
+                              </p>
+                              {task.url && (
+                                <a
+                                  href={task.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 mt-2 text-xs font-semibold hover:opacity-80 transition-opacity"
+                                  style={{ color: meta.color }}
+                                >
+                                  <ExternalLink size={11}/> Mở tài liệu
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* All done message */}
+                    {allDone && (
+                      <div
+                        className="rounded-2xl p-4 flex items-center gap-3 mt-1"
+                        style={{
+                          background: `linear-gradient(135deg, ${phase.color}18, ${phase.color}08)`,
+                          border: `1.5px solid ${phase.color}30`,
+                        }}
+                      >
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+                          style={{ background: phase.color }}
+                        >
+                          <Trophy size={20}/>
+                        </div>
+                        <div>
+                          <p className="font-bold text-[var(--text)] text-sm">Ngày {selectedDay.day} hoàn thành! 🎉</p>
+                          <p className="text-xs text-[var(--text-muted)]">Tất cả tasks đã được tick. Ngày {selectedDay.day + 1} đã mở khóa.</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Unlock notice */}
+                    {!allDone && (
+                      <p className="text-[11px] text-center text-[var(--text-muted)] py-2">
+                        Tick hết {selectedDay.tasks.length - doneCount} task còn lại để mở khóa ngày tiếp theo
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        );
+      })()}
     </div>
   );
 }
