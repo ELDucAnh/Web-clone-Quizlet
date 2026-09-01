@@ -62,22 +62,22 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async session({ session, token }) {
-      if (session?.user?.email) {
+    async jwt({ token }) {
+      if (token?.email && !token.dbId) {
         try {
-          const { rows } = await db.query('SELECT id FROM users WHERE email = $1', [session.user.email]);
+          const { rows } = await db.query('SELECT id FROM users WHERE email = $1', [token.email]);
           if (rows.length > 0 && isValidUUID(rows[0].id)) {
-            (session.user as any).id = rows[0].id; // DB UUID - guaranteed valid
-          } else {
-            // DB returned no user or invalid ID — do NOT use token.sub (Google numeric ID)
-            // Return session without id so routes return 401 (Unauthorized) properly
-            console.error('[Auth] Could not find valid UUID for user:', session.user.email);
+            token.dbId = rows[0].id;
           }
         } catch (err) {
-          console.error("session fetch user error", err);
-          // Do NOT fallback to token.sub — it's a numeric Google ID, not a UUID
-          // Routes will safely return 401 when id is missing
+          console.error("jwt fetch user error", err);
         }
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token?.dbId) {
+        (session.user as any).id = token.dbId;
       }
       return session;
     },

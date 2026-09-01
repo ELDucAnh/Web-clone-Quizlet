@@ -100,6 +100,7 @@ export interface Actions {
   updateCard: (cardId: string, term: string, definition: string) => void;
   deleteCard: (cardId: string) => void;
   updateProgress: (cardId: string, update: Partial<CardProgress>) => void;
+  bulkUpdateProgress: (updates: { cardId: string; update: Partial<CardProgress> }[]) => void;
   addCardToDeck: (deckId: string, term: string, definition: string) => void;
 
   // Layout / UI Actions

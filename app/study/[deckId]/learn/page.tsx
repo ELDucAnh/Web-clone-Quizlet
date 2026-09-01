@@ -32,7 +32,7 @@ export default function LearnPage() {
   const deckId = params.deckId as string;
   const [mounted, setMounted] = useState(false);
 
-  const { decks, cards, cardsByDeck, updateProgress, addSession, settings, progress } = useStore();
+  const { decks, cards, cardsByDeck, updateProgress, bulkUpdateProgress, addSession, settings, progress } = useStore();
   const questionField = settings.answerLanguage === 'definition' ? 'term' : 'definition';
   const answerField = settings.answerLanguage === 'definition' ? 'definition' : 'term';
 
@@ -178,12 +178,14 @@ export default function LearnPage() {
           } else {
             // Pass 2 complete -> Session complete!
             // Mark all cards as mastered
-            deckCards.forEach(c => {
-              updateProgress(c.id, {
-                learnStage: 'mastered',
+            const bulkUpdates = deckCards.map(c => ({
+              cardId: c.id,
+              update: {
+                learnStage: 'mastered' as const,
                 lastAnswered: Date.now(),
-              });
-            });
+              }
+            }));
+            bulkUpdateProgress(bulkUpdates);
 
             addSession({
               id: uuidv4(),

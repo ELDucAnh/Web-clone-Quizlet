@@ -200,6 +200,25 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
         }
       },
 
+      bulkUpdateProgress: (updates: { cardId: string; update: Partial<CardProgress> }[]) => {
+        set((state) => {
+          const newProgress = { ...state.progress };
+          updates.forEach(({ cardId, update }) => {
+            newProgress[cardId] = {
+              ...getDefaultProgress(cardId, state.cards[cardId]?.deckId ?? ''),
+              ...state.progress[cardId],
+              ...update,
+            };
+          });
+          return { progress: newProgress };
+        });
+        
+        const bulkData = updates.map(({ cardId }) => get().progress[cardId]).filter(Boolean);
+        if (bulkData.length > 0) {
+          syncToBackend('/progress/bulk', 'POST', { updates: bulkData });
+        }
+      },
+
       resetDeckProgress: (deckId: string) => {
         const cardIds = get().cardsByDeck[deckId] ?? [];
         set((state) => {
