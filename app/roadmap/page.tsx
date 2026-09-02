@@ -206,7 +206,7 @@ export default function RoadmapPage() {
             <ArrowLeft size={18} />
           </Link>
           <div className="flex-1 min-w-0">
-            <h1 className="font-black text-[var(--text)] text-sm truncate">Lộ Trình IELTS 7.5</h1>
+            <h1 className="font-black text-[var(--text)] text-sm truncate">Lộ Trình IELTS 8.0</h1>
             <p className="text-[10px] text-[var(--text-muted)]">140 ngày · 3h/ngày · 20/01/2027</p>
           </div>
           <div className="flex items-center gap-2">
@@ -236,12 +236,12 @@ export default function RoadmapPage() {
           </div>
           <h2 className="text-2xl font-black text-[var(--text)] mb-2">
             Hành trình chinh phục{' '}
-            <span style={{ background: 'linear-gradient(135deg, #4f8ef7, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              IELTS 7.5
+            <span style={{ background: 'linear-gradient(135deg, #ef4444, #b91c1c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textShadow: '0 2px 10px rgba(239, 68, 68, 0.3)' }}>
+              IELTS 8.0
             </span>
           </h2>
           <p className="text-sm text-[var(--text-muted)] max-w-sm mx-auto">
-            5.5 → 7.5 trong 140 ngày · 3 giờ mỗi ngày · Hoàn thành từng task để mở khóa ngày tiếp theo
+            5.5 → 8.0 trong 140 ngày · 3 giờ mỗi ngày · Hoàn thành từng task để mở khóa ngày tiếp theo
           </p>
         </div>
 
@@ -405,7 +405,7 @@ export default function RoadmapPage() {
             </div>
             <h2 className="text-2xl font-black text-[var(--text)]">🎓 140 Ngày Hoàn Thành!</h2>
             <p className="text-[var(--text-muted)] text-sm max-w-xs text-center leading-relaxed">
-              Bạn đã chinh phục hành trình từ 5.5 → 7.5.<br/>
+              Bạn đã chinh phục hành trình từ 5.5 → 8.0.<br/>
               Chúc bạn thi đạt điểm mơ ước! 🏆
             </p>
           </div>
