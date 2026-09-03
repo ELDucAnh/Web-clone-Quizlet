@@ -316,18 +316,28 @@ export default function GravityPage() {
         )}
 
         {/* Falling definition */}
-        {current && !feedback && (
+        {current && (
           <div
             className="absolute left-1/2 -translate-x-1/2 z-10 max-w-[80%]"
             style={{ top: `${fallingPct}%`, transition: 'none' }}
           >
-            <div className="bg-blue-900/80 border border-blue-400/40 backdrop-blur-sm rounded-2xl px-6 py-4 text-center shadow-2xl shadow-blue-500/20">
-              <p className="text-xs font-semibold uppercase tracking-widest text-blue-300 mb-1">
+            <div className={`backdrop-blur-sm rounded-2xl px-6 py-4 text-center shadow-2xl transition-colors duration-300 border ${
+              feedback 
+                ? (feedback.correct ? 'bg-emerald-600/90 border-emerald-400 shadow-emerald-500/50' : 'bg-red-900/90 border-red-500 shadow-red-500/50') 
+                : 'bg-blue-900/80 border-blue-400/40 shadow-blue-500/20'
+            }`}>
+              <p className={`text-xs font-semibold uppercase tracking-widest mb-1 ${feedback ? 'text-white/80' : 'text-blue-300'}`}>
                 Nghĩa / Definition
               </p>
               <p className="text-white font-bold text-lg leading-snug" dir="auto">
                 {current.card.definition}
               </p>
+              {feedback && !feedback.correct && (
+                <div className="mt-3 pt-3 border-t border-white/20 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <p className="text-xs text-white/80 uppercase tracking-widest mb-1">Từ tiếng Anh</p>
+                  <p className="text-2xl font-black text-white tracking-wide">{current.card.term}</p>
+                </div>
+              )}
             </div>
           </div>
         )}
