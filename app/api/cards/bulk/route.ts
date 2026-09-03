@@ -24,17 +24,17 @@ export async function POST(request: Request) {
     // 2. Update cards
     for (const card of updated) {
       await db.query(
-        'UPDATE cards SET term = $1, definition = $2, updated_at = $3 WHERE id = $4',
-        [card.term, card.definition, new Date(), card.id]
+        'UPDATE cards SET term = $1, definition = $2 WHERE id = $3',
+        [card.term, card.definition, card.id]
       );
     }
     
     // 3. Add cards
     for (const card of added) {
       await db.query(
-        `INSERT INTO cards (id, deck_id, term, definition, starred, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [card.id, card.deckId, card.term, card.definition, card.starred ? 1 : 0, new Date(card.createdAt), new Date()]
+        `INSERT INTO cards (id, deck_id, term, definition, starred, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [card.id, card.deckId, card.term, card.definition, card.starred ? 1 : 0, new Date(card.createdAt)]
       );
     }
     
