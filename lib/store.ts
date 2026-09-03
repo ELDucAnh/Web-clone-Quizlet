@@ -447,6 +447,43 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
         syncToBackend(`/cards/${cardId}`, 'DELETE');
       },
 
+      bulkSaveCards: (deckId: string, added: any[], updated: any[], deleted: string[]) => {
+        set((state) => {
+          const newCards = { ...state.cards };
+          
+          deleted.forEach(id => {
+            delete newCards[id];
+          });
+          
+          updated.forEach(c => {
+            if (newCards[c.id]) {
+              newCards[c.id] = { ...newCards[c.id], term: c.term, definition: c.definition, updatedAt: Date.now() };
+            }
+          });
+          
+          added.forEach(c => {
+            newCards[c.id] = c;
+          });
+          
+          let deckCards = state.cardsByDeck[deckId] ?? [];
+          deckCards = deckCards.filter(id => !deleted.includes(id));
+          added.forEach(c => deckCards.push(c.id));
+          
+          const newDecks = { ...state.decks };
+          if (newDecks[deckId]) {
+            newDecks[deckId] = { ...newDecks[deckId], cardCount: deckCards.length };
+          }
+          
+          return {
+            cards: newCards,
+            cardsByDeck: { ...state.cardsByDeck, [deckId]: deckCards },
+            decks: newDecks,
+          };
+        });
+        
+        syncToBackend('/cards/bulk', 'POST', { added, updated, deleted });
+      },
+
       addCardToDeck: (deckId: string, term: string, definition: string) => {
         const id = uuidv4();
         const newCard = { id, term, definition, deckId, starred: false, createdAt: Date.now() };

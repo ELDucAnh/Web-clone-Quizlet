@@ -109,27 +109,37 @@ function CreateSetContent() {
 
     if (isEditMode && editId) {
       updateDeck(editId, name.trim(), description.trim());
-      // Handle cards
+      
       const oldCardIds = new Set(cardsByDeck[editId] || []);
       const newCardIds = new Set();
       
+      const added: any[] = [];
+      const updated: any[] = [];
+      const deleted: string[] = [];
+      
       validRows.forEach(r => {
         if ((r as any).originalId) {
-          // Update existing
-          updateCard(r.id, r.term.trim(), r.definition.trim());
+          updated.push({ id: r.id, term: r.term.trim(), definition: r.definition.trim() });
           newCardIds.add(r.id);
         } else {
-          // Add new
-          addCardToDeck(editId, r.term.trim(), r.definition.trim());
+          added.push({
+            id: r.id,
+            deckId: editId,
+            term: r.term.trim(),
+            definition: r.definition.trim(),
+            starred: false,
+            createdAt: Date.now()
+          });
         }
       });
       
-      // Delete removed
       oldCardIds.forEach(id => {
         if (!newCardIds.has(id)) {
-          deleteCard(id);
+          deleted.push(id);
         }
       });
+      
+      useStore.getState().bulkSaveCards(editId, added, updated, deleted);
       
       router.push(`/study/${editId}`);
     } else {

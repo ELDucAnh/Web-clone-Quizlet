@@ -99,6 +99,7 @@ export interface Actions {
   toggleStarCard: (cardId: string) => void;
   updateCard: (cardId: string, term: string, definition: string) => void;
   deleteCard: (cardId: string) => void;
+  bulkSaveCards: (deckId: string, added: any[], updated: any[], deleted: string[]) => void;
   updateProgress: (cardId: string, update: Partial<CardProgress>) => void;
   bulkUpdateProgress: (updates: { cardId: string; update: Partial<CardProgress> }[]) => void;
   addCardToDeck: (deckId: string, term: string, definition: string) => void;
