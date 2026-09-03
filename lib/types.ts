@@ -7,6 +7,7 @@ export interface Card {
   deckId: string;
   starred?: boolean;    // Đánh dấu sao thuật ngữ quan trọng
   createdAt: number;    // timestamp
+  updatedAt?: number;
 }
 
 export interface Deck {
