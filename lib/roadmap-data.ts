@@ -1,7 +1,5 @@
-// lib/roadmap-data.ts — IELTS 140-day: 5.5 → 8.0
-// Intensive 4 tasks/day (Phase 1-2) and 6 tasks/day (Phase 3-4)
-// Max 2 skills/day (R&L on odd days, W&S on even days)
-// Max 100 new words/day constraint strictly followed.
+// lib/roadmap-data.ts — IELTS 140-day: 5.5 → 8.5+ (R 9 L 9 W 7 S 6.5)
+// Intensive extreme R&L strategy based on user requirements.
 
 export type Phase = 1 | 2 | 3 | 4;
 export type TaskType = 'vocab' | 'reading' | 'listening' | 'writing' | 'speaking' | 'grammar' | 'mock';
@@ -26,111 +24,87 @@ export interface RoadmapDay {
 }
 
 export const PHASES = [
-  { id: 1 as Phase, name: 'Xây Nền Tảng', bandRange: '5.5 → 6.0', days: [1,35] as [number,number], color: '#4f8ef7', bg: '#EFF6FF', description: '4 tasks/ngày. Lấp lỗ hổng Grammar, tích lũy CamCore 600 & CamListen. Tối đa 2 kỹ năng/ngày (Chẵn R/L, Lẻ W/S).' },
-  { id: 2 as Phase, name: 'Bứt Phá', bandRange: '6.0 → 7.0', days: [36,70] as [number,number], color: '#a855f7', bg: '#F5F3FF', description: '4 tasks/ngày. Đẩy mạnh Topic Vocab và Collocations. Kết thúc chắc chắn đạt 7.0.' },
-  { id: 3 as Phase, name: 'Đào Sâu', bandRange: '7.0 → 7.5', days: [71,105] as [number,number], color: '#06b6d4', bg: '#ECFEFF', description: '6 tasks/ngày. Tăng tốc thực chiến Reading Intensive và Writing Canh giờ.' },
-  { id: 4 as Phase, name: 'Thực Chiến', bandRange: '7.5 → 8.0', days: [106,140] as [number,number], color: '#f59e0b', bg: '#FFFBEB', description: '6 tasks/ngày. Mock test liên tục, tối đa hóa điểm Listening & Reading lên 8.5-9.0.' },
+  { id: 1 as Phase, name: 'Xây Nền Tảng', bandRange: '5.5 → 6.5', days: [1,35] as [number,number], color: '#4f8ef7', bg: '#EFF6FF', description: 'Cày cuốc R&L cực hạn (1h30p dictation, Passage 3). Cuối tuần tập trung Writing & Speaking.' },
+  { id: 2 as Phase, name: 'Bứt Phá', bandRange: '6.5 → 7.5', days: [36,70] as [number,number], color: '#a855f7', bg: '#F5F3FF', description: 'Duy trì cường độ R&L. Tích lũy đủ cụm từ vựng Writing 30 chủ đề Task 2.' },
+  { id: 3 as Phase, name: 'Thực Chiến', bandRange: '7.5 → 8.0', days: [71,105] as [number,number], color: '#06b6d4', bg: '#ECFEFF', description: 'Full Mock R&L liên tục. Luyện kỹ năng Listening 1.25x và Reading ép thời gian 50p.' },
+  { id: 4 as Phase, name: 'Tối Đa Hoá', bandRange: '8.0 → 8.5+', days: [106,140] as [number,number], color: '#f59e0b', bg: '#FFFBEB', description: 'Phân tích bẫy chuyên sâu. Đảm bảo Reading 9.0, Listening 9.0. Duy trì W 7.0 S 6.5.' },
 ];
 
-// Data arrays for dynamic generation
-const CAMCORE_BATCHES = ["Batch 1 (001–070)", "Batch 2 (071–140)", "Batch 3 (141–210)", "Batch 4 (211–280)", "Batch 5 (281–350)", "Batch 6 (351–420)", "Batch 7 (421–490)", "Batch 8 (491–560)", "Batch 9 (561–600)"];
-const TOPIC_READING = ["TR1: Environment", "TR2: Technology", "TR3: Education", "TR4: Health & Medicine", "TR5: Society & Community", "TR6: Science & Research", "TR7: Business & Economy", "TR8: Government & Politics", "TR9: Media & Communication", "TR10: Arts & Culture", "TR11: Crime & Justice", "TR12: Transport & Travel", "TR13: Space & Future"];
-const WRITING_COLLOCS = ["W2T01: Environment", "W2T02: Technology", "W2T03: Education", "W2T04: Health & Medicine", "W2T05: Society", "W2T06: Science", "W2T07: Business & Economy", "W2T08: Government & Politics", "W2T09: Media & Communication", "W2T10: Transport & Urban", "W2T11: Food & Diet", "W2T12: Arts & Culture", "W2T13: Crime & Justice", "W2T14: Family & Children", "W2T15: Books & Reading", "W2T16: Animals & Wildlife", "W2T17: History & Heritage", "W2T18: Languages", "W2T19: Work & Career", "W2T20: Globalisation", "W2T21: Tourism", "W2T22: Space", "W2T23: Sports", "W2T24: Housing", "W2T25: Youth", "W2T26: Elderly", "W2T27: Consumerism", "W2T28: Immigration", "W2T29: Music", "W2T30: Happiness", "W2T31: Water & Oceans", "W2T32: Fashion", "W2T33: Traditional vs Modern", "W2T34: Charity", "W2T35: Mental Health", "W2T36: Social Media", "W2T37: AI", "W2T38: Remote Work", "W2T39: Climate Change", "W2T40: Tech Future"];
-const SPEAKING_TOPICS = ["SP01: Hometown", "SP02: Work", "SP03: Family", "SP04: Friends", "SP05: Technology", "SP06: Social Media", "SP07: Environment", "SP08: Transport", "SP09: Food", "SP10: Sport", "SP11: Health", "SP12: Travel", "SP13: Education", "SP14: Books", "SP15: Movies", "SP16: Music", "SP17: Shopping", "SP18: Hobbies", "SP19: Weather", "SP20: Animals", "SP21: Art", "SP22: Daily Routine", "SP23: Childhood", "SP24: Dreams", "SP25: Languages", "SP26: Neighbours", "SP27: Politeness", "SP28: Sleep", "SP29: Time", "SP30: Celebrations"];
+const WRITING_TOPICS = [
+  "Technology & Society", "Education & Youth", "Environment & Climate Change", "Health & Lifestyle", 
+  "Media & Advertising", "Globalisation & Culture", "Crime & Punishment", "Work & Employment", 
+  "Transport & Urban Planning", "Gender & Equality", "Social Media & Communication", "Science & Research",
+  "Tourism & Heritage", "Food & Agriculture", "Family & Parenting", "Sport & Competition",
+  "Animals & Ethics", "Arts & Creativity", "Space & Future Technology", "Ageing & Demographics",
+  "Government & Politics", "Consumerism & Economics", "Languages & Traditions", "Housing & Infrastructure",
+  "Charity & Aid", "Water & Oceans", "Traditional vs Modern", "Remote Work", "Mental Health", "AI & Automation"
+];
 
 export function generateRoadmap(): RoadmapDay[] {
   const days: RoadmapDay[] = [];
-  let camCoreIdx = 0, trIdx = 0, listenIdx = 1, writeIdx = 0, speakIdx = 0;
+  let dayCounter = 1;
+  let writeTopicIdx = 0;
   
   const t = (id: string, type: TaskType, title: string, detail: string): DayTask => ({ id, type, title, detail });
 
-  const getReadingVocab = (dayStr: string) => {
-    if (camCoreIdx < CAMCORE_BATCHES.length) {
-      const title = CAMCORE_BATCHES[camCoreIdx++];
-      return t(`r_${dayStr}_v`, 'reading', `📖 CamCore ${title}`, 'Học từ vựng cơ bản Cambridge (≤70 từ). Mục tiêu nhận mặt chữ và nghĩa 100%.');
-    } else if (trIdx < TOPIC_READING.length) {
-      const title = TOPIC_READING[trIdx++];
-      return t(`r_${dayStr}_v`, 'reading', `📖 ${title} (70 từ)`, 'Học 70 từ vựng chuyên sâu học thuật theo chủ đề. Flashcard có sẵn.');
-    }
-    return t(`r_${dayStr}_adv`, 'reading', '📰 Reading Intensive Practice', 'Làm 1 passage Reading độ khó cao (IELTS 8.0+), phân tích keyword và bẫy đồng nghĩa.');
-  };
-
-  const getListeningVocab = (dayStr: string) => {
-    if (listenIdx <= 20) {
-      const idx = listenIdx++;
-      return t(`l_${dayStr}_v`, 'listening', `🎧 CamListen BL${idx} (30 từ)`, 'Học 30 từ vựng Listening CamListen. Chú ý spelling (phát âm, trọng âm).');
-    }
-    return t(`l_${dayStr}_adv`, 'listening', '🎧 Listening Intensive Practice', 'Làm đề Listening Section 3 hoặc 4. Luyện tập bắt keyword nhanh và spelling chính xác.');
-  };
-
-  const getWritingColloc = (dayStr: string) => {
-    if (writeIdx < WRITING_COLLOCS.length) {
-      const title = WRITING_COLLOCS[writeIdx++];
-      return t(`w_${dayStr}_v`, 'writing', `✍️ 100 Collocs: ${title.split(': ')[1]}`, `Học 100 collocations chủ đề ${title.split(': ')[1]}. Bắt buộc áp dụng trong Task 2.`);
-    }
-    return t(`w_${dayStr}_adv`, 'writing', '✍️ Advanced Vocabulary (Writing)', 'Ôn tập và nâng cấp các từ vựng band 6.0 lên band 8.0 (Idioms, Phrasal verbs).');
-  };
-
-  const getSpeakingVocab = (dayStr: string) => {
-    if (speakIdx < SPEAKING_TOPICS.length) {
-      const title = SPEAKING_TOPICS[speakIdx++];
-      return t(`s_${dayStr}_v`, 'speaking', `🗣️ ${title.split(': ')[1]} (50 từ)`, `Học 50 từ vựng chủ đề ${title.split(': ')[1]}. Tập trung phát âm và ngữ điệu tự nhiên.`);
-    }
-    return t(`s_${dayStr}_adv`, 'speaking', '🗣️ Advanced Speaking Vocab', 'Luyện tập các cụm từ ăn điểm cho Part 3: discourse markers, hedging.');
-  };
-
-  let dayCounter = 1;
   for (let week = 1; week <= 20; week++) {
     const phase = week <= 5 ? 1 : week <= 10 ? 2 : week <= 15 ? 3 : 4;
-    const is6Tasks = phase >= 3;
     const isMilestoneWeek = week % 5 === 0;
+    
+    // In Phase 1 & 2, we pick 2 topics per week for writing
+    let t1 = "General Topic";
+    let t2 = "General Topic";
+    if (phase <= 2 && writeTopicIdx < WRITING_TOPICS.length - 1) {
+      t1 = WRITING_TOPICS[writeTopicIdx++];
+      t2 = WRITING_TOPICS[writeTopicIdx++];
+    }
 
     for (let d = 1; d <= 7; d++) {
       const tasks: DayTask[] = [];
-      const isReviewDay = d === 7;
-      const isRLDay = d % 2 !== 0 && d !== 7; // Days 1, 3, 5
-      const isWSDay = d % 2 === 0 && d !== 7; // Days 2, 4, 6
       const dayStr = dayCounter.toString();
 
-      if (isReviewDay) {
-        if (!is6Tasks) {
-          tasks.push(t(`m_l_${dayStr}`, 'mock', '🏆 Full Listening Test', 'Làm Full IELTS Listening (40 câu). Canh giờ chuẩn 30p + 10p transfer.'));
-          tasks.push(t(`m_r_${dayStr}`, 'mock', '🏆 Full Reading Test', 'Làm Full IELTS Reading (40 câu). Canh giờ chuẩn 60p.'));
-          tasks.push(t(`w_rev_${dayStr}`, 'writing', '✍️ Writing Review', 'Luyện lại dàn ý Task 2 hoặc viết lại 1 bài Task 1 bị điểm kém.'));
-          tasks.push(t(`v_rev_${dayStr}`, 'vocab', '🔄 Weekly Vocab Review', 'Ôn tập 100 từ vựng khó nhất trong tuần thông qua hệ thống Spaced Repetition.'));
-        } else {
-          tasks.push(t(`m_l_${dayStr}`, 'mock', '🏆 Full Listening Test', 'Làm Full IELTS Listening (40 câu).'));
-          tasks.push(t(`m_r_${dayStr}`, 'mock', '🏆 Full Reading Test', 'Làm Full IELTS Reading (40 câu).'));
-          tasks.push(t(`m_w_${dayStr}`, 'mock', '🏆 Full Writing Mock', 'Viết Task 1 (20p) và Task 2 (40p) liên tục.'));
-          tasks.push(t(`m_s_${dayStr}`, 'mock', '🏆 Full Speaking Mock', 'Ghi âm Part 1, 2, 3 liên tục không ngừng.'));
-          tasks.push(t(`v_rev_${dayStr}`, 'vocab', '🔄 Weekly Vocab Review', 'Ôn tập 100 từ vựng khó nhất trong tuần.'));
-          tasks.push(t(`r_err_${dayStr}`, 'reading', '🔍 Error Log Analysis', 'Dành 30p phân tích kỹ từng câu sai trong Listening & Reading để tránh lặp lại.'));
+      if (phase <= 2) {
+        // PHASE 1 & 2 LOGIC
+        if (d >= 1 && d <= 5) {
+          // THỨ 2 ĐẾN THỨ 5 (Tập trung R&L)
+          tasks.push(t(`r_vocab_${dayStr}`, 'reading', '📖 Học 30 từ vựng Reading', 'Chọn 30 từ vựng học thuật. Ghi chép định nghĩa, từ loại, đồng nghĩa/trái nghĩa.'));
+          tasks.push(t(`l_vocab_${dayStr}`, 'listening', '🎧 Học 30 từ vựng Listening', 'Tập trung phát âm chuẩn, tránh nhầm lẫn minimal pairs và spelling.'));
+          tasks.push(t(`r_prac_${dayStr}`, 'reading', '📰 Làm 2 bài Reading Passage 3 & Học từ vựng', 'Làm 2 bài Passage 3 cực khó (40p). Tra cứu toàn bộ từ vựng và phân tích bẫy Paraphrase.'));
+          tasks.push(t(`l_prac_${dayStr}`, 'listening', '🎧 Nghe chép chính tả liên tục 1h30 phút', 'Chép chính tả liên tục 1h30p. Đối chiếu transcript, đánh dấu từ sai. Luyện tốc độ tự nhiên.'));
+          tasks.push(t(`g_chill_${dayStr}`, 'grammar', '📚 Học 1 chủ đề ngữ pháp (nhẹ nhàng)', 'Học 1 chủ đề ngữ pháp nhẹ nhàng. Viết 2-3 câu ví dụ.'));
+        } else if (d === 6) {
+          // THỨ 7 (Tập trung Writing)
+          tasks.push(t(`w_vocab_${dayStr}`, 'writing', `✍️ Học 60 cụm từ dài cho Writing Task 2`, `Học 30 cụm từ dài x 2 chủ đề (${t1} & ${t2}). Học cách dùng ngữ cảnh.`));
+          tasks.push(t(`w_prac_${dayStr}`, 'writing', `✍️ Viết 1 bài Essay Task 2 (bấm giờ 40 phút)`, `Viết 1 bài Essay bấm giờ 40p. Mục tiêu dùng tối thiểu 10 cụm từ vừa học.`));
+          tasks.push(t(`g_chill_${dayStr}`, 'grammar', '📚 Học 1 chủ đề ngữ pháp (nhẹ nhàng)', 'Học 1 điểm ngữ pháp nhẹ nhàng có thể áp dụng vào Writing.'));
+        } else if (d === 7) {
+          // CHỦ NHẬT (Review & Writing & Speaking)
+          tasks.push(t(`w_vocab_${dayStr}`, 'writing', `✍️ Học 30 cụm từ dài cho Writing Task 2`, `Ôn tập và học thêm cụm từ chủ đề ${t2}. Tìm điểm chung giữa 2 chủ đề tuần này.`));
+          tasks.push(t(`w_prac_${dayStr}`, 'writing', '✍️ Luyện tập viết ứng dụng 2 chủ đề vocab', `Viết 1 bài hoàn chỉnh kết hợp cụm từ của cả 2 chủ đề (${t1} & ${t2}). Bấm giờ 40p.`));
+          tasks.push(t(`s_prac_${dayStr}`, 'speaking', '🗣️ Luyện nói 40 phút với AI về 4 chủ đề từ vựng', `Đóng vai thi Speaking thật. Tích cực ép dùng 120 cụm từ đã học (từ các tuần trước). Ghi âm lại.`));
+          tasks.push(t(`v_rev_${dayStr}`, 'vocab', '🔄 Ôn tập toàn bộ từ vựng trong tuần (Spaced Repetition)', 'Ôn tập toàn bộ từ vựng R, L, W trong tuần. Không để cụm nào bị quên.'));
+          tasks.push(t(`g_chill_${dayStr}`, 'grammar', '📚 Học 1 chủ đề ngữ pháp (nhẹ nhàng)', 'Ôn lại ngữ pháp cuối tuần thật nhẹ nhàng.'));
         }
-      } else if (isRLDay) {
-        tasks.push(getReadingVocab(dayStr));
-        if (!is6Tasks) {
-          tasks.push(t(`r_prac_${dayStr}`, 'reading', '📰 Reading Practice / Grammar', 'Đọc 1 bài báo tiếng Anh (BBC/CNN) hoặc luyện 1 điểm ngữ pháp.'));
-          tasks.push(getListeningVocab(dayStr));
-          tasks.push(t(`l_dic_${dayStr}`, 'listening', '🎧 Listening Dictation', 'Nghe chép chính tả 30 phút. Nâng cao khả năng bắt âm.'));
+      } else {
+        // PHASE 3 & 4 LOGIC
+        if (d === 1 || d === 3 || d === 5) {
+          // THỨ 2, 4, 6 (Full Test & Phân tích bẫy R&L)
+          tasks.push(t(`m_list_${dayStr}`, 'mock', '🎧 Full Mock Test Listening (Tốc độ 1.25x)', 'Làm 4 sections (40 câu) nghiêm ngặt tốc độ 1.25x để quen áp lực. Không dừng audio.'));
+          tasks.push(t(`m_read_${dayStr}`, 'mock', '📰 Full Mock Test Reading (Ép thời gian 50-55 phút)', 'Ép thời gian xuống 50-55 phút. Tăng tốc độ đọc và chọn đáp án.'));
+          tasks.push(t(`r_err_${dayStr}`, 'reading', '🔍 Phân tích sâu 100% các câu sai Reading', 'Tra cứu 100% câu sai, xác định bẫy Paraphrase. Ghi cặp Paraphrase vào sổ tay.'));
+          tasks.push(t(`l_err_${dayStr}`, 'listening', '🔍 Phân tích sâu bẫy Listening Section 3', 'Phân tích sâu Section 3 (Multiple Choice & Matching). Xác định distractors.'));
+          tasks.push(t(`s_prac_${dayStr}`, 'speaking', '🗣️ Luyện Speaking Part 1 & 2', 'Duy trì phản xạ 6.5. Trả lời Part 1 (3-4p) và 1 cue card Part 2 (2p) ghi âm lại.'));
+        } else if (d === 2 || d === 4) {
+          // THỨ 3, 5 (Kỹ năng khó R&L + Writing)
+          tasks.push(t(`r_adv_${dayStr}`, 'reading', '📰 Luyện tập riêng biệt các dạng câu hỏi dễ sai nhất (8.5+)', 'Drill sâu T/F/NG và Matching Headings độ khó 8.5+. Tập trung phân biệt F và NG.'));
+          tasks.push(t(`l_adv_${dayStr}`, 'listening', '🎧 Luyện nghe Section 4 (Fill in the blanks)', 'Nghe liên tục không nghỉ, chép chính tả tốc độ cao bài giảng học thuật.'));
+          tasks.push(t(`w_prac_${dayStr}`, 'writing', `✍️ Viết Task ${d === 2 ? '1' : '2'} bấm giờ nghiêm ngặt`, `Bấm giờ cực ngặt (${d === 2 ? '20p Task 1' : '40p Task 2'}). Tự review lỗi ngữ pháp và từ vựng.`));
+          tasks.push(t(`w_vocab_${dayStr}`, 'writing', '✍️ Nâng cấp từ vựng Writing band 7.0+', 'Học sophisticated collocations, nuanced expressions, hedging language.'));
         } else {
-          tasks.push(t(`r_p1_${dayStr}`, 'reading', '📰 Reading Intensive Passage 1', 'Canh đúng 18 phút làm Passage 1 hoặc 2.'));
-          tasks.push(t(`r_p2_${dayStr}`, 'reading', '📰 Reading Intensive Passage 2', 'Canh đúng 20 phút làm Passage 3 (khó).'));
-          tasks.push(getListeningVocab(dayStr));
-          tasks.push(t(`l_sec34_${dayStr}`, 'listening', '🎧 Listening Section 3 & 4', 'Tập trung luyện Section 3 (Multiple Choice) và 4 (Fill in the blanks).'));
-          tasks.push(t(`l_dic_adv_${dayStr}`, 'listening', '🎧 Dictation Hard Mode', 'Chép chính tả tốc độ 1.25x hoặc bài TED Talks chuyên ngành.'));
-        }
-      } else if (isWSDay) {
-        tasks.push(getWritingColloc(dayStr));
-        if (!is6Tasks) {
-          tasks.push(t(`w_prac_${dayStr}`, 'writing', '✍️ Writing Essay Draft', 'Lập dàn ý chi tiết cho 1 đề Task 2 (10p) hoặc luyện viết Task 1 (20p).'));
-          tasks.push(getSpeakingVocab(dayStr));
-          tasks.push(t(`s_prac_${dayStr}`, 'speaking', '🗣️ Speaking Practice', 'Thực hành trả lời 3 câu Part 1 hoặc 1 đề Part 2. Ghi âm và tự nghe lại.'));
-        } else {
-          tasks.push(t(`w_t1_${dayStr}`, 'writing', '✍️ Writing Task 1 (Timed)', 'Canh 20 phút viết bài Task 1 (Line, Bar, Pie, Map, Process) và chấm điểm.'));
-          tasks.push(t(`w_t2_${dayStr}`, 'writing', '✍️ Writing Task 2 (Timed)', 'Canh 40 phút viết bài Task 2. Dùng các collocations cấp cao.'));
-          tasks.push(getSpeakingVocab(dayStr));
-          tasks.push(t(`s_p2_${dayStr}`, 'speaking', '🗣️ Speaking Part 2', 'Nói Part 2 trong 2 phút liên tục, không ngắc ngứ. Tập trung vào trôi chảy (Fluency).'));
-          tasks.push(t(`s_p3_${dayStr}`, 'speaking', '🗣️ Speaking Part 3', 'Luyện tập trả lời các câu hỏi trừu tượng Part 3 (so sánh, dự đoán tương lai).'));
+          // THỨ 7, CN (Mock Test & Speaking)
+          tasks.push(t(`m_full_${dayStr}`, 'mock', '🏆 Thi thử Mock Test 4 kỹ năng chuẩn format thi thật', 'Mô phỏng thi thật: Sáng L (30p), R (60p), W (60p). Chiều S (14p). Không tra từ điển.'));
+          tasks.push(t(`s_mock_${dayStr}`, 'mock', '🗣️ Ghi âm Full Mock Speaking Part 1, 2, 3 liên tục', 'Ghi âm Part 1,2,3 liên tục. Dùng AI chấm điểm Fluency, Coherence, Pronunciation.'));
+          tasks.push(t(`v_rev_${dayStr}`, 'vocab', '🔄 Ôn tập toàn bộ từ vựng nâng cao đã sai', 'Tổng hợp toàn bộ từ vựng ghi sai trong Mock Test (đặc biệt từ Reading/Listening). Ôn lặp lại.'));
         }
       }
 
