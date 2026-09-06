@@ -22,6 +22,7 @@ export function MultipleChoice({
 }: MultipleChoiceProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [answered, setAnswered] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
 
   const correctAnswer = card[answerField];
 
@@ -42,6 +43,7 @@ export function MultipleChoice({
   useEffect(() => {
     setSelected(null);
     setAnswered(false);
+    setTransitioning(false);
   }, [card.id]);
 
   // Keyboard shortcuts 1-4 and Enter
@@ -133,7 +135,7 @@ export function MultipleChoice({
       </div>
 
       {/* Feedback */}
-      {answered && (
+      {answered && !transitioning && (
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center animate-slide-up">
           <div
             className={`flex-1 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2 ${
@@ -156,8 +158,12 @@ export function MultipleChoice({
             )}
           </div>
           <button
-            onClick={() => onAnswer(selected === correctAnswer)}
-            className="px-6 py-3 rounded-xl font-bold text-white gradient-primary hover:opacity-90 active:scale-95 transition-all flex-shrink-0"
+            onClick={() => {
+              setTransitioning(true);
+              onAnswer(selected === correctAnswer);
+            }}
+            disabled={transitioning}
+            className="px-6 py-3 rounded-xl font-bold text-white gradient-primary hover:opacity-90 active:scale-95 transition-all flex-shrink-0 disabled:opacity-50"
           >
             Tiếp tục (Enter)
           </button>

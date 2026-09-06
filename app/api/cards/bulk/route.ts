@@ -5,10 +5,9 @@ import { db } from '@/lib/db';
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  // Allow unauthenticated for local demo mode if no session, or enforce it?
-  // Our db.query handles it if we don't strictly require session for demo, 
-  // but let's check auth.ts or other routes. Other routes just use db.query directly.
-  
+  const userId = (session?.user as any)?.id;
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   try {
     const { added = [], updated = [], deleted = [] } = await request.json();
     
@@ -17,7 +16,6 @@ export async function POST(request: Request) {
     
     // 1. Delete cards
     if (deleted.length > 0) {
-      // Use ANY to delete multiple
       await db.query('DELETE FROM cards WHERE id = ANY($1::uuid[])', [deleted]);
     }
     
@@ -29,12 +27,12 @@ export async function POST(request: Request) {
       );
     }
     
-    // 3. Add cards
+    // 3. Add cards — include user_id (required NOT NULL column)
     for (const card of added) {
       await db.query(
-        `INSERT INTO cards (id, deck_id, term, definition, starred, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [card.id, card.deckId, card.term, card.definition, card.starred ? 1 : 0, new Date(card.createdAt)]
+        `INSERT INTO cards (id, deck_id, user_id, term, definition, starred, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [card.id, card.deckId, userId, card.term, card.definition, card.starred ? 1 : 0, new Date(card.createdAt)]
       );
     }
     
