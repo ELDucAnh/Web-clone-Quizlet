@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import {
   Home, Library, Folder, Plus, ChevronLeft, ChevronRight,
-  Settings, X, Bell, Clock, PenLine, Mic, Sparkles, Map
+  Settings, X, Bell, Clock, PenLine, Mic, Sparkles, Map, BookMarked
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -158,6 +158,13 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             icon={<Map size={18} className="text-[var(--primary)]" />}
             label="Lộ Trình 120 Ngày"
             active={!!pathname?.startsWith('/roadmap')}
+            collapsed={collapsed}
+          />
+          <NavItem
+            href="/reading-errors"
+            icon={<BookMarked size={18} className="text-red-500" />}
+            label="Nhật Ký Lỗi Reading"
+            active={!!pathname?.startsWith('/reading-errors')}
             collapsed={collapsed}
           />
         </nav>
