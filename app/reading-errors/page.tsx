@@ -234,6 +234,7 @@ function AddErrorForm({ onAdd }: { onAdd: (e: ReadingError) => void }) {
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [selectionHint, setSelectionHint] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const passageTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Capture selected text ONLY from inside the textarea (not window selection)
@@ -286,6 +287,11 @@ function AddErrorForm({ onAdd }: { onAdd: (e: ReadingError) => void }) {
     setCorrection('');
     setTags([]);
     setTagInput('');
+    
+    // Show success feedback
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
+    
     // Scroll the textarea back into view for next selection
     passageTextareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
@@ -434,22 +440,31 @@ function AddErrorForm({ onAdd }: { onAdd: (e: ReadingError) => void }) {
         />
       </div>
 
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={!selectedText.trim()}
-        className="btn-primary w-full py-2.5 disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        <Plus size={16} />
-        Lưu lỗi sai này
-      </button>
+      {/* Submit & Feedback */}
+      <div className="space-y-3">
+        {saveSuccess && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 animate-slide-up">
+            <Check size={16} />
+            Đã lưu lỗi thành công! Bạn có thể tiếp tục bôi chọn cụm từ khác trong bài.
+          </div>
+        )}
+        
+        <button
+          type="submit"
+          disabled={!selectedText.trim()}
+          className="btn-primary w-full py-2.5 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <Plus size={16} />
+          Lưu lỗi sai này
+        </button>
 
-      {!selectedText && (
-        <p className="text-xs text-center text-[var(--text-faint)] flex items-center justify-center gap-1">
-          <AlertCircle size={12} />
-          Hãy paste passage và bôi chọn từ/cụm sai trước
-        </p>
-      )}
+        {!selectedText && !saveSuccess && (
+          <p className="text-xs text-center text-[var(--text-faint)] flex items-center justify-center gap-1">
+            <AlertCircle size={12} />
+            Hãy paste passage và bôi chọn từ/cụm sai trước
+          </p>
+        )}
+      </div>
     </form>
   );
 }
