@@ -156,7 +156,7 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
           <NavItem
             href="/roadmap"
             icon={<Map size={18} className="text-[var(--primary)]" />}
-            label="Lộ Trình 140 Ngày"
+            label="Lộ Trình 120 Ngày"
             active={!!pathname?.startsWith('/roadmap')}
             collapsed={collapsed}
           />
@@ -196,8 +196,8 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
                       href={`/folder/${folder.id}`}
                       onClick={onMobileClose}
                       className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[13px] truncate transition-colors ${pathname === `/folder/${folder.id}`
-                          ? 'bg-[var(--primary-light)] text-[var(--primary)] font-medium'
-                          : 'text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--text)]'
+                        ? 'bg-[var(--primary-light)] text-[var(--primary)] font-medium'
+                        : 'text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--text)]'
                         }`}
                     >
                       <Folder size={14} className="flex-shrink-0" />
