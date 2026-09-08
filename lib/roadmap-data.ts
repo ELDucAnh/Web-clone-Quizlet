@@ -1,127 +1,585 @@
-// lib/roadmap-data.ts — IELTS 140-day: 5.5 → 8.5+ (R 9 L 9 W 7 S 6.5)
-// Intensive extreme R&L strategy based on user requirements.
+// lib/roadmap-data.ts — IELTS 120-day: 5.5 → 9R / 9L / 7W / 6.5S
+// 4 Phases: P1(1-20) P2(21-60) P3(61-80) P4(81-120)
+// Phase 1-3: tasks differ by available time (2h vs 4h per day)
+// Phase 4: fixed full-intensity schedule (7-12h/day no limit)
+//
+// KEY RULE: task IDs always use ABSOLUTE day number (not dayInPhase) to avoid
+// cross-phase ID collisions. Storage key format: `${day.day}_${task.id}`
 
 export type Phase = 1 | 2 | 3 | 4;
 export type TaskType = 'vocab' | 'reading' | 'listening' | 'writing' | 'speaking' | 'grammar' | 'mock';
+export type TimeMode = '2h' | '4h';
 
 export interface DayTask {
   id: string;
   type: TaskType;
   title: string;
   detail: string;
+  durationMin: number; // estimated minutes
   url?: string;
 }
 
 export interface RoadmapDay {
-  day: number;
+  day: number;      // absolute day 1–120
   week: number;
   phase: Phase;
   theme: string;
   themeEn: string;
-  tasks: DayTask[];
+  /** Tasks when user has ~2 hours (Phase 1-3). Phase 4 ignores this. */
+  tasks2h: DayTask[];
+  /** Tasks when user has ~4 hours (Phase 1-3), or the only list for Phase 4. */
+  tasks4h: DayTask[];
   isMilestone: boolean;
   milestoneLabel?: string;
 }
 
 export const PHASES = [
-  { id: 1 as Phase, name: 'Xây Nền Tảng', bandRange: '5.5 → 6.5', days: [1,35] as [number,number], color: '#4f8ef7', bg: '#EFF6FF', description: 'Cày cuốc R&L cực hạn (1h30p dictation, Passage 3). Cuối tuần tập trung Writing & Speaking.' },
-  { id: 2 as Phase, name: 'Bứt Phá', bandRange: '6.5 → 7.5', days: [36,70] as [number,number], color: '#a855f7', bg: '#F5F3FF', description: 'Duy trì cường độ R&L. Tích lũy đủ cụm từ vựng Writing 30 chủ đề Task 2.' },
-  { id: 3 as Phase, name: 'Thực Chiến', bandRange: '7.5 → 8.0', days: [71,105] as [number,number], color: '#06b6d4', bg: '#ECFEFF', description: 'Full Mock R&L liên tục. Luyện kỹ năng Listening 1.25x và Reading ép thời gian 50p.' },
-  { id: 4 as Phase, name: 'Tối Đa Hoá', bandRange: '8.0 → 8.5+', days: [106,140] as [number,number], color: '#f59e0b', bg: '#FFFBEB', description: 'Phân tích bẫy chuyên sâu. Đảm bảo Reading 9.0, Listening 9.0. Duy trì W 7.0 S 6.5.' },
+  {
+    id: 1 as Phase,
+    name: 'Xây Nền Tảng',
+    bandRange: '5.5 → 6.0',
+    days: [1, 20] as [number, number],
+    color: '#4f8ef7',
+    bg: '#EFF6FF',
+    description:
+      'Vocab CAM (R,L) + VOL đã làm, 100 từ/ngày. Làm Passage 3 hằng ngày. Dictation Sec 1. Cày khoá Writing & Speaking thầy Kiên (50 buổi mỗi khoá).',
+  },
+  {
+    id: 2 as Phase,
+    name: 'Bứt Phá',
+    bandRange: '6.0 → 7.0',
+    days: [21, 60] as [number, number],
+    color: '#a855f7',
+    bg: '#F5F3FF',
+    description:
+      'Advanced vocab + collocation/phrasal verb, 100 từ/ngày. Reading: 30 Passage 3 → phân tích lỗi chuyên sâu. Listening: Sec 2&3 VOL + Hacker mỗi ngày. Writing & Speaking: idea → câu → đoạn hoàn chỉnh.',
+  },
+  {
+    id: 3 as Phase,
+    name: 'Thực Chiến',
+    bandRange: '7.0 → 8.0',
+    days: [61, 80] as [number, number],
+    color: '#06b6d4',
+    bg: '#ECFEFF',
+    description:
+      'Vocab 50 từ/ngày. Passage 2 hằng ngày + Full test 1 lần/tuần. Listening: dạng yếu + đoạn dài + Sec 4. Writing 2 Task1 + 2 Task2/tuần. Speaking Part 2&3 thật với AI.',
+  },
+  {
+    id: 4 as Phase,
+    name: 'Tối Đa Hoá',
+    bandRange: '8.0 → 9R/9L',
+    days: [81, 120] as [number, number],
+    color: '#f59e0b',
+    bg: '#FFFBEB',
+    description:
+      'N81-100: học 200 từ/ngày. N101-120: ôn ALL vocab. Full test R&L mỗi 2 ngày. BBC 3 bài/ngày. Task 1+Task 2 mỗi ngày. Speaking 2 chủ đề/ngày. 7-12h/ngày toàn tâm toàn ý.',
+  },
 ];
 
-const WRITING_TOPICS = [
-  "Technology & Society", "Education & Youth", "Environment & Climate Change", "Health & Lifestyle", 
-  "Media & Advertising", "Globalisation & Culture", "Crime & Punishment", "Work & Employment", 
-  "Transport & Urban Planning", "Gender & Equality", "Social Media & Communication", "Science & Research",
-  "Tourism & Heritage", "Food & Agriculture", "Family & Parenting", "Sport & Competition",
-  "Animals & Ethics", "Arts & Creativity", "Space & Future Technology", "Ageing & Demographics",
-  "Government & Politics", "Consumerism & Economics", "Languages & Traditions", "Housing & Infrastructure",
-  "Charity & Aid", "Water & Oceans", "Traditional vs Modern", "Remote Work", "Mental Health", "AI & Automation"
-];
+// ─── Helper — uses ABSOLUTE day to avoid ID collisions across phases ──────────
+const t = (
+  absDay: number,
+  suffix: string,
+  type: TaskType,
+  title: string,
+  detail: string,
+  durationMin: number,
+): DayTask => ({ id: `${suffix}_${absDay}`, type, title, detail, durationMin });
 
+// ─── Phase 1 tasks (absolute day 1-20) ───────────────────────────────────────
+// Vocab: học/ôn 100 từ CAM(R,L) + VOL đã làm — mọi ngày đều phải có
+// Reading (rot 0,2,4): ôn passage cũ 15p + Passage 3 VOL 90p + tóm tắt 25p
+// Listening (rot 1,3): Dictation Sec1 45p + Luyện chỗ sai 30p + ôn vocab nghe 15p + Hacker 1h
+// Writing (rot 2): ôn buổi cũ 15p + 1 buổi khoá thầy Kiên 30p
+// Speaking (rot 3): ôn buổi cũ 15p + 1 buổi khoá thầy Kiên 30p
+// Mixed (rot 4): Writing + Speaking khoá thầy Kiên cùng lúc
+//
+// 2h mode: vocab + 1 kỹ năng cốt lõi (~120p)
+// 4h mode: vocab + đầy đủ theo rotation (~240p)
+
+function makeP1Tasks(absDay: number, mode: TimeMode): DayTask[] {
+  const dayInPhase = absDay; // 1–20
+  const rot = ((dayInPhase - 1) % 5) as 0 | 1 | 2 | 3 | 4;
+  const isLearn = dayInPhase % 2 === 1;
+
+  // Vocab — ALWAYS present every day
+  const vocabTask = isLearn
+    ? t(absDay, 'v_learn', 'vocab',
+        '🧠 Học 100 từ — CAM (R,L) + VOL đã làm',
+        'Học 100 từ từ bộ CAM đã trích (R, L) và vocab từ bài đọc/nghe VOL. Ghi flashcard. Tập phát âm chuẩn.', 90)
+    : t(absDay, 'v_rev', 'vocab',
+        '🔄 Ôn 100 từ — Spaced Repetition',
+        'Ôn lại 100 từ đã học theo spaced repetition. Đặt câu ví dụ cho từ hay quên. Phân loại từ chưa chắc.', 90);
+
+  if (mode === '2h') {
+    // ~120p total
+    switch (rot) {
+      case 0: // Reading day — vocab + passage
+        return [
+          vocabTask,
+          t(absDay, 'r_p3', 'reading',
+            '📰 Làm 1 Passage 3 VOL + Chữa kỹ',
+            'Chọn 1 passage 3 từ VOL bất kỳ (bấm giờ 20p). Chấm → chữa kỹ → ghi note từ vựng + loại bẫy.', 90),
+        ];
+      case 1: // Listening day
+        return [
+          vocabTask,
+          t(absDay, 'l_dict', 'listening',
+            '🎧 Dictation VOL Sec 1 (45p)',
+            'Nghe và chép chính tả Section 1. Ghi note chỗ không nghe ra. So sánh transcript.', 45),
+        ];
+      case 2: // Writing day
+        return [
+          vocabTask,
+          t(absDay, 'w_rev', 'writing',
+            '✍️ Ôn buổi Writing cũ (15p)',
+            'Xem lại notes buổi Writing trước. Viết lại 1-2 câu ví dụ để nhớ cấu trúc + grammar.', 15),
+          t(absDay, 'w_kien', 'writing',
+            '✍️ Khoá Writing thầy Kiên — 1 buổi (30p)',
+            'Học 1 buổi khoá Writing thầy Kiên Luyện. Ghi chú cấu trúc, ngữ pháp quan trọng.', 30),
+        ];
+      case 3: // Speaking day
+        return [
+          vocabTask,
+          t(absDay, 's_rev', 'speaking',
+            '🗣️ Ôn buổi Speaking cũ (15p)',
+            'Xem lại notes buổi Speaking trước. Luyện nói lại các mẫu câu + intonation.', 15),
+          t(absDay, 's_kien', 'speaking',
+            '🗣️ Khoá Speaking thầy Kiên — 1 buổi (30p)',
+            'Học 1 buổi khoá Speaking thầy Kiên. Luyện nói lại theo mẫu.', 30),
+        ];
+      case 4: // Mixed writing + speaking review
+        return [
+          vocabTask,
+          t(absDay, 'w_kien_m', 'writing',
+            '✍️ Khoá Writing thầy Kiên — 1 buổi (30p)',
+            'Học 1 buổi khoá Writing. Ghi cấu trúc + ngữ pháp.', 30),
+          t(absDay, 's_kien_m', 'speaking',
+            '🗣️ Khoá Speaking thầy Kiên — 1 buổi (30p)',
+            'Học 1 buổi khoá Speaking. Luyện nói theo mẫu thầy.', 30),
+        ];
+    }
+  }
+
+  // 4h mode (~240p) — full rotation
+  switch (rot) {
+    case 0: // Reading (4h)
+      return [
+        vocabTask,
+        t(absDay, 'r_rev', 'reading',
+          '📖 Ôn lại passage cũ (15p)',
+          'Đọc lại passage VOL tuần trước. Nhớ lại bẫy + từ vựng quan trọng.', 15),
+        t(absDay, 'r_p3', 'reading',
+          '📰 Làm 1 Passage 3 VOL + Chữa kỹ (1h30)',
+          'Chọn 1 passage 3 VOL (bấm giờ 20p). Chấm → chữa kỹ → note từ vựng khó + loại bẫy.', 90),
+        t(absDay, 'r_summ', 'reading',
+          '📝 Luyện tóm tắt văn bản nhanh (25p)',
+          'Luyện đọc lướt + nắm ý chính từng đoạn. Tóm tắt passage vừa làm trong 5 câu tiếng Anh.', 25),
+      ];
+    case 1: // Listening (4h)
+      return [
+        vocabTask,
+        t(absDay, 'l_dict', 'listening',
+          '🎧 Dictation VOL Sec 1 (45p)',
+          'Nghe và chép chính tả Sec 1. Ghi note chỗ không nghe ra.', 45),
+        t(absDay, 'l_note', 'listening',
+          '✏️ Luyện các chỗ không nghe ra (30p)',
+          'Luyện lại đoạn đã ghi note. Lặp đến khi nghe rõ hết. Phân loại lỗi: spelling / speed / accent.', 30),
+        t(absDay, 'l_voc', 'listening',
+          '🔄 Ôn vocab bài nghe trước (15p)',
+          'Ôn lại từ vựng trong các bài Listening VOL đã làm. Tập nghe và nhận diện từ nhanh.', 15),
+        t(absDay, 'l_hacker', 'listening',
+          '📚 Cày IELTS Hacker Listening (1h)',
+          'Học + luyện theo sách IELTS Hacker Listening 1 unit. Nắm strategy từng dạng câu.', 60),
+      ];
+    case 2: // Writing (4h) — khoá + passage để học vocab
+      return [
+        vocabTask,
+        t(absDay, 'w_rev', 'writing',
+          '✍️ Ôn buổi Writing cũ (15p)',
+          'Xem lại notes buổi Writing trước. Viết 1-2 câu ví dụ để nhớ cấu trúc.', 15),
+        t(absDay, 'w_kien', 'writing',
+          '✍️ Khoá Writing thầy Kiên — 1 buổi (30p)',
+          'Học 1 buổi khoá Writing (30p). Ghi cấu trúc + ngữ pháp quan trọng.', 30),
+        t(absDay, 'r_p3_w', 'reading',
+          '📰 Làm 1 Passage 3 VOL + Chữa (90p)',
+          'Làm 1 passage 3 VOL. Chấm + chữa kỹ + note từ vựng. Nạp thêm vocab học thuật.', 90),
+      ];
+    case 3: // Speaking (4h) — khoá + listening
+      return [
+        vocabTask,
+        t(absDay, 's_rev', 'speaking',
+          '🗣️ Ôn buổi Speaking cũ (15p)',
+          'Xem lại notes buổi Speaking trước. Luyện nói lại các mẫu câu.', 15),
+        t(absDay, 's_kien', 'speaking',
+          '🗣️ Khoá Speaking thầy Kiên — 1 buổi (30p)',
+          'Học 1 buổi khoá Speaking (30p). Luyện nói theo mẫu thầy.', 30),
+        t(absDay, 'l_dict_sp', 'listening',
+          '🎧 Dictation VOL Sec 1 (45p)',
+          'Nghe + chép chính tả VOL Sec 1. Ghi note chỗ chưa nghe ra.', 45),
+        t(absDay, 'l_hacker_sp', 'listening',
+          '📚 Cày IELTS Hacker Listening (1h)',
+          'Học + luyện theo sách Hacker 1 unit.', 60),
+      ];
+    case 4: // Mixed Writing + Speaking + Reading (4h)
+      return [
+        vocabTask,
+        t(absDay, 'w_kien_m', 'writing',
+          '✍️ Khoá Writing thầy Kiên — 1 buổi (30p)',
+          'Học 1 buổi khoá Writing (30p). Ghi chú kỹ cấu trúc.', 30),
+        t(absDay, 's_kien_m', 'speaking',
+          '🗣️ Khoá Speaking thầy Kiên — 1 buổi (30p)',
+          'Học 1 buổi khoá Speaking (30p). Luyện nói theo mẫu.', 30),
+        t(absDay, 'r_p3_m', 'reading',
+          '📰 Làm 1 Passage 3 VOL + Chữa (90p)',
+          'Làm 1 passage 3 VOL. Chấm + chữa + note từ vựng. Tổng hợp lỗi sai.', 90),
+      ];
+  }
+
+  return [];
+}
+
+// ─── Phase 2 tasks (absolute day 21-60) ──────────────────────────────────────
+// Vocab: 100 từ/ngày — advanced (R hoặc L) hoặc collocation&phrasal verb
+// Reading: Passage 3 hằng ngày cho đến khi đủ 30 (dayInP2 1-30) → phân tích lỗi (31-40)
+// Listening: Sec 2&3 VOL 1h + Dictation 20p + Hacker 1h — MỖINGÀY đều có Hacker
+// Writing: idea → cụm → câu → đoạn (45p/session)
+// Speaking: triển khai ý (45p) + luyện nói AI (20p)
+//
+// 2h mode: vocab + reading + listening cơ bản (không Hacker hết, xen kẽ writing/speaking)
+// 4h mode: vocab + reading + đủ listening (Sec23 + Dictation + Hacker) + writing/speaking luân phiên
+
+function makeP2Tasks(absDay: number, mode: TimeMode): DayTask[] {
+  const dayInPhase = absDay - 20; // 1–40
+  const isLearn = dayInPhase % 2 === 1;
+  const readingDone = dayInPhase > 30;
+
+  // Vocab rotation: R → L → Collocation (cycle of 3)
+  const vocabCycle = ((dayInPhase - 1) % 3) as 0 | 1 | 2;
+  let vocabTitle: string;
+  let vocabDetail: string;
+  if (vocabCycle === 0) {
+    vocabTitle = isLearn ? '🧠 Học 100 từ — Advanced Vocab (Reading)' : '🔄 Ôn 100 từ — Advanced Vocab (Reading)';
+    vocabDetail = isLearn
+      ? 'Học 100 từ bộ advanced vocab soạn sẵn cho Reading. Tập dùng trong ngữ cảnh, đặt câu.'
+      : 'Ôn 100 từ advanced vocab Reading. Đặt câu ví dụ cho từ hay quên.';
+  } else if (vocabCycle === 1) {
+    vocabTitle = isLearn ? '🧠 Học 100 từ — Advanced Vocab (Listening)' : '🔄 Ôn 100 từ — Advanced Vocab (Listening)';
+    vocabDetail = isLearn
+      ? 'Học 100 từ bộ advanced vocab cho Listening. Chú ý phát âm, nhận diện từ khi nghe.'
+      : 'Ôn 100 từ advanced vocab Listening. Tập nghe + nhận ra từ trong bài thi.';
+  } else {
+    vocabTitle = isLearn ? '🧠 Học 100 cụm — Collocation & Phrasal Verb (W&S)' : '🔄 Ôn 100 cụm — Collocation & Phrasal Verb';
+    vocabDetail = isLearn
+      ? 'Học 100 cụm collocation và phrasal verb cho Writing Task 2 và Speaking. Ghi ví dụ câu.'
+      : 'Ôn 100 cụm collocation/phrasal verb. Đặt câu. Ghi nhớ cách dùng tự nhiên.';
+  }
+  const vocabTask = t(absDay, 'v', 'vocab', vocabTitle, vocabDetail, 90);
+
+  // Reading task — thay đổi tự động sau 30 passages
+  const readingTask = readingDone
+    ? t(absDay, 'r_err', 'reading',
+        '🔍 Phân tích lỗi Reading (10p) + Luyện dạng hay sai (1h30)',
+        `Xem lại bảng tổng hợp lỗi trong 30 passages đã làm (10p). Chọn 1 dạng hay sai nhất → luyện riêng dạng đó (1h30). Mục tiêu: không lặp lỗi.`,
+        100)
+    : t(absDay, 'r_p3', 'reading',
+        `📰 Làm 1 Passage 3 VOL + Chữa kỹ (${dayInPhase}/30)`,
+        `Làm 1 passage 3 VOL bất kỳ (bấm giờ 20p). Chấm → chữa kỹ → ghi note lỗi sai theo loại → học từ vựng bài đọc.`,
+        90);
+
+  // Listening building blocks
+  const lSec23 = t(absDay, 'l_sec23', 'listening',
+    '🎧 Luyện Section 2&3 VOL (1h)',
+    'Luyện Sec 2 và Sec 3 VOL: nghe lại cho đến khi nghe ra hết và hiểu script. Chú ý distractor trong Sec 3 MCQ.', 60);
+  const lDict = t(absDay, 'l_dict', 'listening',
+    '✏️ Dictation VOL (20p)',
+    'Nghe chép chính tả VOL 20p. Duy trì thói quen tai nghe hằng ngày.', 20);
+  const lHacker = t(absDay, 'l_hacker', 'listening',
+    '📚 Cày IELTS Hacker Listening (1h)',
+    'Học + luyện theo sách Hacker 1 unit. Nắm strategy từng dạng câu. Không bỏ ngày nào.', 60);
+
+  // Writing & Speaking
+  const writingTask = t(absDay, 'w_idea', 'writing',
+    '✍️ Writing: Luyện triển khai ý (idea → đoạn) (45p)',
+    'Quy trình: chọn 1 idea → viết cụm hành động → câu ngắn → câu hoàn chỉnh → 2 câu mạch lạc → 1 đoạn (idea-explanation-example).', 45);
+  const speakingTask = t(absDay, 's_idea', 'speaking',
+    '🗣️ Speaking: Triển khai ý (45p) + Luyện AI (20p)',
+    'Triển khai ý theo quy trình như Writing (45p). Luyện nói với AI 20p — ghi âm và review phát âm, ngữ điệu.', 65);
+
+  if (mode === '2h') {
+    // ~120p: vocab + 1 kỹ năng cốt lõi, xen kẽ listening mỗi 2 ngày
+    const rot2 = ((dayInPhase - 1) % 4) as 0 | 1 | 2 | 3;
+    if (rot2 === 0) return [vocabTask, readingTask];                          // R
+    if (rot2 === 1) return [vocabTask, lSec23, lDict];                        // L (không Hacker, hết giờ)
+    if (rot2 === 2) return [vocabTask, writingTask];                           // W
+    return [vocabTask, speakingTask];                                          // S
+  }
+
+  // 4h mode (~240p): vocab + reading + FULL listening (Sec23+Dict+Hacker) + W or S luân phiên
+  const writingOrSpeaking = ((dayInPhase - 1) % 2 === 0) ? writingTask : speakingTask;
+  return [vocabTask, readingTask, lSec23, lDict, lHacker, writingOrSpeaking];
+}
+
+// ─── Phase 3 tasks (absolute day 61-80) ──────────────────────────────────────
+// Vocab: 50 từ/ngày (học hoặc ôn)
+// Reading: Passage 2 VOL mỗi ngày (60p). Tuần có 1 Full test (ngày đầu tuần trong phase = dayInPhase%7===1)
+// Listening: 3 trụ cột xen kẽ: (a) dạng yếu (b) đoạn dài 4p (c) Sec 4 + phân loại lỗi
+// Writing: mỗi 4 ngày có 1 buổi viết bài (Task1 hoặc Task2) AI chấm — đảm bảo 2T1+2T2/tuần
+// Speaking: Part 2&3 AI mỗi 3 ngày
+// Hacker: tiếp tục ngày nào có giờ (4h) hoặc khi 2h và rot listening
+
+function makeP3Tasks(absDay: number, dayInPhase: number, mode: TimeMode): DayTask[] {
+  const isLearn = dayInPhase % 2 === 1;
+
+  const vocabTask = isLearn
+    ? t(absDay, 'v_learn', 'vocab',
+        '🧠 Học 50 từ — Vocab tổng hợp (P3)',
+        'Học 50 từ mới kết hợp advanced vocab + VOL. Ghi flashcard. Ôn lại 10 từ dễ quên từ tuần trước.', 45)
+    : t(absDay, 'v_rev', 'vocab',
+        '🔄 Ôn 50 từ — Spaced Repetition',
+        'Ôn 50 từ theo spaced repetition. Loại bỏ từ đã nhớ, tập trung từ hay quên. Đặt câu ví dụ.', 45);
+
+  // Full test tuần 1 lần — dùng dayInPhase mod 7 === 1 (ngày đầu mỗi "tuần phase")
+  const isFullTestDay = (dayInPhase % 7 === 1);
+  const readingTask = isFullTestDay
+    ? t(absDay, 'r_full', 'reading',
+        '🏆 Full Test Reading (3 passages, bấm giờ 60p) + Chữa (60p)',
+        'Làm full 3 passages (bấm giờ nghiêm 60p). Chữa kỹ từng passage. Note lỗi sai theo dạng câu. Tổng 2h.', 120)
+    : t(absDay, 'r_p2', 'reading',
+        '📰 Làm 1 Passage 2 VOL + Chữa kỹ (60p)',
+        'Làm 1 passage 2 (không phải dạng yếu nhất). Bấm giờ 20p. Chấm + chữa + ghi note lỗi.', 60);
+
+  // Listening: 3-day rotation (a/b/c)
+  const lRot = ((dayInPhase - 1) % 3) as 0 | 1 | 2;
+  const listeningTask =
+    lRot === 0
+      ? t(absDay, 'l_weak', 'listening',
+          '🎧 Ôn dạng Listening yếu cụ thể (1h)',
+          'Tổng hợp dạng câu yếu nhất (Sec 2 map, Sec 3 MCQ, Sec 4 fill-in). Luyện riêng từng dạng trong 1h.', 60)
+      : lRot === 1
+      ? t(absDay, 'l_long', 'listening',
+          '🎧 Nghe đoạn dài 4p + Tóm tắt (1h)',
+          'Nghe 1 đoạn audio ~4p (BBC 6 Minute English, TED-Ed...). Viết tóm tắt bằng tiếng Anh. Kiểm tra từ vựng.', 60)
+      : t(absDay, 'l_sec4', 'listening',
+          '🎧 Luyện Section 4 VOL + Phân loại lỗi (1h)',
+          'Nghe Sec 4 (academic monologue) từ VOL. Dictation 20p, phân tích câu sai. Phân loại lỗi: speed/spelling/logic.', 60);
+
+  // Writing: mỗi 4 ngày 1 buổi, xen kẽ Task1/Task2
+  const isWritingDay = dayInPhase % 4 === 0;
+  const isTask1 = (dayInPhase / 4) % 2 === 0; // alternates T1/T2 each cycle
+  const writeType = isTask1 ? 'Task 1' : 'Task 2';
+  const writingTasks = isWritingDay
+    ? [
+        t(absDay, 'w_rev_err', 'writing',
+          '✍️ Ôn lỗi Writing thường gặp (20p)',
+          'Xem lại danh sách lỗi từ các bài viết trước. Ghi nhớ cách sửa cụ thể.', 20),
+        t(absDay, 'w_write', 'writing',
+          `✍️ Viết ${writeType} → AI chấm + Chữa (40p)`,
+          `Viết ${writeType} bấm giờ nghiêm (${isTask1 ? '20p' : '40p'}). Nộp AI chấm. Chữa lỗi ngữ pháp + từ vựng + coherence.`, 40),
+      ]
+    : [];
+
+  // Speaking: mỗi 3 ngày 1 buổi
+  const isSpeakingDay = dayInPhase % 3 === 0;
+  const speakingTask = isSpeakingDay
+    ? [t(absDay, 's_p23', 'speaking',
+        '🗣️ Luyện Part 2&3 thật với AI (30p)',
+        'Part 2: cue card 2p. Part 3: Q&A 4p. Ghi âm → AI review phát âm, ngữ pháp, coherence.', 30)]
+    : [];
+
+  if (mode === '2h') {
+    // ~120p: vocab + reading + listening hoặc writing/speaking
+    const hasWritingOrSpeaking = writingTasks.length > 0 || speakingTask.length > 0;
+    if (hasWritingOrSpeaking) {
+      // Writing/speaking day — vocab + reading ngắn + W/S
+      return [vocabTask, t(absDay, 'r_p2_q', 'reading',
+        '📰 Đọc nhanh 1 Passage 2 (30p)',
+        'Đọc lướt passage 2, làm câu hỏi, chấm điểm. Bỏ qua chữa kỹ (dành vào buổi 4h).', 30),
+        ...writingTasks.slice(1), // lấy task viết bài thật (bỏ qua ôn lỗi khi thiếu giờ)
+        ...speakingTask];
+    }
+    return [vocabTask, readingTask, listeningTask];
+  }
+
+  // 4h mode: đủ cả vocab + reading + listening + writing/speaking
+  return [vocabTask, readingTask, listeningTask, ...writingTasks, ...speakingTask];
+}
+
+// ─── Phase 4 tasks (absolute day 81-120) ─────────────────────────────────────
+// N81-100 (dayInPhase 1-20): học 200 từ/ngày
+// N101-120 (dayInPhase 21-40): ôn ALL vocab từ trước đến nay
+// Full test R&L xen kẽ: ngày lẻ = làm full test, ngày chẵn = phân tích lỗi
+// BBC 3 bài/ngày — MỖINGÀY
+// Writing: Task1 + Task2 mỗi ngày (aim 7)
+// Speaking: 2 chủ đề full test với AI mỗi ngày (aim 6.5)
+// Không giới hạn thời gian — "7-12h là bình thường"
+
+function makeP4Tasks(absDay: number): DayTask[] {
+  const dayInPhase = absDay - 80; // 1–40
+  const isFirstHalf = dayInPhase <= 20;
+  const isFullTestDay = dayInPhase % 2 === 1;
+
+  const vocabTask = isFirstHalf
+    ? t(absDay, 'v_200', 'vocab',
+        '🧠 Học 200 từ/ngày — R&L Intensive (2h)',
+        'Học 200 từ chất lượng cao nhất cho R&L. Dùng Anki hoặc flashcard tốc độ cao. Mục tiêu: nhận ra ngay trong bài thi. Aim 9R 9L.', 120)
+    : t(absDay, 'v_all', 'vocab',
+        '🔄 Ôn ALL Vocab từ N1 đến nay',
+        'Ôn toàn bộ vocab từ Phase 1-3. Từ P1-P3 đã học kỹ nên ôn nhanh (~90p). Tập trung từ chưa chắc, dễ nhầm.', 90);
+
+  const readingTask = isFullTestDay
+    ? t(absDay, 'r_full', 'reading',
+        '📰 Full Test Reading VOL (60p nghiêm) + Chữa kỹ',
+        'Làm full 3 passages bấm giờ 60p. Chữa kỹ mọi câu sai. Note chi tiết loại bẫy. Aim: zero error. Mục tiêu 9R.', 120)
+    : t(absDay, 'r_err', 'reading',
+        '🔍 Phân tích lỗi Reading + Học vocab chữa',
+        'Phân tích 100% lỗi full test hôm qua. Note chi tiết từng loại bẫy (paraphrase / T-F-NG / matching). Học vocab bài đọc.', 90);
+
+  const listeningTask = isFullTestDay
+    ? t(absDay, 'l_full', 'listening',
+        '🎧 Full Test Listening VOL (30p) + Chữa kỹ',
+        'Làm full 4 sections (30p). Chữa mọi câu sai. Note distractor Sec 3&4. Mục tiêu 9L.', 90)
+    : t(absDay, 'l_err', 'listening',
+        '🔍 Phân tích lỗi Listening + Phân loại + Fix',
+        'Phân tích 100% lỗi full test hôm qua. Phân loại: spelling / speed / distractor / Sec4 academic. Luyện lại điểm yếu.', 60);
+
+  const bbcTask = t(absDay, 'l_bbc', 'listening',
+    '🌐 Nghe 3 bài BBC (Môi trường tiếng Anh tự nhiên)',
+    'Nghe hiểu hết 3 bài BBC 6 Minute English hoặc BBC Documentary. Tóm tắt nhanh mỗi bài. Nhồi tai nghe vào môi trường native.', 60);
+
+  const writingTask = t(absDay, 'w_daily', 'writing',
+    '✍️ Viết Task 1 + Task 2 → AI chấm (Aim Band 7)',
+    'Ôn lỗi + kiểm tra cấu trúc bài (15p). Viết Task 1 bấm giờ (20p) + Task 2 bấm giờ (40p). Nộp AI chấm + chữa chi tiết.', 75);
+
+  const speakingTask = t(absDay, 's_full', 'speaking',
+    '🗣️ Full Speaking: 2 chủ đề + AI chữa phát âm (Aim 6.5)',
+    'Luyện full speaking test 2 chủ đề khác nhau với AI (30p). Ghi âm → AI chữa phát âm, ngữ pháp, fluency chi tiết (30p).', 60);
+
+  return [vocabTask, readingTask, listeningTask, bbcTask, writingTask, speakingTask];
+}
+
+// ─── Main generator ───────────────────────────────────────────────────────────
 export function generateRoadmap(): RoadmapDay[] {
   const days: RoadmapDay[] = [];
-  let dayCounter = 1;
-  let writeTopicIdx = 0;
-  
-  const t = (id: string, type: TaskType, title: string, detail: string): DayTask => ({ id, type, title, detail });
 
-  for (let week = 1; week <= 20; week++) {
-    const phase = week <= 5 ? 1 : week <= 10 ? 2 : week <= 15 ? 3 : 4;
-    const isMilestoneWeek = week % 5 === 0;
-    
-    // In Phase 1 & 2, we pick 2 topics per week for writing
-    let t1 = "General Topic";
-    let t2 = "General Topic";
-    if (phase <= 2 && writeTopicIdx < WRITING_TOPICS.length - 1) {
-      t1 = WRITING_TOPICS[writeTopicIdx++];
-      t2 = WRITING_TOPICS[writeTopicIdx++];
+  for (let day = 1; day <= 120; day++) {
+    const week = Math.ceil(day / 7);
+    const isMilestoneDay = day === 20 || day === 60 || day === 80 || day === 120;
+
+    let phase: Phase;
+    let theme: string;
+    let themeEn: string;
+    let tasks2h: DayTask[];
+    let tasks4h: DayTask[];
+
+    if (day <= 20) {
+      phase = 1;
+      const dayInPhase = day;
+      const rot = ((dayInPhase - 1) % 5) as 0 | 1 | 2 | 3 | 4;
+      const focusList = ['Reading + Vocab', 'Listening + Vocab', 'Writing + Vocab', 'Speaking + Vocab', 'W+S + Vocab'];
+      theme = `Tuần ${week}: Xây Nền — ${focusList[rot]}`;
+      themeEn = `Week ${week}: Foundation — ${focusList[rot]}`;
+      tasks2h = makeP1Tasks(day, '2h');
+      tasks4h = makeP1Tasks(day, '4h');
+
+    } else if (day <= 60) {
+      phase = 2;
+      const dayInPhase = day - 20;
+      const readingDone = dayInPhase > 30;
+      theme = readingDone
+        ? `Tuần ${week}: Bứt Phá — Phân tích lỗi R (${dayInPhase - 30}/10)`
+        : `Tuần ${week}: Bứt Phá — Passage 3 (${dayInPhase}/30)`;
+      themeEn = readingDone
+        ? `Week ${week}: Breakthrough — Error Analysis (${dayInPhase - 30}/10)`
+        : `Week ${week}: Breakthrough — Passage 3 (${dayInPhase}/30)`;
+      tasks2h = makeP2Tasks(day, '2h');
+      tasks4h = makeP2Tasks(day, '4h');
+
+    } else if (day <= 80) {
+      phase = 3;
+      const dayInPhase = day - 60;
+      const isFullTestDay = (dayInPhase % 7 === 1);
+      theme = isFullTestDay
+        ? `Tuần ${week}: Thực Chiến — Full Test (${dayInPhase}/20)`
+        : `Tuần ${week}: Thực Chiến — Passage 2 (${dayInPhase}/20)`;
+      themeEn = isFullTestDay
+        ? `Week ${week}: Battle — Full Test (${dayInPhase}/20)`
+        : `Week ${week}: Battle — Passage 2 (${dayInPhase}/20)`;
+      tasks2h = makeP3Tasks(day, dayInPhase, '2h');
+      tasks4h = makeP3Tasks(day, dayInPhase, '4h');
+
+    } else {
+      phase = 4;
+      const dayInPhase = day - 80;
+      const subPhase = dayInPhase <= 20 ? `Học 200 từ (${dayInPhase}/20)` : `Ôn ALL Vocab (${dayInPhase - 20}/20)`;
+      theme = `Tuần ${week}: Tối Đa Hoá — ${subPhase}`;
+      themeEn = `Week ${week}: Max Mode — ${dayInPhase <= 20 ? `200 words/day (${dayInPhase}/20)` : `Review ALL (${dayInPhase - 20}/20)`}`;
+      const p4Tasks = makeP4Tasks(day);
+      tasks2h = p4Tasks;
+      tasks4h = p4Tasks;
     }
 
-    for (let d = 1; d <= 7; d++) {
-      const tasks: DayTask[] = [];
-      const dayStr = dayCounter.toString();
+    const milestoneLabels: Record<number, string> = {
+      20: '🏁 Kết thúc Phase 1 — Kiểm tra tiến độ toàn bộ',
+      60: '🏁 Kết thúc Phase 2 — 30 Passages + Phân tích lỗi xong',
+      80: '🏁 Kết thúc Phase 3 — Thực chiến hoàn tất',
+      120: '🏆 HOÀN THÀNH 120 Ngày — IELTS 9R 9L 7W 6.5S',
+    };
 
-      if (phase <= 2) {
-        // PHASE 1 & 2 LOGIC
-        if (d >= 1 && d <= 5) {
-          // THỨ 2 ĐẾN THỨ 5 (Tập trung R&L)
-          tasks.push(t(`r_vocab_${dayStr}`, 'reading', '📖 Học 30 từ vựng Reading', 'Chọn 30 từ vựng học thuật. Ghi chép định nghĩa, từ loại, đồng nghĩa/trái nghĩa.'));
-          tasks.push(t(`l_vocab_${dayStr}`, 'listening', '🎧 Học 30 từ vựng Listening', 'Tập trung phát âm chuẩn, tránh nhầm lẫn minimal pairs và spelling.'));
-          tasks.push(t(`r_prac_${dayStr}`, 'reading', '📰 Làm 2 bài Reading Passage 3 & Học từ vựng', 'Làm 2 bài Passage 3 cực khó (40p). Tra cứu toàn bộ từ vựng và phân tích bẫy Paraphrase.'));
-          tasks.push(t(`l_prac_${dayStr}`, 'listening', '🎧 Nghe chép chính tả liên tục 1h30 phút', 'Chép chính tả liên tục 1h30p. Đối chiếu transcript, đánh dấu từ sai. Luyện tốc độ tự nhiên.'));
-          tasks.push(t(`g_chill_${dayStr}`, 'grammar', '📚 Học 1 chủ đề ngữ pháp (nhẹ nhàng)', 'Học 1 chủ đề ngữ pháp nhẹ nhàng. Viết 2-3 câu ví dụ.'));
-        } else if (d === 6) {
-          // THỨ 7 (Tập trung Writing)
-          tasks.push(t(`w_vocab_${dayStr}`, 'writing', `✍️ Học 60 cụm từ dài cho Writing Task 2`, `Học 30 cụm từ dài x 2 chủ đề (${t1} & ${t2}). Học cách dùng ngữ cảnh.`));
-          tasks.push(t(`w_prac_${dayStr}`, 'writing', `✍️ Viết 1 bài Essay Task 2 (bấm giờ 40 phút)`, `Viết 1 bài Essay bấm giờ 40p. Mục tiêu dùng tối thiểu 10 cụm từ vừa học.`));
-          tasks.push(t(`g_chill_${dayStr}`, 'grammar', '📚 Học 1 chủ đề ngữ pháp (nhẹ nhàng)', 'Học 1 điểm ngữ pháp nhẹ nhàng có thể áp dụng vào Writing.'));
-        } else if (d === 7) {
-          // CHỦ NHẬT (Review & Writing & Speaking)
-          tasks.push(t(`w_vocab_${dayStr}`, 'writing', `✍️ Học 30 cụm từ dài cho Writing Task 2`, `Ôn tập và học thêm cụm từ chủ đề ${t2}. Tìm điểm chung giữa 2 chủ đề tuần này.`));
-          tasks.push(t(`w_prac_${dayStr}`, 'writing', '✍️ Luyện tập viết ứng dụng 2 chủ đề vocab', `Viết 1 bài hoàn chỉnh kết hợp cụm từ của cả 2 chủ đề (${t1} & ${t2}). Bấm giờ 40p.`));
-          tasks.push(t(`s_prac_${dayStr}`, 'speaking', '🗣️ Luyện nói 40 phút với AI về 4 chủ đề từ vựng', `Đóng vai thi Speaking thật. Tích cực ép dùng 120 cụm từ đã học (từ các tuần trước). Ghi âm lại.`));
-          tasks.push(t(`v_rev_${dayStr}`, 'vocab', '🔄 Ôn tập toàn bộ từ vựng trong tuần (Spaced Repetition)', 'Ôn tập toàn bộ từ vựng R, L, W trong tuần. Không để cụm nào bị quên.'));
-          tasks.push(t(`g_chill_${dayStr}`, 'grammar', '📚 Học 1 chủ đề ngữ pháp (nhẹ nhàng)', 'Ôn lại ngữ pháp cuối tuần thật nhẹ nhàng.'));
-        }
-      } else {
-        // PHASE 3 & 4 LOGIC
-        if (d === 1 || d === 3 || d === 5) {
-          // THỨ 2, 4, 6 (Full Test & Phân tích bẫy R&L)
-          tasks.push(t(`m_list_${dayStr}`, 'mock', '🎧 Full Mock Test Listening (Tốc độ 1.25x)', 'Làm 4 sections (40 câu) nghiêm ngặt tốc độ 1.25x để quen áp lực. Không dừng audio.'));
-          tasks.push(t(`m_read_${dayStr}`, 'mock', '📰 Full Mock Test Reading (Ép thời gian 50-55 phút)', 'Ép thời gian xuống 50-55 phút. Tăng tốc độ đọc và chọn đáp án.'));
-          tasks.push(t(`r_err_${dayStr}`, 'reading', '🔍 Phân tích sâu 100% các câu sai Reading', 'Tra cứu 100% câu sai, xác định bẫy Paraphrase. Ghi cặp Paraphrase vào sổ tay.'));
-          tasks.push(t(`l_err_${dayStr}`, 'listening', '🔍 Phân tích sâu bẫy Listening Section 3', 'Phân tích sâu Section 3 (Multiple Choice & Matching). Xác định distractors.'));
-          tasks.push(t(`s_prac_${dayStr}`, 'speaking', '🗣️ Luyện Speaking Part 1 & 2', 'Duy trì phản xạ 6.5. Trả lời Part 1 (3-4p) và 1 cue card Part 2 (2p) ghi âm lại.'));
-        } else if (d === 2 || d === 4) {
-          // THỨ 3, 5 (Kỹ năng khó R&L + Writing)
-          tasks.push(t(`r_adv_${dayStr}`, 'reading', '📰 Luyện tập riêng biệt các dạng câu hỏi dễ sai nhất (8.5+)', 'Drill sâu T/F/NG và Matching Headings độ khó 8.5+. Tập trung phân biệt F và NG.'));
-          tasks.push(t(`l_adv_${dayStr}`, 'listening', '🎧 Luyện nghe Section 4 (Fill in the blanks)', 'Nghe liên tục không nghỉ, chép chính tả tốc độ cao bài giảng học thuật.'));
-          tasks.push(t(`w_prac_${dayStr}`, 'writing', `✍️ Viết Task ${d === 2 ? '1' : '2'} bấm giờ nghiêm ngặt`, `Bấm giờ cực ngặt (${d === 2 ? '20p Task 1' : '40p Task 2'}). Tự review lỗi ngữ pháp và từ vựng.`));
-          tasks.push(t(`w_vocab_${dayStr}`, 'writing', '✍️ Nâng cấp từ vựng Writing band 7.0+', 'Học sophisticated collocations, nuanced expressions, hedging language.'));
-        } else {
-          // THỨ 7, CN (Mock Test & Speaking)
-          tasks.push(t(`m_full_${dayStr}`, 'mock', '🏆 Thi thử Mock Test 4 kỹ năng chuẩn format thi thật', 'Mô phỏng thi thật: Sáng L (30p), R (60p), W (60p). Chiều S (14p). Không tra từ điển.'));
-          tasks.push(t(`s_mock_${dayStr}`, 'mock', '🗣️ Ghi âm Full Mock Speaking Part 1, 2, 3 liên tục', 'Ghi âm Part 1,2,3 liên tục. Dùng AI chấm điểm Fluency, Coherence, Pronunciation.'));
-          tasks.push(t(`v_rev_${dayStr}`, 'vocab', '🔄 Ôn tập toàn bộ từ vựng nâng cao đã sai', 'Tổng hợp toàn bộ từ vựng ghi sai trong Mock Test (đặc biệt từ Reading/Listening). Ôn lặp lại.'));
-        }
-      }
-
-      days.push({
-        day: dayCounter++,
-        week,
-        phase: phase as Phase,
-        theme: `Tuần ${week}: Kỷ luật tạo nên 8.0`,
-        themeEn: `Week ${week}`,
-        tasks,
-        isMilestone: isMilestoneWeek && d === 7,
-        milestoneLabel: isMilestoneWeek && d === 7 ? `🏆 Mock Test Phase ${phase} — Đánh giá band điểm` : undefined,
-      });
-    }
+    days.push({
+      day,
+      week,
+      phase,
+      theme,
+      themeEn,
+      tasks2h,
+      tasks4h,
+      isMilestone: isMilestoneDay,
+      milestoneLabel: isMilestoneDay ? milestoneLabels[day] : undefined,
+    });
   }
 
   return days;
 }
 
 export const ROADMAP = generateRoadmap();
+
+// ─── Storage helpers for time mode per day ────────────────────────────────────
+const TIME_MODE_KEY = 'ielts_day_timemode_v1';
+
+export function loadTimeModes(): Record<number, TimeMode> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(TIME_MODE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+export function saveTimeMode(day: number, mode: TimeMode): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const all = loadTimeModes();
+    all[day] = mode;
+    localStorage.setItem(TIME_MODE_KEY, JSON.stringify(all));
+  } catch { /* ignore */ }
+}
+
+/** Get the active tasks for a day based on its time mode.
+ *  Phase 4 always uses tasks4h regardless of mode setting. */
+export function getActiveTasks(day: RoadmapDay, timeModes: Record<number, TimeMode>): DayTask[] {
+  if (day.phase === 4) return day.tasks4h;
+  const mode = timeModes[day.day] ?? '4h';
+  return mode === '2h' ? day.tasks2h : day.tasks4h;
+}
+
+/** Count how many Reading Passage-3 tasks have been ticked in Phase 2.
+ *  Task ID pattern: `r_p3_${absDay}`, storage key: `${absDay}_r_p3_${absDay}`.
+ *  Only counts days 21-50 (first 30 days of Phase 2).
+ */
+export function countCompletedP2Passages(taskRecord: Record<string, boolean>): number {
+  let count = 0;
+  for (let absDay = 21; absDay <= 50; absDay++) {
+    if (taskRecord[`${absDay}_r_p3_${absDay}`]) count++;
+  }
+  return count;
+}

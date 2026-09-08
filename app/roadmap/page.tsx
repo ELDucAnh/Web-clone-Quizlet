@@ -1,11 +1,18 @@
 'use client';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Check, Lock, Trophy, BookOpen, Headphones, PenLine, Mic, Brain, Target, FlaskConical, X, ExternalLink, Flame, Calendar } from 'lucide-react';
-import { ROADMAP, PHASES, type RoadmapDay, type TaskType } from '@/lib/roadmap-data';
+import {
+  ArrowLeft, Check, Lock, Trophy, BookOpen, Headphones, PenLine, Mic,
+  Brain, Target, FlaskConical, X, ExternalLink, Flame, Calendar, Clock, Zap
+} from 'lucide-react';
+import {
+  ROADMAP, PHASES,
+  type RoadmapDay, type TaskType, type TimeMode,
+  loadTimeModes, saveTimeMode, getActiveTasks,
+} from '@/lib/roadmap-data';
 
 // ─── Storage ─────────────────────────────────────────────────
-const STORAGE_KEY = 'ielts_roadmap_v2';
+const STORAGE_KEY = 'ielts_roadmap_v3';
 
 type TaskRecord = Record<string, boolean>; // key: `${day}_${taskId}`
 
@@ -20,17 +27,34 @@ function saveTasks(r: TaskRecord) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(r));
 }
 
-function isDayComplete(day: RoadmapDay, tasks: TaskRecord): boolean {
-  return day.tasks.every(t => tasks[`${day.day}_${t.id}`]);
+function isDayComplete(day: RoadmapDay, tasks: TaskRecord, timeModes: Record<number, TimeMode>): boolean {
+  const activeTasks = getActiveTasks(day, timeModes);
+  return activeTasks.length > 0 && activeTasks.every(t => tasks[`${day.day}_${t.id}`]);
 }
 
-function getStatus(day: number, allDays: RoadmapDay[], tasks: TaskRecord): 'done' | 'current' | 'locked' {
+function getStatus(
+  day: number,
+  allDays: RoadmapDay[],
+  tasks: TaskRecord,
+  timeModes: Record<number, TimeMode>
+): 'done' | 'current' | 'locked' {
   const d = allDays.find(x => x.day === day)!;
-  if (isDayComplete(d, tasks)) return 'done';
+  if (isDayComplete(d, tasks, timeModes)) return 'done';
   if (day === 1) return 'current';
   const prev = allDays.find(x => x.day === day - 1);
-  if (prev && isDayComplete(prev, tasks)) return 'current';
+  if (prev && isDayComplete(prev, tasks, timeModes)) return 'current';
   return 'locked';
+}
+
+// ─── Count completed Phase 2 passages (smart tracking) ───────
+// Task ID format (new): `r_p3_${absDay}` → storage key: `${absDay}_r_p3_${absDay}`
+// Phase 2 passage days: absDay 21-50 (first 30 days of Phase 2)
+function countP2Passages(tasks: TaskRecord): number {
+  let count = 0;
+  for (let absDay = 21; absDay <= 50; absDay++) {
+    if (tasks[`${absDay}_r_p3_${absDay}`]) count++;
+  }
+  return count;
 }
 
 // ─── Task type metadata ───────────────────────────────────────
@@ -43,6 +67,40 @@ const TASK_META: Record<TaskType, { label: string; icon: React.ReactNode; color:
   grammar:   { label: 'Ngữ pháp',  icon: <BookOpen size={15}/>,    color: '#6366F1', bg: 'rgba(99,102,241,0.1)' },
   mock:      { label: 'Mock Test', icon: <Target size={15}/>,      color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
 };
+
+// ─── Time Mode Selector Component ────────────────────────────
+interface TimeModeProps {
+  day: RoadmapDay;
+  currentMode: TimeMode;
+  onSelect: (mode: TimeMode) => void;
+}
+function TimeModeSelector({ day, currentMode, onSelect }: TimeModeProps) {
+  if (day.phase === 4) return null; // Phase 4 always full intensity
+  return (
+    <div className="flex items-center gap-1.5 bg-[var(--bg)] rounded-xl p-1 border border-[var(--border)]">
+      <button
+        onClick={() => onSelect('2h')}
+        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all"
+        style={{
+          background: currentMode === '2h' ? '#3B82F6' : 'transparent',
+          color: currentMode === '2h' ? 'white' : 'var(--text-muted)',
+        }}
+      >
+        <Clock size={11}/> 2h
+      </button>
+      <button
+        onClick={() => onSelect('4h')}
+        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all"
+        style={{
+          background: currentMode === '4h' ? '#8B5CF6' : 'transparent',
+          color: currentMode === '4h' ? 'white' : 'var(--text-muted)',
+        }}
+      >
+        <Zap size={11}/> 4h
+      </button>
+    </div>
+  );
+}
 
 // ─── Day Node ─────────────────────────────────────────────────
 interface NodeProps {
@@ -140,16 +198,28 @@ function RowConnector({ isEvenRow, color }: { isEvenRow: boolean; color: string 
   );
 }
 
+// ─── Phase progress percent helper ───────────────────────────
+function phaseDayCount(phaseId: number): number {
+  const p = PHASES.find(p => p.id === phaseId)!;
+  return p.days[1] - p.days[0] + 1;
+}
+
 // ─── Main Page ────────────────────────────────────────────────
 const COLS = 5;
+const TOTAL_DAYS = 120;
 
 export default function RoadmapPage() {
   const [mounted, setMounted] = useState(false);
   const [tasks, setTasks] = useState<TaskRecord>({});
+  const [timeModes, setTimeModes] = useState<Record<number, TimeMode>>({});
   const [selectedDay, setSelectedDay] = useState<RoadmapDay | null>(null);
   const currentDayRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setMounted(true); setTasks(loadTasks()); }, []);
+  useEffect(() => {
+    setMounted(true);
+    setTasks(loadTasks());
+    setTimeModes(loadTimeModes());
+  }, []);
 
   useEffect(() => {
     if (mounted && currentDayRef.current) {
@@ -158,8 +228,8 @@ export default function RoadmapPage() {
   }, [mounted]);
 
   const getStatusMemo = useCallback((day: number) => {
-    return getStatus(day, ROADMAP, tasks);
-  }, [tasks]);
+    return getStatus(day, ROADMAP, tasks, timeModes);
+  }, [tasks, timeModes]);
 
   const handleToggleTask = (day: RoadmapDay, taskId: string) => {
     const status = getStatusMemo(day.day);
@@ -172,14 +242,23 @@ export default function RoadmapPage() {
     });
   };
 
-  const completedDaysCount = ROADMAP.filter(d => isDayComplete(d, tasks)).length;
-  const progressPct = Math.round((completedDaysCount / 140) * 100);
+  const handleSetTimeMode = (day: RoadmapDay, mode: TimeMode) => {
+    setTimeModes(prev => {
+      const next = { ...prev, [day.day]: mode };
+      saveTimeMode(day.day, mode);
+      return next;
+    });
+  };
+
+  const completedDaysCount = ROADMAP.filter(d => isDayComplete(d, tasks, timeModes)).length;
+  const progressPct = Math.round((completedDaysCount / TOTAL_DAYS) * 100);
+  const p2Passages = countP2Passages(tasks);
 
   const streakDays = (() => {
     let streak = 0;
     for (let d = completedDaysCount; d >= 1; d--) {
       const day = ROADMAP.find(x => x.day === d);
-      if (day && isDayComplete(day, tasks)) streak++;
+      if (day && isDayComplete(day, tasks, timeModes)) streak++;
       else break;
     }
     return streak;
@@ -197,17 +276,20 @@ export default function RoadmapPage() {
   // Phase color for current node (for connector)
   const currentPhaseColor = currentDay ? PHASES.find(p => p.id === currentDay.phase)!.color : '#4f8ef7';
 
+  // Phase start days for the snake tree
+  const phaseStartDays = [1, 21, 61, 81];
+
   return (
     <div className="min-h-dvh bg-[var(--bg)]">
-      {/* ── Sticky Header (NO backdrop-blur to avoid UI glitch) ── */}
+      {/* ── Sticky Header ── */}
       <header className="sticky top-0 z-30 bg-[var(--card)] border-b border-[var(--border)]">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
           <Link href="/" className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[var(--bg)] text-[var(--text-muted)] transition-colors">
             <ArrowLeft size={18} />
           </Link>
           <div className="flex-1 min-w-0">
-            <h1 className="font-black text-[var(--text)] text-sm truncate">Lộ Trình IELTS 8.0</h1>
-            <p className="text-[10px] text-[var(--text-muted)]">140 ngày · 3h/ngày · 20/01/2027</p>
+            <h1 className="font-black text-[var(--text)] text-sm truncate">Lộ Trình IELTS 9R·9L·7W·6.5S</h1>
+            <p className="text-[10px] text-[var(--text-muted)]">120 ngày · 5.5 → Band 9 R&L · Bắt đầu ngay hôm nay</p>
           </div>
           <div className="flex items-center gap-2">
             {streakDays > 0 && (
@@ -216,7 +298,7 @@ export default function RoadmapPage() {
               </div>
             )}
             <div className="flex items-center gap-1.5 bg-[var(--primary-light)] text-[var(--primary)] px-3 py-1.5 rounded-full font-bold text-xs">
-              <Check size={12}/> {completedDaysCount}/140
+              <Check size={12}/> {completedDaysCount}/{TOTAL_DAYS}
             </div>
           </div>
         </div>
@@ -232,25 +314,33 @@ export default function RoadmapPage() {
         {/* ── Hero Section ─────────────────────────────────── */}
         <div className="pt-8 pb-6 text-center">
           <div className="inline-flex items-center gap-2 bg-[var(--primary-light)] text-[var(--primary)] px-4 py-1.5 rounded-full text-xs font-bold mb-4">
-            <Calendar size={13}/> Bắt đầu ngay hôm nay
+            <Calendar size={13}/> 120 Ngày · Chiến đấu tới cùng
           </div>
           <h2 className="text-2xl font-black text-[var(--text)] mb-2">
             Hành trình chinh phục{' '}
-            <span style={{ background: 'linear-gradient(135deg, #ef4444, #b91c1c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textShadow: '0 2px 10px rgba(239, 68, 68, 0.3)' }}>
-              IELTS 8.0
+            <span style={{ background: 'linear-gradient(135deg, #ef4444, #b91c1c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              IELTS 9R · 9L
             </span>
           </h2>
           <p className="text-sm text-[var(--text-muted)] max-w-sm mx-auto">
-            5.5 → 8.0 trong 140 ngày · 3 giờ mỗi ngày · Hoàn thành từng task để mở khóa ngày tiếp theo
+            5.5 → 9R/9L/7W/6.5S · 120 ngày toàn tâm toàn lực · Hoàn thành từng task để mở khóa ngày tiếp theo
           </p>
+          {/* P2 passages tracker */}
+          {currentDay && currentDay.phase === 2 && (
+            <div className="inline-flex items-center gap-2 mt-3 bg-purple-500/10 text-purple-400 px-3 py-1.5 rounded-full text-xs font-bold border border-purple-500/20">
+              <BookOpen size={11}/> Reading P3 Phase 2: {p2Passages}/30 passages hoàn thành
+              {p2Passages >= 30 && <span className="text-green-400">✓ Đã chuyển sang phân tích lỗi!</span>}
+            </div>
+          )}
         </div>
 
         {/* ── Phase Cards ──────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-8">
           {PHASES.map(p => {
             const pDays = ROADMAP.filter(d => d.phase === p.id);
-            const pDone = pDays.filter(d => isDayComplete(d, tasks)).length;
+            const pDone = pDays.filter(d => isDayComplete(d, tasks, timeModes)).length;
             const pPct = Math.round((pDone / pDays.length) * 100);
+            const totalDays = phaseDayCount(p.id);
             return (
               <div
                 key={p.id}
@@ -270,7 +360,8 @@ export default function RoadmapPage() {
                   <span className="text-xs font-black" style={{ color: p.color }}>{pPct}%</span>
                 </div>
                 <p className="text-[11px] font-bold text-[var(--text)] leading-tight">{p.name}</p>
-                <p className="text-[10px] text-[var(--text-muted)] mb-2">{p.bandRange}</p>
+                <p className="text-[10px] text-[var(--text-muted)] mb-1">{p.bandRange}</p>
+                <p className="text-[9px] text-[var(--text-muted)] mb-2">N{p.days[0]}–{p.days[1]} · {totalDays} ngày</p>
                 <div className="h-1 bg-[var(--border)] rounded-full overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pPct}%`, background: p.color }} />
                 </div>
@@ -282,28 +373,39 @@ export default function RoadmapPage() {
         {/* ── Current Day Banner ────────────────────────────── */}
         {currentDay && (() => {
           const phase = PHASES.find(p => p.id === currentDay.phase)!;
-          const completedTasksCount = currentDay.tasks.filter(t => tasks[`${currentDay.day}_${t.id}`]).length;
+          const currentMode: TimeMode = timeModes[currentDay.day] ?? '4h';
+          const activeTasks = getActiveTasks(currentDay, timeModes);
+          const completedTasksCount = activeTasks.filter(t => tasks[`${currentDay.day}_${t.id}`]).length;
+          const totalMin = activeTasks.reduce((s, t) => s + t.durationMin, 0);
           return (
             <div
-              className="rounded-2xl p-4 mb-8 cursor-pointer hover:scale-[1.01] transition-transform border"
+              className="rounded-2xl p-4 mb-8 border"
               style={{
                 background: `linear-gradient(135deg, ${phase.color}18, ${phase.color}08)`,
                 borderColor: `${phase.color}40`,
               }}
-              onClick={() => setSelectedDay(currentDay)}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-start gap-4">
                 <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl text-white flex-shrink-0"
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl text-white flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"
                   style={{ background: `radial-gradient(circle at 35% 35%, ${phase.color}, ${phase.color}aa)`, boxShadow: `0 4px 16px ${phase.color}44` }}
+                  onClick={() => setSelectedDay(currentDay)}
                 >
                   {currentDay.day}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-semibold text-[var(--text-muted)] mb-0.5">📍 Ngày hiện tại · Tuần {currentDay.week}</p>
-                  <p className="font-bold text-[var(--text)] truncate">{currentDay.theme}</p>
-                  <div className="flex items-center gap-1.5 mt-1.5">
-                    {currentDay.tasks.map(t => {
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <p className="text-[11px] font-semibold text-[var(--text-muted)]">📍 Ngày hiện tại · Tuần {currentDay.week}</p>
+                    {/* Time mode selector on banner */}
+                    <TimeModeSelector
+                      day={currentDay}
+                      currentMode={currentMode}
+                      onSelect={(m) => handleSetTimeMode(currentDay, m)}
+                    />
+                  </div>
+                  <p className="font-bold text-[var(--text)] truncate text-sm" onClick={() => setSelectedDay(currentDay)} style={{cursor:'pointer'}}>{currentDay.theme}</p>
+                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                    {activeTasks.map(t => {
                       const done = tasks[`${currentDay.day}_${t.id}`];
                       return (
                         <div
@@ -315,7 +417,9 @@ export default function RoadmapPage() {
                         </div>
                       );
                     })}
-                    <span className="text-[10px] text-[var(--text-muted)] ml-1">{completedTasksCount}/{currentDay.tasks.length} tasks</span>
+                    <span className="text-[10px] text-[var(--text-muted)] ml-1">
+                      {completedTasksCount}/{activeTasks.length} tasks · ~{totalMin}p
+                    </span>
                   </div>
                 </div>
               </div>
@@ -328,7 +432,7 @@ export default function RoadmapPage() {
           {snakeRows.map((row, rowIndex) => {
             const originalRow = rows[rowIndex];
             const firstDay = originalRow[0];
-            const isPhaseStart = [1, 36, 71, 106].includes(firstDay.day);
+            const isPhaseStart = phaseStartDays.includes(firstDay.day);
             const phase = PHASES.find(p => p.id === firstDay.phase)!;
             const hasCurrentInRow = row.some(d => getStatusMemo(d.day) === 'current');
 
@@ -343,7 +447,6 @@ export default function RoadmapPage() {
                       border: `1.5px solid ${phase.color}35`,
                     }}
                   >
-                    {/* Decorative background circle */}
                     <div
                       className="absolute -right-8 -top-8 w-32 h-32 rounded-full opacity-10"
                       style={{ background: phase.color }}
@@ -363,10 +466,10 @@ export default function RoadmapPage() {
                         className="ml-auto text-xs font-black px-2.5 py-1 rounded-full"
                         style={{ background: phase.bg, color: phase.color }}
                       >
-                        {Math.round((ROADMAP.filter(d => d.phase === phase.id && isDayComplete(d, tasks)).length / 35) * 100)}%
+                        {Math.round((ROADMAP.filter(d => d.phase === phase.id && isDayComplete(d, tasks, timeModes)).length / phaseDayCount(phase.id)) * 100)}%
                       </div>
                     </div>
-                    <p className="text-[11px] text-[var(--text-muted)] mt-2 ml-13 pl-1 leading-relaxed">{phase.description}</p>
+                    <p className="text-[11px] text-[var(--text-muted)] mt-2 leading-relaxed">{phase.description}</p>
                   </div>
                 )}
 
@@ -395,7 +498,7 @@ export default function RoadmapPage() {
         </div>
 
         {/* ── Completion Banner ─────────────────────────────── */}
-        {completedDaysCount === 140 && (
+        {completedDaysCount === TOTAL_DAYS && (
           <div className="text-center py-16 flex flex-col items-center gap-5">
             <div
               className="w-28 h-28 rounded-full flex items-center justify-center shadow-2xl"
@@ -403,9 +506,9 @@ export default function RoadmapPage() {
             >
               <Trophy size={52} className="text-white" />
             </div>
-            <h2 className="text-2xl font-black text-[var(--text)]">🎓 140 Ngày Hoàn Thành!</h2>
+            <h2 className="text-2xl font-black text-[var(--text)]">🎓 120 Ngày Hoàn Thành!</h2>
             <p className="text-[var(--text-muted)] text-sm max-w-xs text-center leading-relaxed">
-              Bạn đã chinh phục hành trình từ 5.5 → 8.0.<br/>
+              Bạn đã chinh phục hành trình từ 5.5 → 9R/9L/7W/6.5S.<br/>
               Chúc bạn thi đạt điểm mơ ước! 🏆
             </p>
           </div>
@@ -416,8 +519,11 @@ export default function RoadmapPage() {
       {selectedDay && (() => {
         const phase = PHASES.find(p => p.id === selectedDay.phase)!;
         const status = getStatusMemo(selectedDay.day);
-        const allDone = isDayComplete(selectedDay, tasks);
-        const doneCount = selectedDay.tasks.filter(t => tasks[`${selectedDay.day}_${t.id}`]).length;
+        const currentMode: TimeMode = timeModes[selectedDay.day] ?? '4h';
+        const activeTasks = getActiveTasks(selectedDay, timeModes);
+        const allDone = status !== 'locked' && activeTasks.length > 0 && activeTasks.every(t => tasks[`${selectedDay.day}_${t.id}`]);
+        const doneCount = activeTasks.filter(t => tasks[`${selectedDay.day}_${t.id}`]).length;
+        const totalMin = activeTasks.reduce((s, t) => s + t.durationMin, 0);
 
         return (
           <>
@@ -443,6 +549,11 @@ export default function RoadmapPage() {
                           🏆 {selectedDay.milestoneLabel || 'Milestone'}
                         </span>
                       )}
+                      {selectedDay.phase !== 4 && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--bg)] text-[var(--text-muted)]">
+                          ~{totalMin}p
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -462,15 +573,27 @@ export default function RoadmapPage() {
                       </div>
                     </div>
 
+                    {/* Time mode selector inside modal */}
+                    {selectedDay.phase !== 4 && status !== 'locked' && (
+                      <div className="flex items-center gap-2 mt-3">
+                        <span className="text-[10px] text-[var(--text-muted)] font-semibold">Thời gian hôm nay:</span>
+                        <TimeModeSelector
+                          day={selectedDay}
+                          currentMode={currentMode}
+                          onSelect={(m) => handleSetTimeMode(selectedDay, m)}
+                        />
+                      </div>
+                    )}
+
                     {/* Progress mini-bar */}
                     <div className="flex items-center gap-2 mt-3">
                       <div className="flex-1 h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500"
-                          style={{ width: `${(doneCount / selectedDay.tasks.length) * 100}%`, background: phase.color }}
+                          style={{ width: `${activeTasks.length > 0 ? (doneCount / activeTasks.length) * 100 : 0}%`, background: phase.color }}
                         />
                       </div>
-                      <span className="text-[10px] font-bold text-[var(--text-muted)]">{doneCount}/{selectedDay.tasks.length}</span>
+                      <span className="text-[10px] font-bold text-[var(--text-muted)]">{doneCount}/{activeTasks.length}</span>
                     </div>
                   </div>
 
@@ -493,7 +616,7 @@ export default function RoadmapPage() {
                   </div>
                 ) : (
                   <>
-                    {selectedDay.tasks.map(task => {
+                    {activeTasks.map(task => {
                       const meta = TASK_META[task.type];
                       const isChecked = !!tasks[`${selectedDay.day}_${task.id}`];
                       return (
@@ -529,7 +652,7 @@ export default function RoadmapPage() {
 
                             {/* Content */}
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
                                 <span
                                   className="text-[10px] font-bold px-1.5 py-0.5 rounded"
                                   style={{
@@ -539,6 +662,7 @@ export default function RoadmapPage() {
                                 >
                                   {meta.label}
                                 </span>
+                                <span className="text-[10px] text-[var(--text-muted)]">~{task.durationMin}p</span>
                                 {isChecked && <span className="text-[10px] text-[var(--text-muted)]">✓ Hoàn thành</span>}
                               </div>
                               <p className={`text-sm font-bold leading-snug mb-1.5 ${isChecked ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'}`}>
@@ -589,7 +713,7 @@ export default function RoadmapPage() {
                     {/* Unlock notice */}
                     {!allDone && (
                       <p className="text-[11px] text-center text-[var(--text-muted)] py-2">
-                        Tick hết {selectedDay.tasks.length - doneCount} task còn lại để mở khóa ngày tiếp theo
+                        Tick hết {activeTasks.length - doneCount} task còn lại để mở khóa ngày tiếp theo
                       </p>
                     )}
                   </>
