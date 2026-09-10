@@ -396,17 +396,18 @@ export default function ListeningErrorsPage() {
     <div className="min-h-dvh bg-[var(--bg)]">
       <main className="max-w-4xl mx-auto px-4 pb-16">
         {/* Page heading */}
-        <div className="flex items-center gap-3 pt-8 pb-6">
-          <Link href="/" className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[var(--card)] text-[var(--text-muted)] transition-colors flex-shrink-0">
-            <ArrowLeft size={18} />
-          </Link>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-black text-[var(--text)] text-2xl tracking-tight">🎧 Nhật Ký Lỗi Listening</h1>
-            <p className="text-sm text-[var(--text-muted)] mt-0.5">{errors.length} lỗi đã lưu · Luyện VOL → ghi lỗi → khắc phục</p>
+        <div className="flex items-start justify-between gap-4 pt-8 pb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-[var(--text)] flex items-center gap-2">
+              <Headphones size={24} className="text-[var(--primary)]" /> Nhật Ký Lỗi Listening
+            </h1>
+            <p className="text-[var(--text-muted)] text-sm mt-1">
+              {errors.length} lỗi đã lưu · Luyện VOL → ghi lỗi → khắc phục
+            </p>
           </div>
-          <button onClick={() => setShowForm(v => !v)} className="btn-primary px-4 py-2 text-sm gap-1.5 flex-shrink-0">
-            {showForm ? <X size={14} /> : <Plus size={14} />}
-            {showForm ? 'Đóng' : '+ Thêm lỗi'}
+          <button onClick={() => setShowForm(v => !v)} className="btn-primary flex-shrink-0">
+            {showForm ? <X size={16} /> : <Plus size={16} />}
+            {showForm ? 'Đóng' : 'Thêm lỗi'}
           </button>
         </div>
         {/* Stats */}
@@ -450,10 +451,14 @@ export default function ListeningErrorsPage() {
         {errors.length > 0 && (
           <div className="flex flex-col gap-2 mb-5">
             {/* Search — full width */}
-            <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
-              <input type="text" value={searchText} onChange={e => setSearchText(e.target.value)}
-                placeholder="Tìm lỗi, đáp án, transcript..." className="q-input pl-9 text-sm w-full"
+            <div className="relative flex-1">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
+              <input
+                type="text"
+                value={searchText}
+                onChange={e => setSearchText(e.target.value)}
+                placeholder="Tìm lỗi, đáp án, transcript..."
+                className="w-full h-10 pl-9 pr-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm outline-none transition-all focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-light)] placeholder:text-[var(--text-muted)]"
               />
             </div>
             {/* Section filter */}

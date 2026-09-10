@@ -150,14 +150,14 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
 
           <NavItem
             href="/reading-errors"
-            icon={<BookMarked size={18} className="text-red-500" />}
+            icon={<BookMarked size={18} />}
             label="Nhật Ký Lỗi Reading"
             active={!!pathname?.startsWith('/reading-errors')}
             collapsed={collapsed}
           />
           <NavItem
             href="/listening-errors"
-            icon={<Headphones size={18} className="text-amber-500" />}
+            icon={<Headphones size={18} />}
             label="Nhật Ký Lỗi Listening"
             active={!!pathname?.startsWith('/listening-errors')}
             collapsed={collapsed}
