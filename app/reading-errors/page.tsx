@@ -548,29 +548,23 @@ export default function ReadingErrorsPage() {
               <p className="text-xs text-[var(--text-muted)] mt-0.5">Tổng lỗi</p>
             </div>
             {topError && (
-              <div
-                className="rounded-2xl border p-3.5"
-                style={{
-                  background: ERROR_TYPE_COLORS[topError].bg,
-                  borderColor: ERROR_TYPE_COLORS[topError].border,
-                }}
-              >
-                <p className="text-2xl font-black" style={{ color: ERROR_TYPE_COLORS[topError].text }}>
+              <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-3.5">
+                <p className="text-2xl font-black text-[var(--primary)]">
                   {statsByType[topError]}
                 </p>
-                <p className="text-xs mt-0.5" style={{ color: ERROR_TYPE_COLORS[topError].text, opacity: 0.75 }}>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">
                   {topError} (nhiều nhất)
                 </p>
               </div>
             )}
             <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-3.5">
-              <p className="text-2xl font-black text-red-500">
+              <p className="text-2xl font-black text-[var(--primary)]">
                 {errors.filter(e => e.errorType === 'Paraphrase Trap').length}
               </p>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">Paraphrase bẫy</p>
             </div>
             <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-3.5">
-              <p className="text-2xl font-black text-purple-500">
+              <p className="text-2xl font-black text-[var(--primary)]">
                 {errors.filter(e => e.errorType === 'True/False/NG').length}
               </p>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">T/F/NG</p>

@@ -321,12 +321,12 @@ function AddErrorForm({ onAdd }: { onAdd: (e: ListeningError) => void }) {
 function MiniBarChart({ data }: { data: { label: string; count: number; color: string }[] }) {
   const max = Math.max(...data.map(d => d.count), 1);
   return (
-    <div className="flex gap-3 items-end h-14">
+    <div className="flex gap-1.5 items-end h-16 w-full justify-between mt-auto">
       {data.map(d => (
-        <div key={d.label} className="flex flex-col items-center gap-1 flex-1">
-          <span className="text-[10px] font-bold" style={{ color: d.color }}>{d.count}</span>
-          <div className="w-full rounded-t-sm transition-all duration-500" style={{ height: `${Math.max(4, (d.count / max) * 36)}px`, background: d.color, opacity: 0.85 }} />
-          <span className="text-[9px] text-[var(--text-muted)] text-center leading-tight">{d.label}</span>
+        <div key={d.label} className="flex flex-col items-center flex-1 min-w-0">
+          <span className="text-[10px] font-bold text-[var(--primary)] mb-0.5">{d.count}</span>
+          <div className="w-4 rounded-t-sm bg-[var(--primary)] transition-all duration-500" style={{ height: `${Math.max(4, (d.count / max) * 32)}px` }} />
+          <span className="text-[8.5px] text-[var(--text-muted)] text-center leading-none mt-1 w-full truncate px-0.5" title={d.label}>{d.label}</span>
         </div>
       ))}
     </div>
@@ -418,14 +418,14 @@ export default function ListeningErrorsPage() {
               <p className="text-xs text-[var(--text-muted)] mt-0.5">Tổng lỗi</p>
             </div>
             {topType && countByType[topType] > 0 && (
-              <div className="rounded-2xl border p-3.5" style={{ background: ERROR_TYPE_META[topType].bg, borderColor: ERROR_TYPE_META[topType].border }}>
-                <p className="text-2xl font-black" style={{ color: ERROR_TYPE_META[topType].text }}>{countByType[topType]}</p>
-                <p className="text-xs mt-0.5 font-semibold" style={{ color: ERROR_TYPE_META[topType].text, opacity: 0.8 }}>{ERROR_TYPE_META[topType].icon} {topType}</p>
+              <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-3.5">
+                <p className="text-2xl font-black text-[var(--primary)]">{countByType[topType]}</p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">{topType} (nhiều nhất)</p>
               </div>
             )}
             <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-3.5">
-              <p className="text-2xl font-black text-amber-500">{countBySection[weakestSection]}</p>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">⚠️ {weakestSection}</p>
+              <p className="text-2xl font-black text-[var(--primary)]">{countBySection[weakestSection]}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">{weakestSection} (yếu nhất)</p>
             </div>
             <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-3.5 flex flex-col justify-between">
               <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1 flex items-center gap-1">
