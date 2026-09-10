@@ -238,6 +238,22 @@ export default function FolderDetailPage() {
             const cardIds = cardsByDeck[deck.id] ?? [];
             const mastered = cardIds.filter((id) => progress[id]?.learnStage === 'mastered').length;
             const pct = deck.cardCount > 0 ? Math.round((mastered / deck.cardCount) * 100) : 0;
+            const isComplete = pct === 100 && deck.cardCount > 0;
+            const reviewCount = isComplete ? (deck.reviewCount ?? 0) : 0;
+            const getTimeSince = () => {
+              if (!deck.lastStudied) return null;
+              const diffMs = Date.now() - deck.lastStudied;
+              const diffMins = Math.floor(diffMs / 60000);
+              const diffHours = Math.floor(diffMs / 3600000);
+              const diffDays = Math.floor(diffMs / 86400000);
+              if (diffMins < 60) return diffMins <= 1 ? 'Vừa xong' : `${diffMins} phút trước`;
+              if (diffHours < 24) return `${diffHours} giờ trước`;
+              if (diffDays === 1) return 'Hôm qua';
+              if (diffDays < 30) return `${diffDays} ngày trước`;
+              const m = Math.floor(diffDays / 30);
+              return m === 1 ? '1 tháng trước' : `${m} tháng trước`;
+            };
+            const timeSince = isComplete ? getTimeSince() : null;
             return (
               <div
                 key={deck.id}
@@ -249,9 +265,9 @@ export default function FolderDetailPage() {
                       <h3 className="font-bold text-[var(--text)] truncate group-hover/link:text-[var(--primary)] transition-colors text-[0.9375rem] leading-snug tracking-tight">
                         {deck.name}
                       </h3>
-                      <div className="flex items-center gap-2 mt-1.5">
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                         <span className="text-xs text-[var(--text-muted)]">{deck.cardCount} thẻ</span>
-                        {pct === 100 && deck.cardCount > 0 && (
+                        {isComplete && (
                           <span className="badge badge-green text-[10px]">Hoàn thành</span>
                         )}
                       </div>
@@ -274,7 +290,7 @@ export default function FolderDetailPage() {
                         className="h-full rounded-full transition-all duration-500"
                         style={{
                           width: `${pct}%`,
-                          background: pct === 100
+                          background: isComplete
                             ? 'linear-gradient(90deg, #16A34A, #22C55E)'
                             : 'linear-gradient(90deg, var(--primary) 0%, #818CF8 100%)',
                         }}
@@ -285,8 +301,26 @@ export default function FolderDetailPage() {
                     href={`/study/${deck.id}`}
                     className="block text-center py-2 px-4 rounded-lg font-semibold text-sm text-white bg-[var(--primary)] hover:bg-[var(--primary-hover)] transition-colors active:scale-95"
                   >
-                    {pct === 100 ? 'Học lại' : deck.lastStudied ? 'Tiếp tục học' : 'Bắt đầu học'}
+                    {isComplete ? 'Học lại' : deck.lastStudied ? 'Tiếp tục học' : 'Bắt đầu học'}
                   </Link>
+
+                  {/* Review stats — chỉ hiện khi hoàn thành 100% */}
+                  {isComplete && (reviewCount > 0 || timeSince) && (
+                    <div className="flex items-center gap-3 text-[11px] text-[var(--text-muted)] flex-wrap">
+                      {reviewCount > 0 && (
+                        <span className="flex items-center gap-1">
+                          <TrendingUp size={10} />
+                          Đã ôn <span className="font-semibold text-[var(--primary)]">{reviewCount}</span> lần
+                        </span>
+                      )}
+                      {timeSince && (
+                        <span className="flex items-center gap-1">
+                          {reviewCount > 0 && <span className="w-1 h-1 rounded-full bg-[var(--border)]" />}
+                          Lần cuối: <span className="font-semibold text-[var(--text-secondary)]">{timeSince}</span>
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );
