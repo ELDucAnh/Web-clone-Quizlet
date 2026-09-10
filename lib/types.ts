@@ -21,6 +21,7 @@ export interface Deck {
   folderId?: string;    // Thuộc thư mục nào (nếu có)
   color: string;        // Màu accent
   tags?: string[];
+  reviewCount?: number; // Số lần ôn lại (đã tính cả lần học đầu)
 }
 
 export interface Folder {
@@ -117,7 +118,9 @@ export type IELTSSkill = 'Listening' | 'Reading' | 'Writing' | 'Speaking' | 'Voc
 export interface StudyHoursGoal {
   id: string;
   skill: IELTSSkill;
-  targetHours: number;      // max 1000
+  targetHours: number;      // max 1000 (giữ backward compat)
+  targetValue?: number;     // giá trị mục tiêu theo đơn vị tùy chỉnh
+  unit?: string;            // đơn vị tùy chỉnh (giờ, bài, trang, mục,...)
   deadline?: number;        // timestamp
   createdAt: number;
 }
@@ -126,7 +129,7 @@ export interface StudyHoursLog {
   id: string;
   goalId: string;
   skill: IELTSSkill;
-  minutes: number;          // số phút
+  minutes: number;          // số phút (hoặc giá trị theo đơn vị)
   content: string;          // nội dung ví dụ: "dictation, shadowing"
   date: number;             // timestamp ngày học
   createdAt: number;
@@ -184,7 +187,7 @@ export interface IELTSState {
 
 export interface IELTSActions {
   // Study Hours
-  createStudyHoursGoal: (skill: IELTSSkill, targetHours: number, deadline?: number) => string;
+  createStudyHoursGoal: (skill: IELTSSkill, targetHours: number, deadline?: number, unit?: string, targetValue?: number) => string;
   deleteStudyHoursGoal: (goalId: string) => void;
   addStudyHoursLog: (log: Omit<StudyHoursLog, 'id' | 'createdAt'>) => void;
   deleteStudyHoursLog: (logId: string) => void;

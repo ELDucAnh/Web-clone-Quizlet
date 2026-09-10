@@ -214,7 +214,7 @@ function ErrorCard({
           <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
             Đoạn passage gốc
           </p>
-          <div className="bg-[var(--bg)] rounded-xl p-3 max-h-64 overflow-y-auto">
+          <div className="bg-[var(--bg)] rounded-xl p-3 max-h-60 overflow-y-auto">
             <HighlightedPassage text={error.passageText} highlight={error.selectedText} />
           </div>
         </div>
@@ -524,35 +524,32 @@ export default function ReadingErrorsPage() {
 
   return (
     <div className="min-h-dvh bg-[var(--bg)]">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-[var(--card)] border-b border-[var(--border)]">
-        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-3">
+      <main className="max-w-4xl mx-auto px-4 pb-16">
+        {/* Page heading */}
+        <div className="flex items-center gap-3 pt-8 pb-6">
           <Link
             href="/"
-            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[var(--bg)] text-[var(--text-muted)] transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[var(--card)] text-[var(--text-muted)] transition-colors flex-shrink-0"
           >
             <ArrowLeft size={18} />
           </Link>
           <div className="flex-1 min-w-0">
-            <h1 className="font-black text-[var(--text)] text-sm truncate">📕 Nhật Ký Lỗi Reading</h1>
-            <p className="text-[10px] text-[var(--text-muted)]">
+            <h1 className="font-black text-[var(--text)] text-2xl tracking-tight">📕 Nhật Ký Lỗi Reading</h1>
+            <p className="text-sm text-[var(--text-muted)] mt-0.5">
               {errors.length} lỗi đã lưu · Paste passage → bôi chọn → ghi chú
             </p>
           </div>
           <button
             onClick={() => setShowForm(v => !v)}
-            className="btn-primary px-3 py-1.5 text-xs gap-1"
+            className="btn-primary px-4 py-2 text-sm gap-1.5 flex-shrink-0"
           >
-            {showForm ? <X size={13} /> : <Plus size={13} />}
-            {showForm ? 'Đóng' : 'Thêm lỗi'}
+            {showForm ? <X size={14} /> : <Plus size={14} />}
+            {showForm ? 'Đóng' : '+ Thêm lỗi'}
           </button>
         </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-4 pb-16">
         {/* ── Stats bar ── */}
         {errors.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-6 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
             <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-3.5">
               <p className="text-2xl font-black text-[var(--text)]">{errors.length}</p>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">Tổng lỗi</p>
@@ -601,16 +598,16 @@ export default function ReadingErrorsPage() {
 
         {/* ── Filter & Search ── */}
         {errors.length > 0 && (
-          <div className="flex flex-col sm:flex-row gap-2.5 mb-5">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+          <div className="flex flex-col gap-2 mb-5">
+            {/* Search — full width */}
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
               <input
                 type="text"
                 value={searchText}
                 onChange={e => setSearchText(e.target.value)}
                 placeholder="Tìm lỗi, từ vựng, ghi chú..."
-                className="q-input pl-9 text-sm"
+                className="q-input pl-9 text-sm w-full"
               />
             </div>
 

@@ -522,6 +522,7 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
             newDecks[session.deckId] = {
               ...newDecks[session.deckId],
               lastStudied: session.startedAt,
+              reviewCount: (newDecks[session.deckId].reviewCount ?? 0) + 1,
             };
           }
           return {
@@ -534,9 +535,16 @@ export const useStore = create<AppState & Actions & IELTSState & IELTSActions & 
       },
 
       // ─── IELTS Study Hours Actions ────────────────────────────────────────────
-      createStudyHoursGoal: (skill: IELTSSkill, targetHours: number, deadline?: number) => {
+      createStudyHoursGoal: (skill: IELTSSkill, targetHours: number, deadline?: number, unit?: string, targetValue?: number) => {
         const id = uuidv4();
-        const goal: StudyHoursGoal = { id, skill, targetHours: Math.min(1000, targetHours), deadline, createdAt: Date.now() };
+        const goal: StudyHoursGoal = { 
+          id, skill, 
+          targetHours: Math.min(1000, targetHours), 
+          targetValue: targetValue ?? Math.min(1000, targetHours),
+          unit: unit || 'giờ',
+          deadline, 
+          createdAt: Date.now() 
+        };
         set((state) => ({ studyHoursGoals: { ...state.studyHoursGoals, [id]: goal } }));
         syncToBackend('/study-goals', 'POST', goal);
         return id;

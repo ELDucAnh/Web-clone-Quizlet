@@ -21,6 +21,23 @@ export function DeckCard({ deck, progress, cardIds, cards, onDelete, onReset }: 
   const starredCount = cards ? cardIds.filter((id) => cards[id]?.starred).length : 0;
   const isComplete = progressPct === 100 && deck.cardCount > 0;
 
+  // Time since last review (only for completed decks)
+  const getTimeSinceLastStudy = () => {
+    if (!deck.lastStudied) return null;
+    const diffMs = Date.now() - deck.lastStudied;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffMins < 60) return diffMins <= 1 ? 'Vừa xong' : `${diffMins} phút trước`;
+    if (diffHours < 24) return `${diffHours} giờ trước`;
+    if (diffDays === 1) return 'Hôm qua';
+    if (diffDays < 30) return `${diffDays} ngày trước`;
+    const diffMonths = Math.floor(diffDays / 30);
+    return diffMonths === 1 ? '1 tháng trước' : `${diffMonths} tháng trước`;
+  };
+  const timeSince = isComplete ? getTimeSinceLastStudy() : null;
+  const reviewCount = deck.reviewCount ?? 0;
+
   const handleDelete = () => { setMenuOpen(false); onDelete(); };
   const handleReset = () => { setMenuOpen(false); onReset(); };
 
@@ -37,7 +54,7 @@ export function DeckCard({ deck, progress, cardIds, cards, onDelete, onReset }: 
             {deck.description && (
               <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">{deck.description}</p>
             )}
-            <div className="flex items-center gap-2 mt-1.5">
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
               <span className="text-xs text-[var(--text-muted)]">{deck.cardCount} thẻ</span>
               {starredCount > 0 && (
                 <span className="flex items-center gap-0.5 text-xs text-amber-500 font-medium">
@@ -116,6 +133,24 @@ export function DeckCard({ deck, progress, cardIds, cards, onDelete, onReset }: 
         >
           {isComplete ? 'Học lại' : deck.lastStudied ? 'Tiếp tục học' : 'Bắt đầu học'}
         </Link>
+
+        {/* Review stats (only for completed decks) */}
+        {isComplete && (reviewCount > 0 || timeSince) && (
+          <div className="flex items-center gap-3 text-[11px] text-[var(--text-muted)] flex-wrap">
+            {reviewCount > 0 && (
+              <span className="flex items-center gap-1">
+                <RotateCcw size={10} />
+                Đã ôn <span className="font-semibold text-[var(--primary)]">{reviewCount}</span> lần
+              </span>
+            )}
+            {timeSince && (
+              <span className="flex items-center gap-1">
+                {reviewCount > 0 && <span className="w-1 h-1 rounded-full bg-[var(--border)]" />}
+                Lần cuối: <span className="font-semibold text-[var(--text-secondary)]">{timeSince}</span>
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

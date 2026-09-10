@@ -63,12 +63,25 @@ function GoalCard({ goal }: { goal: StudyHoursGoal }) {
     .sort((a, b) => b.date - a.date);
 
   const totalMins = logs.reduce((s, l) => s + l.minutes, 0);
-  const totalHours = totalMins / 60;
-  const pct = Math.min(100, Math.round((totalHours / goal.targetHours) * 100));
+  const unit = goal.unit || 'giờ';
+  const isHours = unit === 'giờ';
+  // targetValue: nếu có unit tùy chỉnh thì dùng targetValue, nếu không thì dùng targetHours
+  const targetVal = goal.targetValue ?? goal.targetHours;
+  const totalVal = isHours ? totalMins / 60 : totalMins; // nếu đơn vị là giờ thì đổi ra giờ, còn lại lấy thắng minutes
+  const pct = Math.min(100, Math.round((totalVal / targetVal) * 100));
   const color = SKILL_COLORS[goal.skill];
 
-  const remaining = goal.targetHours - totalHours;
+  const remaining = targetVal - totalVal;
   const daysLeft = goal.deadline ? Math.ceil((goal.deadline - Date.now()) / 86400000) : null;
+
+  const fmtVal = (v: number) => {
+    if (isHours) return fmt(Math.round(v * 60));
+    return `${Math.round(v)} ${unit}`;
+  };
+  const fmtShortVal = (v: number) => {
+    if (isHours) return fmtShort(Math.round(v * 60));
+    return `${Math.round(v)} ${unit}`;
+  };
 
   const handleAddLog = () => {
     const m = parseInt(newMins);
@@ -104,7 +117,7 @@ function GoalCard({ goal }: { goal: StudyHoursGoal }) {
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-bold text-[var(--text)]">{goal.skill}</h3>
             <span className="text-xs text-[var(--text-muted)]">
-              {fmtShort(totalMins)} / {goal.targetHours}h
+              {fmtShortVal(totalVal)} / {targetVal} {unit}
             </span>
             {pct === 100 && (
               <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400 px-2 py-0.5 rounded-full">
@@ -119,7 +132,7 @@ function GoalCard({ goal }: { goal: StudyHoursGoal }) {
             />
           </div>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
-            <p className="text-xs text-[var(--text-muted)]">{pct}% • còn {remaining > 0 ? fmt(Math.round(remaining * 60)) : 'đã đạt mục tiêu'}</p>
+            <p className="text-xs text-[var(--text-muted)]">{pct}% • còn {remaining > 0 ? fmtVal(remaining) : 'đã đạt mục tiêu'}</p>
             {daysLeft !== null && (
               <p className={`text-xs font-medium ${daysLeft < 7 ? 'text-red-500' : 'text-[var(--text-muted)]'}`}>
                 {daysLeft > 0 ? `Còn ${daysLeft} ngày` : daysLeft === 0 ? 'Hôm nay hạn chót' : `Quá hạn ${Math.abs(daysLeft)} ngày`}
@@ -138,7 +151,7 @@ function GoalCard({ goal }: { goal: StudyHoursGoal }) {
           {/* Action bar */}
           <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50">
             <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-              {logs.length} buổi học • {fmtShort(totalMins)} tổng
+              {logs.length} buổi học • {isHours ? fmtShort(totalMins) : `${Math.round(totalVal)} ${unit}`} tổng
             </p>
             <div className="flex items-center gap-2">
               <button
@@ -170,14 +183,16 @@ function GoalCard({ goal }: { goal: StudyHoursGoal }) {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-[var(--text-muted)] block mb-1">Thời gian (phút)</label>
+                  <label className="text-xs text-[var(--text-muted)] block mb-1">
+                    Số {unit === 'giờ' ? 'phút' : unit} đã học
+                  </label>
                   <input
                     type="number"
                     min="1"
-                    max="1440"
+                    max="9999"
                     value={newMins}
                     onChange={e => setNewMins(e.target.value)}
-                    placeholder="60"
+                    placeholder={unit === 'giờ' ? '60' : '1'}
                     className="q-input"
                   />
                 </div>
@@ -256,6 +271,7 @@ export default function StudyHoursPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [newSkill, setNewSkill] = useState<IELTSSkill>('Listening');
   const [newTarget, setNewTarget] = useState('100');
+  const [newUnit, setNewUnit] = useState('giờ');
   const [newDeadline, setNewDeadline] = useState('');
 
   useEffect(() => { setMounted(true); }, []);
@@ -270,10 +286,20 @@ export default function StudyHoursPage() {
 
   const handleCreate = () => {
     const t = parseInt(newTarget);
-    if (!t || t <= 0 || t > 1000) return;
-    createStudyHoursGoal(newSkill, t, newDeadline ? new Date(newDeadline).getTime() : undefined);
+    if (!t || t <= 0 || t > 99999) return;
+    const unit = newUnit.trim() || 'giờ';
+    const isHoursUnit = unit === 'giờ';
+    // nếu đơn vị là giờ thì dùng như cũ, nếu không thì targetHours = 1 (để compat), targetValue = t
+    createStudyHoursGoal(
+      newSkill, 
+      isHoursUnit ? t : 1,  // targetHours (legacy)
+      newDeadline ? new Date(newDeadline).getTime() : undefined,
+      unit,
+      t  // targetValue
+    );
     setShowCreate(false);
     setNewTarget('100');
+    setNewUnit('giờ');
     setNewDeadline('');
   };
 
@@ -323,11 +349,11 @@ export default function StudyHoursPage() {
         </div>
       )}
 
-      {/* ── Create form ───────────────────────────────────── */}
+      {/* ── Create form ────────────────────────────────     */}
       {showCreate && (
         <div className="bg-[var(--card)] border-2 border-[var(--primary)] rounded-2xl p-5 flex flex-col gap-4 animate-slide-down">
           <h3 className="font-bold text-[var(--text)]">Tạo mục tiêu mới</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-[var(--text-muted)] block mb-1">Kỹ năng</label>
               <select value={newSkill} onChange={e => setNewSkill(e.target.value as IELTSSkill)} className="q-input">
@@ -338,32 +364,44 @@ export default function StudyHoursPage() {
                 ))}
               </select>
             </div>
-            <div>
-              <label className="text-xs text-[var(--text-muted)] block mb-1">Mục tiêu giờ (tối đa 1000)</label>
-              <input
-                type="number"
-                min="1"
-                max="1000"
-                value={newTarget}
-                onChange={e => setNewTarget(e.target.value)}
-                className="q-input"
-              />
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-[var(--text-muted)] block mb-1">Mục tiêu (số)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="99999"
+                  value={newTarget}
+                  onChange={e => setNewTarget(e.target.value)}
+                  className="q-input"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[var(--text-muted)] block mb-1">Đơn vị</label>
+                <input
+                  type="text"
+                  value={newUnit}
+                  onChange={e => setNewUnit(e.target.value)}
+                  placeholder="giờ, bài, trang..."
+                  className="q-input"
+                />
+              </div>
             </div>
-            <div>
-              <label className="text-xs text-[var(--text-muted)] block mb-1">Hạn chót (tùy chọn)</label>
-              <input
-                type="date"
-                value={newDeadline}
-                onChange={e => setNewDeadline(e.target.value)}
-                className="q-input"
-                min={new Date().toISOString().split('T')[0]}
-              />
-            </div>
+          </div>
+          <div>
+            <label className="text-xs text-[var(--text-muted)] block mb-1">Hạn chốt (tùy chọn)</label>
+            <input
+              type="date"
+              value={newDeadline}
+              onChange={e => setNewDeadline(e.target.value)}
+              className="q-input max-w-xs"
+              min={new Date().toISOString().split('T')[0]}
+            />
           </div>
           <div className="flex gap-2">
             <button
               onClick={handleCreate}
-              disabled={!newTarget || parseInt(newTarget) <= 0 || parseInt(newTarget) > 1000}
+              disabled={!newTarget || parseInt(newTarget) <= 0}
               className="btn-primary disabled:opacity-40"
             >
               <Check size={14} /> Tạo mục tiêu
