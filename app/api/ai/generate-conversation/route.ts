@@ -1,4 +1,4 @@
-export const maxDuration = 60; // Allow max 60s for Vercel Hobby
+export const maxDuration = 60;
 
 import { NextRequest, NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
@@ -17,21 +17,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing words' }, { status: 400 });
     }
 
-    const prompt = `Create an advanced 10-question IELTS Writing Task 2 translation exercise based on the following vocabulary words:
-${words.join(', ')}
+    const prompt = `You are an expert IELTS Writing Task 2 coach. Generate exactly 10 translation exercises based on these vocabulary words: ${words.join(', ')}
 
-IMPORTANT RULES:
-- Generate EXACTLY 10 items.
-- ALL items must be of type "translate_typing".
-- Every item MUST incorporate at least one vocabulary word from the list above.
-- The output MUST be a valid JSON object with a single key "conversation" containing the array of 10 items.
+STRICT RULES:
+- Pick exactly 2 different IELTS Task 2 essay topics (5 sentences per topic).
+- For topic 1: questions 1-5 (indices 0-4). For topic 2: questions 6-10 (indices 5-9).
+- Each sentence covers a DIFFERENT argument/sub-point of that topic (introduction, body point 1, body point 2, concession, conclusion etc).
+- The Vietnamese sentence must be a natural, complex academic sentence related to that argument.
+- The English translation must be genuinely IELTS Writing Task 2 quality (band 7+): complex grammar, good collocations, cohesion.
+- Incorporate vocabulary words naturally.
 
-Format for each item (User reads a complex Vietnamese sentence and types the English translation):
-- The sentences MUST be highly complex, academic, and structured like IELTS Writing Task 2 arguments or complex ideas.
+Output ONLY this JSON structure:
 {
-  "type": "translate_typing",
-  "vietnamese": "Câu tiếng Việt học thuật, phức tạp cần dịch ra tiếng Anh.",
-  "expectedEnglish": "The expected complex English translation using the vocabulary."
+  "conversation": [
+    {
+      "type": "translate_typing",
+      "task2Prompt": "Full IELTS Task 2 question (2-3 sentences, as it would appear in the exam)",
+      "argument": "Brief label for this sub-point, e.g. 'Body 1: Main argument for...' or 'Introduction' or 'Counter-argument'",
+      "vietnamese": "Câu tiếng Việt học thuật phức tạp cần dịch ra tiếng Anh.",
+      "expectedEnglish": "The expected band 7+ English translation using the vocabulary."
+    }
+  ]
 }`;
 
     const fallbackModels = ['groq/compound', 'groq/compound-mini'];
@@ -42,13 +48,13 @@ Format for each item (User reads a complex Vietnamese sentence and types the Eng
       try {
         completion = await groq.chat.completions.create({
           messages: [
-            { role: "system", content: "You are an expert English teacher. Output valid JSON only." },
-            { role: "user", content: prompt }
+            { role: 'system', content: 'You are an expert IELTS Writing Task 2 coach. Output valid JSON only. Ensure exactly 10 items with 2 distinct task2Prompt values (5 items each).' },
+            { role: 'user', content: prompt }
           ],
           model: modelName,
           temperature: 0.7,
-          max_tokens: 3000,
-          response_format: { type: "json_object" }
+          max_tokens: 4000,
+          response_format: { type: 'json_object' }
         });
         if (completion) break;
       } catch (e: any) {
@@ -61,18 +67,16 @@ Format for each item (User reads a complex Vietnamese sentence and types the Eng
       throw new Error('All Groq models failed. Details: ' + errors.join(' | '));
     }
 
-    const responseText = completion.choices[0]?.message?.content || "";
-    
-    // Parse JSON
+    const responseText = completion.choices[0]?.message?.content || '';
     const parsedData = JSON.parse(responseText);
-
-    // Xử lý fallback trong trường hợp Groq trả về object thay vì mảng trực tiếp (vì đã ép json_object)
-    const conversation = Array.isArray(parsedData) ? parsedData : (parsedData.conversation || parsedData.items || Object.values(parsedData)[0]);
+    const conversation = Array.isArray(parsedData)
+      ? parsedData
+      : (parsedData.conversation || parsedData.items || Object.values(parsedData)[0]);
 
     return NextResponse.json({ conversation });
 
   } catch (error: any) {
-    console.error('Error generating conversation:', error);
+    console.error('Error generating writing practice:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

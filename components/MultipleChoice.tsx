@@ -51,7 +51,7 @@ export function MultipleChoice({
     const handler = (e: KeyboardEvent) => {
       if (answered) {
         if (e.key === 'Enter') {
-          onAnswer(selected === correctAnswer);
+          handleContinue();
         }
         return;
       }
@@ -69,6 +69,16 @@ export function MultipleChoice({
     if (answered) return;
     setSelected(option);
     setAnswered(true);
+  };
+
+  const handleContinue = () => {
+    if (transitioning) return;
+    // Hide feedback immediately — no flash on next card
+    setTransitioning(true);
+    // Short delay so the fade-out completes before parent mounts new card
+    setTimeout(() => {
+      onAnswer(selected === correctAnswer);
+    }, 120);
   };
 
   const getOptionStyle = (option: string) => {
@@ -113,7 +123,7 @@ export function MultipleChoice({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {options.map((option, i) => (
           <button
-            key={option + i}
+            key={i}
             onClick={() => handleSelect(option)}
             disabled={answered}
             className={`relative flex items-center gap-4 p-5 sm:p-6 rounded-2xl border-2 text-left transition-all duration-200 ${getOptionStyle(option)}`}
@@ -134,7 +144,7 @@ export function MultipleChoice({
         ))}
       </div>
 
-      {/* Feedback */}
+      {/* Feedback — hidden immediately when transitioning to avoid flash */}
       {answered && !transitioning && (
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center animate-slide-up">
           <div
@@ -158,12 +168,8 @@ export function MultipleChoice({
             )}
           </div>
           <button
-            onClick={() => {
-              setTransitioning(true);
-              onAnswer(selected === correctAnswer);
-            }}
-            disabled={transitioning}
-            className="px-6 py-3 rounded-xl font-bold text-white gradient-primary hover:opacity-90 active:scale-95 transition-all flex-shrink-0 disabled:opacity-50"
+            onClick={handleContinue}
+            className="px-6 py-3 rounded-xl font-bold text-white gradient-primary hover:opacity-90 active:scale-95 transition-all flex-shrink-0"
           >
             Tiếp tục (Enter)
           </button>

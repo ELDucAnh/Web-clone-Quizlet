@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import {
   Home, Library, Folder, Plus, ChevronLeft, ChevronRight,
-  Settings, X, Bell, Clock, PenLine, Mic, Sparkles, Map, BookMarked
+  Settings, X, Bell, Clock, PenLine, Mic, Sparkles, Map, BookMarked, Headphones
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -165,6 +165,13 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             icon={<BookMarked size={18} className="text-red-500" />}
             label="Nhật Ký Lỗi Reading"
             active={!!pathname?.startsWith('/reading-errors')}
+            collapsed={collapsed}
+          />
+          <NavItem
+            href="/listening-errors"
+            icon={<Headphones size={18} className="text-amber-500" />}
+            label="Nhật Ký Lỗi Listening"
+            active={!!pathname?.startsWith('/listening-errors')}
             collapsed={collapsed}
           />
         </nav>

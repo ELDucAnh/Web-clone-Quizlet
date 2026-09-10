@@ -1,4 +1,4 @@
-// lib/roadmap-data.ts — IELTS 120-day: 5.5 → 9R / 9L / 7W / 6.5S
+// lib/roadmap-data.ts — IELTS 120-day: 5.5 → R9 / L8 / W7 / S7
 // 4 Phases: P1(1-20) P2(21-60) P3(61-80) P4(81-120)
 // Phase 1-3: tasks differ by available time (2h vs 4h per day)
 // Phase 4: fixed full-intensity schedule (7-12h/day no limit)
@@ -42,7 +42,7 @@ export const PHASES = [
     color: '#4f8ef7',
     bg: '#EFF6FF',
     description:
-      'Vocab CAM (R,L) + VOL đã làm, 100 từ/ngày. Làm Passage 3 hằng ngày. Dictation Sec 1. Cày khoá Writing & Speaking thầy Kiên (50 buổi mỗi khoá).',
+      'Vocab CAM (R,L) + VOL đã làm, 100 từ/ngày. Làm Passage 3 hằng ngày. Luyện Sec 1 VOL + ghi lỗi sai vào nhật ký. Cày khoá Writing & Speaking thầy Kiên (50 buổi mỗi khoá).',
   },
   {
     id: 2 as Phase,
@@ -52,7 +52,7 @@ export const PHASES = [
     color: '#a855f7',
     bg: '#F5F3FF',
     description:
-      'Advanced vocab + collocation/phrasal verb, 100 từ/ngày. Reading: 30 Passage 3 → phân tích lỗi chuyên sâu. Listening: Sec 2&3 VOL + Hacker mỗi ngày. Writing & Speaking: idea → câu → đoạn hoàn chỉnh.',
+      'Advanced vocab + collocation/phrasal verb, 100 từ/ngày. Reading: 30 Passage 3 → phân tích lỗi chuyên sâu. Listening: luyện Sec 2&3 VOL mỗi ngày + ghi nhật ký lỗi. Writing & Speaking: idea → câu → đoạn hoàn chỉnh.',
   },
   {
     id: 3 as Phase,
@@ -62,17 +62,17 @@ export const PHASES = [
     color: '#06b6d4',
     bg: '#ECFEFF',
     description:
-      'Vocab 50 từ/ngày. Passage 2 hằng ngày + Full test 1 lần/tuần. Listening: dạng yếu + đoạn dài + Sec 4. Writing 2 Task1 + 2 Task2/tuần. Speaking Part 2&3 thật với AI.',
+      'Vocab 50 từ/ngày. Passage 2 hằng ngày + Full test 1 lần/tuần. Listening: luyện dạng yếu + Sec 3&4 VOL + review nhật ký lỗi. Writing 2 Task1 + 2 Task2/tuần. Speaking Part 2&3 thật với AI.',
   },
   {
     id: 4 as Phase,
     name: 'Tối Đa Hoá',
-    bandRange: '8.0 → 9R/9L',
+    bandRange: '8.0 → R9/L8',
     days: [81, 120] as [number, number],
     color: '#f59e0b',
     bg: '#FFFBEB',
     description:
-      'N81-100: học 200 từ/ngày. N101-120: ôn ALL vocab. Full test R&L mỗi 2 ngày. BBC 3 bài/ngày. Task 1+Task 2 mỗi ngày. Speaking 2 chủ đề/ngày. 7-12h/ngày toàn tâm toàn ý.',
+      'N81-100: học 200 từ/ngày. N101-120: ôn ALL vocab. Full test R&L mỗi 2 ngày. Luyện Sec yếu + nhật ký lỗi. Task 1+Task 2 mỗi ngày. Speaking 2 chủ đề/ngày. 7-12h/ngày toàn tâm toàn ý.',
   },
 ];
 
@@ -89,7 +89,7 @@ const t = (
 // ─── Phase 1 tasks (absolute day 1-20) ───────────────────────────────────────
 // Vocab: học/ôn 100 từ CAM(R,L) + VOL đã làm — mọi ngày đều phải có
 // Reading (rot 0,2,4): ôn passage cũ 15p + Passage 3 VOL 90p + tóm tắt 25p
-// Listening (rot 1,3): Dictation Sec1 45p + Luyện chỗ sai 30p + ôn vocab nghe 15p + Hacker 1h
+// Listening (rot 1,3): Luyện Sec 1 VOL 45p + Nghe lại câu sai 30p + Ghi nhật ký lỗi 15p
 // Writing (rot 2): ôn buổi cũ 15p + 1 buổi khoá thầy Kiên 30p
 // Speaking (rot 3): ôn buổi cũ 15p + 1 buổi khoá thầy Kiên 30p
 // Mixed (rot 4): Writing + Speaking khoá thầy Kiên cùng lúc
@@ -124,9 +124,9 @@ function makeP1Tasks(absDay: number, mode: TimeMode): DayTask[] {
       case 1: // Listening day
         return [
           vocabTask,
-          t(absDay, 'l_dict', 'listening',
-            '🎧 Dictation VOL Sec 1 (45p)',
-            'Nghe và chép chính tả Section 1. Ghi note chỗ không nghe ra. So sánh transcript.', 45),
+          t(absDay, 'l_vol_s1', 'listening',
+            '🎧 Luyện Sec 1 VOL + Nghe lại câu sai (45p)',
+            'Làm Section 1 VOL bấm giờ. Chấm → chọn mọi câu sai → nghe lại đoạn đó nhiều lần cho đến khi nghe ra rõ. Note vào Nhật Ký Lỗi Listening.', 45),
         ];
       case 2: // Writing day
         return [
@@ -179,18 +179,15 @@ function makeP1Tasks(absDay: number, mode: TimeMode): DayTask[] {
     case 1: // Listening (4h)
       return [
         vocabTask,
-        t(absDay, 'l_dict', 'listening',
-          '🎧 Dictation VOL Sec 1 (45p)',
-          'Nghe và chép chính tả Sec 1. Ghi note chỗ không nghe ra.', 45),
+        t(absDay, 'l_vol_s1', 'listening',
+          '🎧 Luyện Sec 1 VOL + Nghe lại câu sai (45p)',
+          'Làm Section 1 VOL bấm giờ. Chấm → chọn mọi câu sai → nghe lại đoạn đó nhiều lần đến khi nghe ra hết. Phân loại lỗi: spelling / speed / distractor.', 45),
         t(absDay, 'l_note', 'listening',
-          '✏️ Luyện các chỗ không nghe ra (30p)',
-          'Luyện lại đoạn đã ghi note. Lặp đến khi nghe rõ hết. Phân loại lỗi: spelling / speed / accent.', 30),
+          '📝 Ghi nhật ký lỗi Listening + Phân tích (30p)',
+          'Vào Nhật Ký Lỗi Listening. Ghi lại từng câu sai: section, câu số, transcript ngắn, đáp án đúng, loại lỗi, phân tích tại sao sai.', 30),
         t(absDay, 'l_voc', 'listening',
-          '🔄 Ôn vocab bài nghe trước (15p)',
+          '🔄 Ôn vocab nghe từ bài đã làm (15p)',
           'Ôn lại từ vựng trong các bài Listening VOL đã làm. Tập nghe và nhận diện từ nhanh.', 15),
-        t(absDay, 'l_hacker', 'listening',
-          '📚 Cày IELTS Hacker Listening (1h)',
-          'Học + luyện theo sách IELTS Hacker Listening 1 unit. Nắm strategy từng dạng câu.', 60),
       ];
     case 2: // Writing (4h) — khoá + passage để học vocab
       return [
@@ -214,12 +211,9 @@ function makeP1Tasks(absDay: number, mode: TimeMode): DayTask[] {
         t(absDay, 's_kien', 'speaking',
           '🗣️ Khoá Speaking thầy Kiên — 1 buổi (30p)',
           'Học 1 buổi khoá Speaking (30p). Luyện nói theo mẫu thầy.', 30),
-        t(absDay, 'l_dict_sp', 'listening',
-          '🎧 Dictation VOL Sec 1 (45p)',
-          'Nghe + chép chính tả VOL Sec 1. Ghi note chỗ chưa nghe ra.', 45),
-        t(absDay, 'l_hacker_sp', 'listening',
-          '📚 Cày IELTS Hacker Listening (1h)',
-          'Học + luyện theo sách Hacker 1 unit.', 60),
+        t(absDay, 'l_vol_s12', 'listening',
+          '🎧 Luyện Sec 1+2 VOL + Nghe lại câu sai (45p)',
+          'Làm Sec 1 và 2 VOL bấm giờ. Chấm → nghe lại mọi câu sai nhiều lần. Ghi nhật ký lỗi Listening.', 45),
       ];
     case 4: // Mixed Writing + Speaking + Reading (4h)
       return [
@@ -242,12 +236,12 @@ function makeP1Tasks(absDay: number, mode: TimeMode): DayTask[] {
 // ─── Phase 2 tasks (absolute day 21-60) ──────────────────────────────────────
 // Vocab: 100 từ/ngày — advanced (R hoặc L) hoặc collocation&phrasal verb
 // Reading: Passage 3 hằng ngày cho đến khi đủ 30 (dayInP2 1-30) → phân tích lỗi (31-40)
-// Listening: Sec 2&3 VOL 1h + Dictation 20p + Hacker 1h — MỖINGÀY đều có Hacker
+// Listening: luyện Sec 2&3 VOL 90p MỖINGÀY + Ghi nhật ký lỗi → nghe lại câu sai
 // Writing: idea → cụm → câu → đoạn (45p/session)
 // Speaking: triển khai ý (45p) + luyện nói AI (20p)
 //
-// 2h mode: vocab + reading + listening cơ bản (không Hacker hết, xen kẽ writing/speaking)
-// 4h mode: vocab + reading + đủ listening (Sec23 + Dictation + Hacker) + writing/speaking luân phiên
+// 2h mode: vocab + reading + listening VOL cơ bản + xen kẽ writing/speaking
+// 4h mode: vocab + reading + listening VOL đầy đủ (luyện + nghe lại + ghi lỗi) + writing/speaking luân phiên
 
 function makeP2Tasks(absDay: number, mode: TimeMode): DayTask[] {
   const dayInPhase = absDay - 20; // 1–40
@@ -287,16 +281,13 @@ function makeP2Tasks(absDay: number, mode: TimeMode): DayTask[] {
         `Làm 1 passage 3 VOL bất kỳ (bấm giờ 20p). Chấm → chữa kỹ → ghi note lỗi sai theo loại → học từ vựng bài đọc.`,
         90);
 
-  // Listening building blocks
-  const lSec23 = t(absDay, 'l_sec23', 'listening',
-    '🎧 Luyện Section 2&3 VOL (1h)',
-    'Luyện Sec 2 và Sec 3 VOL: nghe lại cho đến khi nghe ra hết và hiểu script. Chú ý distractor trong Sec 3 MCQ.', 60);
-  const lDict = t(absDay, 'l_dict', 'listening',
-    '✏️ Dictation VOL (20p)',
-    'Nghe chép chính tả VOL 20p. Duy trì thói quen tai nghe hằng ngày.', 20);
-  const lHacker = t(absDay, 'l_hacker', 'listening',
-    '📚 Cày IELTS Hacker Listening (1h)',
-    'Học + luyện theo sách Hacker 1 unit. Nắm strategy từng dạng câu. Không bỏ ngày nào.', 60);
+  // Listening building blocks — VOL only, no dictation, no Hacker
+  const lVol = t(absDay, 'l_vol', 'listening',
+    '🎧 Luyện Sec 2&3 VOL + Nghe lại câu sai (90p)',
+    'Làm 1 Sec 2 và 1 Sec 3 VOL bấm giờ. Chấm → chọn mọi câu sai → nghe lại đoạn đó liên tục đến khi nghe ra hết. Chú ý distractor trong Sec 3 MCQ.', 90);
+  const lErr = t(absDay, 'l_err', 'listening',
+    '📝 Ghi nhật ký lỗi Listening + Phân tích (30p)',
+    'Vào Nhật Ký Lỗi Listening. Ghi lại từng câu sai hôm nay: section, câu số, transcript ngắn, đáp án đúng, loại lỗi (Spelling/Speed/Distractor/No Comprehension), phân tích tại sao sai.', 30);
 
   // Writing & Speaking
   const writingTask = t(absDay, 'w_idea', 'writing',
@@ -309,24 +300,23 @@ function makeP2Tasks(absDay: number, mode: TimeMode): DayTask[] {
   if (mode === '2h') {
     // ~120p: vocab + 1 kỹ năng cốt lõi, xen kẽ listening mỗi 2 ngày
     const rot2 = ((dayInPhase - 1) % 4) as 0 | 1 | 2 | 3;
-    if (rot2 === 0) return [vocabTask, readingTask];                          // R
-    if (rot2 === 1) return [vocabTask, lSec23, lDict];                        // L (không Hacker, hết giờ)
-    if (rot2 === 2) return [vocabTask, writingTask];                           // W
-    return [vocabTask, speakingTask];                                          // S
+    if (rot2 === 0) return [vocabTask, readingTask];                      // R
+    if (rot2 === 1) return [vocabTask, lVol];                             // L (chỉ VOL, hết giờ thì bỏ note)
+    if (rot2 === 2) return [vocabTask, writingTask];                       // W
+    return [vocabTask, speakingTask];                                      // S
   }
 
-  // 4h mode (~240p): vocab + reading + FULL listening (Sec23+Dict+Hacker) + W or S luân phiên
+  // 4h mode (~240p): vocab + reading + FULL listening (VOL drill + error log) + W or S luân phiên
   const writingOrSpeaking = ((dayInPhase - 1) % 2 === 0) ? writingTask : speakingTask;
-  return [vocabTask, readingTask, lSec23, lDict, lHacker, writingOrSpeaking];
+  return [vocabTask, readingTask, lVol, lErr, writingOrSpeaking];
 }
 
 // ─── Phase 3 tasks (absolute day 61-80) ──────────────────────────────────────
 // Vocab: 50 từ/ngày (học hoặc ôn)
 // Reading: Passage 2 VOL mỗi ngày (60p). Tuần có 1 Full test (ngày đầu tuần trong phase = dayInPhase%7===1)
-// Listening: 3 trụ cột xen kẽ: (a) dạng yếu (b) đoạn dài 4p (c) Sec 4 + phân loại lỗi
+// Listening: 3-day rotation: (a) luyện dạng yếu Sec 1&2 (b) luyện Sec 3&4 VOL (c) review nhật ký lỗi + drill điểm yếu
 // Writing: mỗi 4 ngày có 1 buổi viết bài (Task1 hoặc Task2) AI chấm — đảm bảo 2T1+2T2/tuần
 // Speaking: Part 2&3 AI mỗi 3 ngày
-// Hacker: tiếp tục ngày nào có giờ (4h) hoặc khi 2h và rot listening
 
 function makeP3Tasks(absDay: number, dayInPhase: number, mode: TimeMode): DayTask[] {
   const isLearn = dayInPhase % 2 === 1;
@@ -349,20 +339,20 @@ function makeP3Tasks(absDay: number, dayInPhase: number, mode: TimeMode): DayTas
         '📰 Làm 1 Passage 2 VOL + Chữa kỹ (60p)',
         'Làm 1 passage 2 (không phải dạng yếu nhất). Bấm giờ 20p. Chấm + chữa + ghi note lỗi.', 60);
 
-  // Listening: 3-day rotation (a/b/c)
+  // Listening: 3-day rotation (a/b/c) — VOL only, no dictation/Hacker
   const lRot = ((dayInPhase - 1) % 3) as 0 | 1 | 2;
   const listeningTask =
     lRot === 0
-      ? t(absDay, 'l_weak', 'listening',
-          '🎧 Ôn dạng Listening yếu cụ thể (1h)',
-          'Tổng hợp dạng câu yếu nhất (Sec 2 map, Sec 3 MCQ, Sec 4 fill-in). Luyện riêng từng dạng trong 1h.', 60)
+      ? t(absDay, 'l_s12_weak', 'listening',
+          '🎧 Luyện dạng yếu Sec 1&2 VOL + Nghe lại (1h)',
+          'Mở nhật ký lỗi → tìm dạng yếu nhất ở Sec 1&2. Lấy 1 test VOL làm riêng Sec 1&2. Chấm → nghe lại mọi câu sai liên tục đến khi nghe ra. Ghi lỗi mới vào nhật ký.', 60)
       : lRot === 1
-      ? t(absDay, 'l_long', 'listening',
-          '🎧 Nghe đoạn dài 4p + Tóm tắt (1h)',
-          'Nghe 1 đoạn audio ~4p (BBC 6 Minute English, TED-Ed...). Viết tóm tắt bằng tiếng Anh. Kiểm tra từ vựng.', 60)
-      : t(absDay, 'l_sec4', 'listening',
-          '🎧 Luyện Section 4 VOL + Phân loại lỗi (1h)',
-          'Nghe Sec 4 (academic monologue) từ VOL. Dictation 20p, phân tích câu sai. Phân loại lỗi: speed/spelling/logic.', 60);
+      ? t(absDay, 'l_s34_vol', 'listening',
+          '🎧 Luyện Sec 3&4 VOL + Nghe lại câu sai (1h)',
+          'Làm Sec 3 (MCQ) và Sec 4 (academic monologue) từ VOL. Chú ý distractor Sec 3. Sau khi chấm, nghe lại từng câu sai đến khi nghe rõ. Ghi lỗi vào nhật ký.', 60)
+      : t(absDay, 'l_review', 'listening',
+          '📝 Review nhật ký lỗi + Drill điểm yếu (1h)',
+          'Mở Nhật Ký Lỗi Listening. Thống kê loại lỗi nhiều nhất tuần này. Lấy đúng các câu đó nghe lại. Luyện drill 10 câu cùng loại lỗi.', 60);
 
   // Writing: mỗi 4 ngày 1 buổi, xen kẽ Task1/Task2
   const isWritingDay = dayInPhase % 4 === 0;
@@ -409,9 +399,9 @@ function makeP3Tasks(absDay: number, dayInPhase: number, mode: TimeMode): DayTas
 // N81-100 (dayInPhase 1-20): học 200 từ/ngày
 // N101-120 (dayInPhase 21-40): ôn ALL vocab từ trước đến nay
 // Full test R&L xen kẽ: ngày lẻ = làm full test, ngày chẵn = phân tích lỗi
-// BBC 3 bài/ngày — MỖINGÀY
+// Listening error day: review nhật ký lỗi + drill section yếu nhất
 // Writing: Task1 + Task2 mỗi ngày (aim 7)
-// Speaking: 2 chủ đề full test với AI mỗi ngày (aim 6.5)
+// Speaking: 2 chủ đề full test với AI mỗi ngày (aim 7)
 // Không giới hạn thời gian — "7-12h là bình thường"
 
 function makeP4Tasks(absDay: number): DayTask[] {
@@ -437,25 +427,21 @@ function makeP4Tasks(absDay: number): DayTask[] {
 
   const listeningTask = isFullTestDay
     ? t(absDay, 'l_full', 'listening',
-        '🎧 Full Test Listening VOL (30p) + Chữa kỹ',
-        'Làm full 4 sections (30p). Chữa mọi câu sai. Note distractor Sec 3&4. Mục tiêu 9L.', 90)
-    : t(absDay, 'l_err', 'listening',
-        '🔍 Phân tích lỗi Listening + Phân loại + Fix',
-        'Phân tích 100% lỗi full test hôm qua. Phân loại: spelling / speed / distractor / Sec4 academic. Luyện lại điểm yếu.', 60);
-
-  const bbcTask = t(absDay, 'l_bbc', 'listening',
-    '🌐 Nghe 3 bài BBC (Môi trường tiếng Anh tự nhiên)',
-    'Nghe hiểu hết 3 bài BBC 6 Minute English hoặc BBC Documentary. Tóm tắt nhanh mỗi bài. Nhồi tai nghe vào môi trường native.', 60);
+        '🎧 Full Test Listening VOL 4 Sections (30p) + Chữa kỹ (60p)',
+        'Làm full 4 sections bấm giờ 30p. Chấm → nghe lại 100% câu sai liên tục đến khi nghe ra. Ghi tất cả vào Nhật Ký Lỗi. Mục tiêu L8.', 90)
+    : t(absDay, 'l_err_review', 'listening',
+        '📝 Review nhật ký lỗi + Drill section yếu nhất (1h)',
+        'Mở Nhật Ký Lỗi Listening → thống kê loại lỗi nhiều nhất tuần này. Lấy đúng section đó trong VOL mới → drill chuyên sâu 1h. Ghi lỗi mới phát sinh.', 60);
 
   const writingTask = t(absDay, 'w_daily', 'writing',
     '✍️ Viết Task 1 + Task 2 → AI chấm (Aim Band 7)',
     'Ôn lỗi + kiểm tra cấu trúc bài (15p). Viết Task 1 bấm giờ (20p) + Task 2 bấm giờ (40p). Nộp AI chấm + chữa chi tiết.', 75);
 
   const speakingTask = t(absDay, 's_full', 'speaking',
-    '🗣️ Full Speaking: 2 chủ đề + AI chữa phát âm (Aim 6.5)',
+    '🗣️ Full Speaking: 2 chủ đề + AI chữa phát âm (Aim Band 7)',
     'Luyện full speaking test 2 chủ đề khác nhau với AI (30p). Ghi âm → AI chữa phát âm, ngữ pháp, fluency chi tiết (30p).', 60);
 
-  return [vocabTask, readingTask, listeningTask, bbcTask, writingTask, speakingTask];
+  return [vocabTask, readingTask, listeningTask, writingTask, speakingTask];
 }
 
 // ─── Main generator ───────────────────────────────────────────────────────────
@@ -523,7 +509,7 @@ export function generateRoadmap(): RoadmapDay[] {
       20: '🏁 Kết thúc Phase 1 — Kiểm tra tiến độ toàn bộ',
       60: '🏁 Kết thúc Phase 2 — 30 Passages + Phân tích lỗi xong',
       80: '🏁 Kết thúc Phase 3 — Thực chiến hoàn tất',
-      120: '🏆 HOÀN THÀNH 120 Ngày — IELTS 9R 9L 7W 6.5S',
+      120: '🏆 HOÀN THÀNH 120 Ngày — IELTS R9 L8 W7 S7',
     };
 
     days.push({
