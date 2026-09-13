@@ -281,7 +281,7 @@ function TopicCard({ topic }: { topic: SpeakingTopic }) {
                 <label className="text-xs text-[var(--text-muted)] block mb-1">Bài mẫu (tùy chọn)</label>
                 <textarea
                   rows={7}
-                  className="q-input resize-y text-sm font-mono leading-relaxed"
+                  className="q-input resize-y text-sm font-sans leading-relaxed"
                   value={editData.sampleAnswer}
                   onChange={e => setEditData(p => ({ ...p, sampleAnswer: e.target.value }))}
                 />
@@ -445,7 +445,7 @@ function CreateForm({ onClose }: { onClose: () => void }) {
         <label className="text-xs text-[var(--text-muted)] block mb-1">Bài mẫu (tùy chọn, có thể thêm sau)</label>
         <textarea
           rows={5}
-          className="q-input resize-none text-sm font-mono leading-relaxed"
+          className="q-input resize-none text-sm font-sans leading-relaxed"
           placeholder="Dán bài mẫu vào đây..."
           value={form.sampleAnswer}
           onChange={e => setForm(p => ({ ...p, sampleAnswer: e.target.value }))}
