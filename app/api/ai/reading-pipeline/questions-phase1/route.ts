@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export const maxDuration = 60;
 
@@ -13,7 +13,9 @@ export async function POST(req: Request) {
 
     const { paragraphs } = await req.json();
 
-    const prompt = `Based on the following highly academic reading passage:
+    const prompt = `You are an expert IELTS Reading examiner. Output valid JSON only.
+
+Based on the following highly academic reading passage:
 
 Passage:
 ${paragraphs.join('\n\n')}
@@ -21,7 +23,7 @@ ${paragraphs.join('\n\n')}
 IMPORTANT RULES:
 - Create EXACTLY 5 questions based on the passage provided above.
 - ALL 5 questions MUST be of the type "True / False / Not Given".
-- ALL 7 questions MUST strictly follow the JSON format below.
+- ALL 5 questions MUST strictly follow the JSON format below.
 
 CRITICAL JSON RULE: 
 - DO NOT output literal newline characters inside any string value! 
@@ -48,35 +50,24 @@ Format:
   ]
 }`;
 
-    const fallbackGroq = [
-      'qwen/qwen3.6-27b', 
-      'openai/gpt-oss-20b', 
-      'groq/compound-mini', 
-      'groq/compound'
+    const fallbackModels = [
+      'gemini-flash-latest',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-pro-latest'
     ];
 
     let data: any;
     let errors: string[] = [];
-    
-    // Combine prompt and system instruction
-    const fullPrompt = `You are an expert IELTS Reading examiner. Output valid JSON only.\n\n${prompt}`;
 
-    for (const modelName of fallbackGroq) {
+    for (const modelName of fallbackModels) {
       try {
-        const completion = await groq.chat.completions.create({
-          messages: [
-            { role: "system", content: "You are an expert IELTS Reading examiner. Output valid JSON only." },
-            { role: "user", content: prompt }
-          ],
-          model: modelName,
-          temperature: 0.3,
-          max_tokens: 1500
-        });
-        
-        if (completion) {
-          let responseText = completion.choices[0]?.message?.content || "";
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        if (result) {
+          let responseText = result.response.text();
           responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
-          
+
           const firstCurly = responseText.indexOf('{');
           const firstSquare = responseText.indexOf('[');
           let firstBrace = -1;
@@ -85,7 +76,7 @@ Format:
           else firstBrace = firstSquare;
 
           const lastBrace = Math.max(responseText.lastIndexOf('}'), responseText.lastIndexOf(']'));
-          
+
           if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
             responseText = responseText.substring(firstBrace, lastBrace + 1);
           }
@@ -104,15 +95,17 @@ Format:
             }
           }
 
-          break; // Successfully parsed JSON
+          console.log(`[questions-phase1] Đã dùng thành công model: ${modelName}`);
+          break;
         }
       } catch (e: any) {
         errors.push(`[${modelName}]: ${e.message}`);
+        console.warn(`[questions-phase1] Model ${modelName} failed: ${e.message}`);
       }
     }
 
     if (!data) {
-      throw new Error('All Groq models failed. Details: ' + errors.join(' | '));
+      throw new Error('All Gemini models failed. Details: ' + errors.join(' | '));
     }
 
     return NextResponse.json(data);

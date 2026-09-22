@@ -1,14 +1,14 @@
 export const maxDuration = 60; // Allow max 60s for Vercel Hobby
 
 import { NextRequest, NextResponse } from 'next/server';
-import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(req: NextRequest) {
   try {
-    if (!process.env.GROQ_API_KEY) {
-      return NextResponse.json({ error: 'Chưa cấu hình GROQ_API_KEY' }, { status: 500 });
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ error: 'Chưa cấu hình GEMINI_API_KEY' }, { status: 500 });
     }
 
     const { words } = await req.json();
@@ -17,7 +17,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing words' }, { status: 400 });
     }
 
-    const prompt = `Create an EXTREMELY complex, high-difficulty IELTS Reading Passage 3 practice exercise based on the following vocabulary words:
+    const prompt = `You are an expert IELTS Reading examiner. Output valid JSON only.
+
+Create an EXTREMELY complex, high-difficulty IELTS Reading Passage 3 practice exercise based on the following vocabulary words:
 ${words.join(', ')}
 
 IMPORTANT RULES:
@@ -61,43 +63,42 @@ Format:
   ]
 }`;
 
-    const fallbackModels = ['groq/compound', 'groq/compound-mini'];
-    let completion;
+    const fallbackModels = [
+      'gemini-flash-latest',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-pro-latest'
+    ];
+    let readingPractice: any;
     let errors: string[] = [];
 
     for (const modelName of fallbackModels) {
       try {
-        completion = await groq.chat.completions.create({
-          messages: [
-            { role: "system", content: "You are an expert IELTS Reading examiner. Output valid JSON only." },
-            { role: "user", content: prompt }
-          ],
-          model: modelName,
-          temperature: 0.3,
-          max_tokens: 2000,
-          response_format: { type: "json_object" }
-        });
-        if (completion) break;
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        if (result) {
+          let responseText = result.response.text();
+          responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+          // Extract JSON block to handle any extra text Gemini may output
+          const firstBrace = responseText.indexOf('{');
+          const lastBrace = responseText.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            responseText = responseText.substring(firstBrace, lastBrace + 1);
+          }
+
+          readingPractice = JSON.parse(responseText);
+          console.log(`[generate-reading] Đã dùng thành công model: ${modelName}`);
+          break;
+        }
       } catch (e: any) {
         errors.push(`[${modelName}]: ${e.message}`);
-        console.warn(`Groq Model ${modelName} failed: ${e.message}`);
+        console.warn(`[generate-reading] Model ${modelName} failed: ${e.message}`);
       }
     }
 
-    if (!completion) {
-      throw new Error('All Groq models failed. Details: ' + errors.join(' | '));
-    }
-
-    const responseText = completion.choices[0]?.message?.content || "";
-    let readingPractice;
-    
-    try {
-      readingPractice = JSON.parse(responseText);
-    } catch (parseError: any) {
-      if (completion.choices[0]?.finish_reason === 'length') {
-        throw new Error("AI đang viết thì bị ngắt ngang do vượt quá giới hạn Token/Phút (TPM). Vui lòng nghỉ tay chờ 1 phút rồi tạo lại nhé!");
-      }
-      throw new Error("Lỗi rách file JSON (do AI bị ngắt kết nối hoặc hết hạn ngạch Token): " + parseError.message);
+    if (!readingPractice) {
+      throw new Error('All Gemini models failed. Details: ' + errors.join(' | '));
     }
 
     return NextResponse.json(readingPractice);

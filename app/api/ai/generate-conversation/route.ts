@@ -1,14 +1,14 @@
 export const maxDuration = 60;
 
 import { NextRequest, NextResponse } from 'next/server';
-import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(req: NextRequest) {
   try {
-    if (!process.env.GROQ_API_KEY) {
-      return NextResponse.json({ error: 'Chưa cấu hình GROQ_API_KEY' }, { status: 500 });
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ error: 'Chưa cấu hình GEMINI_API_KEY' }, { status: 500 });
     }
 
     const { words } = await req.json();
@@ -17,7 +17,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing words' }, { status: 400 });
     }
 
-    const prompt = `You are an expert IELTS Writing Task 2 coach. Generate exactly 10 translation exercises based on these vocabulary words: ${words.join(', ')}
+    const prompt = `You are an expert IELTS Writing Task 2 coach. Output valid JSON only. Ensure exactly 10 items with 2 distinct task2Prompt values (5 items each).
+
+Generate exactly 10 translation exercises based on these vocabulary words: ${words.join(', ')}
 
 STRICT RULES:
 - Pick exactly 2 different IELTS Task 2 essay topics (5 sentences per topic).
@@ -40,35 +42,43 @@ Output ONLY this JSON structure:
   ]
 }`;
 
-    const fallbackModels = ['groq/compound', 'groq/compound-mini'];
-    let completion;
+    const fallbackModels = [
+      'gemini-flash-latest',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-pro-latest'
+    ];
+    let parsedData: any;
     let errors: string[] = [];
 
     for (const modelName of fallbackModels) {
       try {
-        completion = await groq.chat.completions.create({
-          messages: [
-            { role: 'system', content: 'You are an expert IELTS Writing Task 2 coach. Output valid JSON only. Ensure exactly 10 items with 2 distinct task2Prompt values (5 items each).' },
-            { role: 'user', content: prompt }
-          ],
-          model: modelName,
-          temperature: 0.7,
-          max_tokens: 4000,
-          response_format: { type: 'json_object' }
-        });
-        if (completion) break;
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        if (result) {
+          let responseText = result.response.text();
+          responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+          const firstBrace = responseText.indexOf('{');
+          const lastBrace = responseText.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            responseText = responseText.substring(firstBrace, lastBrace + 1);
+          }
+
+          parsedData = JSON.parse(responseText);
+          console.log(`[generate-conversation] Đã dùng thành công model: ${modelName}`);
+          break;
+        }
       } catch (e: any) {
         errors.push(`[${modelName}]: ${e.message}`);
-        console.warn(`Groq Model ${modelName} failed: ${e.message}`);
+        console.warn(`[generate-conversation] Model ${modelName} failed: ${e.message}`);
       }
     }
 
-    if (!completion) {
-      throw new Error('All Groq models failed. Details: ' + errors.join(' | '));
+    if (!parsedData) {
+      throw new Error('All Gemini models failed. Details: ' + errors.join(' | '));
     }
 
-    const responseText = completion.choices[0]?.message?.content || '';
-    const parsedData = JSON.parse(responseText);
     const conversation = Array.isArray(parsedData)
       ? parsedData
       : (parsedData.conversation || parsedData.items || Object.values(parsedData)[0]);

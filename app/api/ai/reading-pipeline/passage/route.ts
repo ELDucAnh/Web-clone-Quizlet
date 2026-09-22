@@ -1,19 +1,23 @@
 import { NextResponse } from 'next/server';
-import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export const maxDuration = 60; // Allow max 60s for Vercel Hobby
 
 export async function POST(req: Request) {
   try {
-    if (!process.env.GROQ_API_KEY) {
-      return NextResponse.json({ error: 'Chưa cấu hình GROQ_API_KEY' }, { status: 500 });
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ error: 'Chưa cấu hình GEMINI_API_KEY' }, { status: 500 });
     }
 
     const { words } = await req.json();
 
-    const prompt = `Write an engaging, logical, and highly coherent academic IELTS reading passage (C1 Advanced proficiency level, approximately 400 words).
+    const systemInstruction = "You are an expert IELTS Reading examiner. Output valid JSON only.";
+
+    const prompt = `${systemInstruction}
+
+Write an engaging, logical, and highly coherent academic IELTS reading passage (C1 Advanced proficiency level, approximately 400 words).
 The passage MUST have a clear central theme (e.g., Psychology, Sociology, Biology, Technology, or History) and flow naturally from introduction to conclusion.
 
 Vocabulary words to integrate seamlessly and contextually: ${words.join(', ')}
@@ -35,32 +39,24 @@ Format:
   ]
 }`;
 
-    const fallbackGroq = [
-      'qwen/qwen3.6-27b', 
-      'openai/gpt-oss-20b', 
-      'groq/compound-mini', 
-      'groq/compound'
+    const fallbackModels = [
+      'gemini-flash-latest',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-pro-latest'
     ];
-    
+
     let data: any;
     let errors: string[] = [];
-    
-    for (const modelName of fallbackGroq) {
+
+    for (const modelName of fallbackModels) {
       try {
-        const completion = await groq.chat.completions.create({
-          messages: [
-            { role: "system", content: "You are an expert IELTS Reading examiner. Output valid JSON only." },
-            { role: "user", content: prompt }
-          ],
-          model: modelName,
-          temperature: 0.3,
-          max_tokens: 2500
-        });
-        
-        if (completion) {
-          let responseText = completion.choices[0]?.message?.content || "";
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        if (result) {
+          let responseText = result.response.text();
           responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
-          
+
           const firstCurly = responseText.indexOf('{');
           const firstSquare = responseText.indexOf('[');
           let firstBrace = -1;
@@ -69,31 +65,32 @@ Format:
           else firstBrace = firstSquare;
 
           const lastBrace = Math.max(responseText.lastIndexOf('}'), responseText.lastIndexOf(']'));
-          
+
           if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
             responseText = responseText.substring(firstBrace, lastBrace + 1);
           }
 
           data = JSON.parse(responseText);
 
-          // Normalize data
           if (Array.isArray(data)) {
-             throw new Error("Returned array instead of full object with title/paragraphs");
+            throw new Error("Returned array instead of full object with title/paragraphs");
           }
 
           if (data && data.title && data.paragraphs) {
-            break; // Successfully parsed JSON
+            console.log(`[reading-pipeline/passage] Đã dùng thành công model: ${modelName}`);
+            break;
           } else {
             throw new Error("Missing required fields in JSON.");
           }
         }
       } catch (e: any) {
         errors.push(`[${modelName}]: ${e.message}`);
+        console.warn(`[reading-pipeline/passage] Model ${modelName} failed: ${e.message}`);
       }
     }
 
     if (!data) {
-      throw new Error('All Groq models failed. Details: ' + errors.join(' | '));
+      throw new Error('All Gemini models failed. Details: ' + errors.join(' | '));
     }
 
     return NextResponse.json(data);

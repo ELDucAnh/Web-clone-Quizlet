@@ -1,14 +1,14 @@
 export const maxDuration = 30;
 
 import { NextRequest, NextResponse } from 'next/server';
-import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(req: NextRequest) {
   try {
-    if (!process.env.GROQ_API_KEY) {
-      return NextResponse.json({ error: 'Chưa cấu hình GROQ_API_KEY' }, { status: 500 });
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ error: 'Chưa cấu hình GEMINI_API_KEY' }, { status: 500 });
     }
 
     const { userTranslation, expectedEnglish, vietnameseSentence } = await req.json();
@@ -17,7 +17,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const prompt = `You are an expert English teacher analyzing a student's Vietnamese-to-English translation.
+    const prompt = `You are an expert English teacher. Output valid JSON only.
+
+You are an expert English teacher analyzing a student's Vietnamese-to-English translation.
 
 Vietnamese sentence: "${vietnameseSentence}"
 Expected English: "${expectedEnglish}"
@@ -56,34 +58,42 @@ Format:
   "correctedSentence": "..."
 }`;
 
-    const fallbackModels = ['groq/compound', 'groq/compound-mini', 'qwen/qwen3.6-27b'];
-    let completion;
+    const fallbackModels = [
+      'gemini-flash-latest',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-pro-latest'
+    ];
+    let analysis: any;
     let errors: string[] = [];
 
     for (const modelName of fallbackModels) {
       try {
-        completion = await groq.chat.completions.create({
-          messages: [
-            { role: 'system', content: 'You are an expert English teacher. Output valid JSON only.' },
-            { role: 'user', content: prompt }
-          ],
-          model: modelName,
-          temperature: 0.3,
-          max_tokens: 1000,
-          response_format: { type: 'json_object' }
-        });
-        if (completion) break;
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        if (result) {
+          let responseText = result.response.text();
+          responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+          const firstBrace = responseText.indexOf('{');
+          const lastBrace = responseText.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            responseText = responseText.substring(firstBrace, lastBrace + 1);
+          }
+
+          analysis = JSON.parse(responseText);
+          console.log(`[analyze-translation] Đã dùng thành công model: ${modelName}`);
+          break;
+        }
       } catch (e: any) {
         errors.push(`[${modelName}]: ${e.message}`);
+        console.warn(`[analyze-translation] Model ${modelName} failed: ${e.message}`);
       }
     }
 
-    if (!completion) {
-      throw new Error('All models failed: ' + errors.join(' | '));
+    if (!analysis) {
+      throw new Error('All Gemini models failed: ' + errors.join(' | '));
     }
-
-    const responseText = completion.choices[0]?.message?.content || '{}';
-    const analysis = JSON.parse(responseText);
 
     return NextResponse.json(analysis);
   } catch (error: any) {

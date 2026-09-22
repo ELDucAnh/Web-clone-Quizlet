@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export const maxDuration = 60;
 
@@ -14,8 +14,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!process.env.GROQ_API_KEY) {
-      return NextResponse.json({ error: 'Chưa cấu hình GROQ_API_KEY' }, { status: 500 });
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ error: 'Chưa cấu hình GEMINI_API_KEY' }, { status: 500 });
     }
 
     const { text } = await req.json();
@@ -23,7 +23,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Văn bản quá ngắn' }, { status: 400 });
     }
 
-    const prompt = `
+    const prompt = `You are an expert English teacher. Output valid JSON only.
+
 Bạn là một chuyên gia ngôn ngữ tiếng Anh. Hãy rà soát toàn bộ đoạn văn bản tiếng Anh dưới đây và trích xuất TOÀN BỘ những từ vựng khó, học thuật, idioms, collocations, phrasal verbs (trình độ B2, C1, C2). 
 KHÔNG GIỚI HẠN số lượng từ, hãy quét thật kỹ và tìm ra nhiều từ khó nhất có thể.
 Đối với mỗi từ, hãy tạo định dạng thẻ ghi nhớ (flashcard) vô cùng ngắn gọn:
@@ -45,35 +46,42 @@ Văn bản:
 ${text}
 """`;
 
-    const fallbackModels = ['groq/compound', 'groq/compound-mini'];
-    let completion;
+    const fallbackModels = [
+      'gemini-flash-latest',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-pro-latest'
+    ];
+    let parsedData: any;
     let errors: string[] = [];
 
     for (const modelName of fallbackModels) {
       try {
-        completion = await groq.chat.completions.create({
-          messages: [
-            { role: "system", content: "You are an expert English teacher. Output valid JSON only." },
-            { role: "user", content: prompt }
-          ],
-          model: modelName,
-          temperature: 0.5,
-          max_tokens: 3000,
-          response_format: { type: "json_object" }
-        });
-        if (completion) break;
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        if (result) {
+          let responseText = result.response.text();
+          responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+          const firstBrace = responseText.indexOf('{');
+          const lastBrace = responseText.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            responseText = responseText.substring(firstBrace, lastBrace + 1);
+          }
+
+          parsedData = JSON.parse(responseText);
+          console.log(`[generate-deck] Đã dùng thành công model: ${modelName}`);
+          break;
+        }
       } catch (e: any) {
         errors.push(`[${modelName}]: ${e.message}`);
-        console.warn(`Groq Model ${modelName} failed: ${e.message}`);
+        console.warn(`[generate-deck] Model ${modelName} failed: ${e.message}`);
       }
     }
 
-    if (!completion) {
-      throw new Error('All Groq models failed. Details: ' + errors.join(' | '));
+    if (!parsedData) {
+      throw new Error('All Gemini models failed. Details: ' + errors.join(' | '));
     }
-
-    const responseText = completion.choices[0]?.message?.content || "";
-    const parsedData = JSON.parse(responseText);
 
     const cards = Array.isArray(parsedData) ? parsedData : (parsedData.cards || parsedData.items || Object.values(parsedData)[0]);
 
