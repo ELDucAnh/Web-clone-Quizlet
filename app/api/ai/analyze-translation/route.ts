@@ -27,11 +27,11 @@ Student's translation: "${userTranslation}"
 
 Analyze the student's translation and return a JSON object with:
 1. "score": integer 0–100 rating the translation quality
-2. "grammarErrors": array of objects, each with:
+2. "grammarErrors": array of objects — list ALL grammar errors found, do NOT limit the count. Each object has:
    - "original": the incorrect phrase/word from student's text
    - "correction": the corrected version
    - "explanation": brief explanation in Vietnamese (1 sentence)
-3. "vocabularyTips": array of objects (max 3), each with:
+3. "vocabularyTips": array of objects — list ALL words/phrases that can be improved with a more natural or academic alternative, do NOT limit the count. Each object has:
    - "studentWord": word/phrase student used
    - "betterAlternative": a more natural/academic alternative
    - "reason": why it's better (in Vietnamese, 1 sentence)
@@ -43,6 +43,7 @@ IMPORTANT:
 - Be encouraging but precise.
 - If the translation is good, say so in structureFeedback.
 - Only flag real grammar errors, not stylistic choices.
+- For vocabularyTips: cover every word/phrase in the student's sentence that has a meaningfully better academic/natural alternative used in the correctedSentence.
 - Output ONLY valid JSON, no markdown.
 
 Format:
