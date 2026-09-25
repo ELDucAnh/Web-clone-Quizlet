@@ -134,11 +134,12 @@ For "map" type:
 Make sure the data is realistic and similar to actual IELTS exam questions. Topics can include: energy, education, tourism, transport, population, environment, employment, housing, food, health, technology.
 `;
 
+  // Dùng đúng fallback list như writing route
   const fallbackModels = [
     'gemini-flash-latest',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash-latest',
-    'gemini-1.5-flash',
+    'gemini-3.6-flash',
+    'gemini-3.5-flash',
+    'gemini-pro-latest'
   ];
 
   let result: any;
@@ -148,11 +149,14 @@ Make sure the data is realistic and similar to actual IELTS exam questions. Topi
     for (const modelName of fallbackModels) {
       try {
         const model = genAI.getGenerativeModel({ model: modelName });
-        result = await model.generateContent(prompt);
-        if (result) { console.log(`[task1-generate] used model: ${modelName}`); break; }
+        result = await model.generateContent([prompt]);
+        if (result) {
+          console.log(`Đã dùng thành công model: ${modelName}`);
+          break; // Thoát vòng lặp ngay nếu thành công
+        }
       } catch (e: any) {
         lastError = e;
-        console.warn(`[task1-generate] model ${modelName} failed: ${e.message}`);
+        console.warn(`Model ${modelName} bị lỗi hoặc quá tải: ${e.message}`);
       }
     }
 
@@ -170,11 +174,14 @@ Make sure the data is realistic and similar to actual IELTS exam questions. Topi
       if (!data.type) throw new Error('Missing type field');
       return NextResponse.json(data, { status: 200 });
     } catch (parseErr: any) {
-      console.error('[task1-generate] JSON parse error:', text.slice(0, 200));
-      return NextResponse.json({ error: 'AI trả về dữ liệu không hợp lệ. Vui lòng thử lại.' }, { status: 500 });
+      console.error('Lỗi Parse JSON từ Gemini:', text.slice(0, 200));
+      return NextResponse.json({ error: 'AI trả về định dạng lỗi: ' + text.slice(0, 100) + '...' }, { status: 500 });
     }
-  } catch (err: any) {
-    console.error('[task1-generate] Fatal error:', err.message);
-    return NextResponse.json({ error: 'Lỗi AI: ' + (err.message || String(err)) }, { status: 500 });
+  } catch (error: any) {
+    console.error('Lỗi khi tạo đề Task 1:', error);
+    return NextResponse.json(
+      { error: 'Lỗi AI: ' + (error.message || String(error)) },
+      { status: 500 }
+    );
   }
 }
