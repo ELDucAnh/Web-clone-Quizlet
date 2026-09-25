@@ -46,15 +46,19 @@ Return a JSON object with:
 - "structureFeedback": string — overall feedback on this specific sentence in Vietnamese (2–3 sentences). Be specific about whether it works well for Task 1.
 - "correctedSentence": the fully corrected, improved version of the student's sentence
 
-Scoring guide:
-- 80–100: Well-written, grammatically correct, appropriate Task 1 language, accurate reference to chart type
-- 60–79: Decent but has minor issues in grammar or vocabulary, or slightly informal
-- 40–59: Multiple grammar errors OR vocabulary too basic OR inaccurate reference to data
-- 0–39: Major grammar issues, completely wrong language, or sentence doesn't describe the chart at all
+Scoring guide (Target IELTS Band 7.5 standard):
+- 90–100: Flawless grammar, highly advanced/precise vocabulary, perfect academic tone, excellent complex sentence structures (Band 8.0+ level).
+- 80–89: Meets Band 7.5 standard. Very good grammar (minor slips allowed), uses a range of complex structures, very good control of academic vocabulary and data description.
+- 70–79: Meets Band 6.5-7.0 standard. Grammar is mostly correct but relies on simpler structures, vocabulary is accurate but basic, lacks the sophistication required for 7.5. (Must be scored < 80 to force user to improve).
+- 50–69: Meets Band 5.5-6.0 standard. Noticeable grammar errors, repetitive vocabulary, or mechanical descriptions. 
+- 0–49: Band 5.0 or below. Major errors, inaccurate data, or inappropriate tone.
+
+STRICT INSTRUCTION FOR BAND 7.5:
+To score 80 or above, the sentence MUST use sophisticated Task 1 vocabulary (e.g., 'a substantial proportion', 'experienced a dramatic surge', 'remained relatively stable') AND complex grammar structures (e.g., relative clauses, participle clauses, varied conjunctions). Simple sentences like "The number of cars increased in 2020" are grammatically correct but MUST receive a score BELOW 80 because they do not meet the Band 7.5 standard.
 
 IMPORTANT:
 - All feedback (explanation, reason, structureFeedback) must be in Vietnamese.
-- Be encouraging but precise.
+- Be extremely strict with the 80 threshold. If it's too simple, fail it (score < 80) and provide vocabulary/structure tips.
 - Output ONLY valid JSON, no markdown.
 
 Format:
