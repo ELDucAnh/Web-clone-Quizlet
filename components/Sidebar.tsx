@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import {
   Home, Library, Folder, Plus, ChevronLeft, ChevronRight,
-  Settings, X, Clock, PenLine, Mic, Sparkles, BookMarked, Headphones
+  Settings, X, Clock, PenLine, Mic, Sparkles, BookMarked, Headphones, BarChart2
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -124,6 +124,13 @@ export function Sidebar({ mobileOpen, onMobileClose, showCreateFolderModal }: Si
             icon={<PenLine size={18} />}
             label="Bài mẫu Writing"
             active={!!pathname?.startsWith('/writing')}
+            collapsed={collapsed}
+          />
+          <NavItem
+            href="/task1-practice"
+            icon={<BarChart2 size={18} className="text-indigo-500" />}
+            label="Luyện Task 1"
+            active={!!pathname?.startsWith('/task1-practice')}
             collapsed={collapsed}
           />
           <NavItem
