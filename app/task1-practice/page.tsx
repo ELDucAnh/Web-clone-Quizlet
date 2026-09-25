@@ -114,7 +114,7 @@ function BarChart({ data }: { data: ChartData }) {
   if (!series.length || !categories.length) return null;
   const allValues = series.flatMap(s => s.values);
   const maxVal = Math.max(...allValues, 1);
-  const W = 520, H = 220, PL = 50, PR = 16, PT = 14, PB = 55;
+  const W = 520, H = 245, PL = 50, PR = 16, PT = 14, PB = 80;
   const cW = W - PL - PR, cH = H - PT - PB;
   const gW = cW / categories.length;
   const bW = Math.min((gW / (series.length + 1)) * 0.9, 36);
@@ -161,7 +161,7 @@ function BarChart({ data }: { data: ChartData }) {
       {xLabel && <text x={PL + cW / 2} y={H - 2} textAnchor="middle" fontSize="10" fill="#6b7280" fontWeight="600">{xLabel}</text>}
       {yLabel && <text transform={`translate(10,${PT + cH / 2})rotate(-90)`} textAnchor="middle" fontSize="10" fill="#6b7280" fontWeight="600">{yLabel}</text>}
       {series.length > 1 && series.map((s, si) => (
-        <g key={si} transform={`translate(${PL + si * 120},${H - 6})`}>
+        <g key={si} transform={`translate(${PL + si * 120},${H - 12})`}>
           <rect width="10" height="10" fill={CHART_COLORS[si]} rx="2" />
           <text x={13} y={9} fontSize="9" fill="#374151">{s.name.length > 14 ? s.name.slice(0, 13) + '…' : s.name}</text>
         </g>
@@ -175,7 +175,7 @@ function LineChart({ data }: { data: ChartData }) {
   if (!series.length || !xValues.length) return null;
   const allV = series.flatMap(s => s.values);
   const maxV = Math.max(...allV, 1), minV = Math.min(...allV, 0);
-  const W = 520, H = 230, PL = 50, PR = 16, PT = 14, PB = 58;
+  const W = 520, H = 255, PL = 50, PR = 16, PT = 14, PB = 83;
   const cW = W - PL - PR, cH = H - PT - PB;
   const range = maxV - minV || 1;
   const tStep = Math.max(Math.ceil(range / 5 / 5) * 5, 5);
@@ -215,7 +215,7 @@ function LineChart({ data }: { data: ChartData }) {
       {xLabel && <text x={PL + cW / 2} y={H - 2} textAnchor="middle" fontSize="10" fill="#6b7280" fontWeight="600">{xLabel}</text>}
       {yLabel && <text transform={`translate(10,${PT + cH / 2})rotate(-90)`} textAnchor="middle" fontSize="10" fill="#6b7280" fontWeight="600">{yLabel}</text>}
       {series.map((s, si) => (
-        <g key={si} transform={`translate(${PL + si * 140},${H - 6})`}>
+        <g key={si} transform={`translate(${PL + si * 140},${H - 12})`}>
           <line x1={0} y1={5} x2={13} y2={5} stroke={CHART_COLORS[si]} strokeWidth="2.5" />
           <circle cx={6} cy={5} r={2.5} fill={CHART_COLORS[si]} />
           <text x={17} y={9} fontSize="9" fill="#374151">{s.name.length > 15 ? s.name.slice(0, 14) + '…' : s.name}</text>
@@ -412,10 +412,6 @@ export default function Task1PracticePage() {
   const [completedSentences, setCompletedSentences] = useState<CompletedSentence[]>([]);
   const [phase, setPhase] = useState<'idle' | 'practicing' | 'done'>('idle');
 
-  // Timer
-  const [timeLeft, setTimeLeft] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
   // History
   const [sessions, setSessions] = useState<PracticeSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<PracticeSession | null>(null);
@@ -423,25 +419,6 @@ export default function Task1PracticePage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => { setMounted(true); setSessions(loadSessions()); }, []);
-
-  const stopTimer = useCallback(() => {
-    if (timerRef.current !== null) { clearInterval(timerRef.current); timerRef.current = null; }
-  }, []);
-  const stopTimerRef = useRef(stopTimer);
-  useEffect(() => { stopTimerRef.current = stopTimer; }, [stopTimer]);
-
-  useEffect(() => () => stopTimer(), [stopTimer]);
-
-  const startTimer = useCallback((s: number) => {
-    stopTimerRef.current();
-    setTimeLeft(s);
-    timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) { stopTimerRef.current(); return 0; }
-        return prev - 1;
-      });
-    }, 1000);
-  }, []);
 
   const generateChart = useCallback(async () => {
     setIsGenerating(true);
@@ -455,20 +432,18 @@ export default function Task1PracticePage() {
     setGradeChecked(false);
     setAttemptCount(0);
     setSavedToWriting(false);
-    stopTimerRef.current();
     try {
       const res = await fetch('/api/ai/task1-generate', { method: 'POST' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Lỗi server');
       setChartData(data);
       setPhase('practicing');
-      startTimer(20 * 60);
     } catch (e: any) {
       setGenError(e.message || 'Không thể tạo đề bài. Vui lòng thử lại.');
     } finally {
       setIsGenerating(false);
     }
-  }, [startTimer]);
+  }, []);
 
   const gradeSentence = async () => {
     if (!chartData || !inputText.trim()) return;
@@ -523,7 +498,6 @@ export default function Task1PracticePage() {
 
     if (currentSentenceIdx + 1 >= TOTAL_SENTENCES) {
       // All done
-      stopTimerRef.current();
       setPhase('done');
       const avgScore = Math.round(newCompleted.reduce((sum, s) => sum + s.score, 0) / newCompleted.length);
       const session: PracticeSession = {
@@ -567,8 +541,6 @@ export default function Task1PracticePage() {
     saveSessions(updated);
     if (selectedSession?.id === id) setSelectedSession(null);
   };
-
-  const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
   const handleNewFromHistory = useCallback(() => {
     setTab('practice');
@@ -624,8 +596,8 @@ export default function Task1PracticePage() {
 
           {/* Main practice layout */}
           {chartData && phase === 'practicing' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {/* LEFT: Chart panel — fixed height, no crop */}
+            <div className="flex flex-col gap-5 max-w-3xl mx-auto w-full">
+              {/* TOP: Chart panel — full width, no crop */}
               <div className="flex flex-col gap-3">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                   {/* Chart header */}
@@ -635,17 +607,19 @@ export default function Task1PracticePage() {
                     <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: currentColor }}>IELTS Task 1</span>
                   </div>
                   {/* Context */}
-                  <div className="px-4 pt-3 pb-2">
-                    <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3 mb-3">
+                  <div className="px-5 pt-4 pb-3">
+                    <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-4 mb-4">
                       <p className="text-sm text-gray-700 leading-relaxed">
                         <span className="font-bold text-blue-800">Đề bài: </span>{chartData.context}
                       </p>
                     </div>
                     {/* Chart — unconstrained height so it doesn't crop */}
-                    <div className="w-full">
-                      <ChartRenderer data={chartData} />
+                    <div className="w-full flex justify-center">
+                      <div className="w-full max-w-xl">
+                        <ChartRenderer data={chartData} />
+                      </div>
                     </div>
-                    <p className="mt-2.5 text-xs text-gray-400 italic bg-gray-50 p-2 rounded-lg border border-gray-100 leading-relaxed">
+                    <p className="mt-4 text-xs text-gray-400 italic bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed text-center">
                       {chartData.prompt}
                     </p>
                   </div>
@@ -655,10 +629,6 @@ export default function Task1PracticePage() {
                 <div className="bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold text-gray-500">Tiến độ</span>
-                    <div className="flex items-center gap-1.5 text-indigo-600">
-                      <Clock size={13} />
-                      <span className={`font-black text-sm tabular-nums ${timeLeft > 0 && timeLeft < 300 ? 'text-red-500 animate-pulse' : ''}`}>{fmt(timeLeft)}</span>
-                    </div>
                   </div>
                   <div className="flex gap-1.5 flex-wrap">
                     {Array.from({ length: TOTAL_SENTENCES }, (_, i) => {
@@ -676,23 +646,9 @@ export default function Task1PracticePage() {
                     })}
                   </div>
                 </div>
-
-                {/* Tips */}
-                {chartData.keyFeatures?.length ? (
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-4 py-3">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Info size={11} className="text-amber-500" />Những điểm chính cần đề cập</p>
-                    <ul className="space-y-1">
-                      {chartData.keyFeatures.map((f, i) => (
-                        <li key={i} className="flex items-start gap-2 text-xs text-gray-700">
-                          <CheckCircle size={11} className="text-emerald-500 mt-0.5 flex-shrink-0" />{f}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
               </div>
 
-              {/* RIGHT: Writing panel */}
+              {/* BOTTOM: Writing panel */}
               <div className="flex flex-col gap-3">
                 {/* Sentence context */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 flex flex-col gap-3">
